@@ -1,0 +1,38 @@
+# Pegasus runtime installed by scripts/windows/setup.ps1
+/pegasus/*.exe
+/pegasus/*.dll
+/pegasus/*.txt
+/pegasus/*.dat
+/pegasus/*.pak
+/pegasus/platforms/
+/pegasus/imageformats/
+/pegasus/iconengines/
+/pegasus/styles/
+/pegasus/translations/
+/pegasus/config/
+/pegasus/cache/
+/pegasus/logs/
+/pegasus/lastrun.log
+/pegasus/stats.db
+/pegasus/theme_settings/
+/cache/
+
+# Local game and emulator content
+/roms/
+/bios/
+/emulators/
+/saves/
+/pegasus/roms/
+/pegasus/bios/
+/pegasus/emulators/
+/pegasus/saves/
+/pegasus/metadata/**/roms/
+/pegasus/metadata/**/bios/
+/pegasus/metadata/**/saves/
+
+# Common generated files
+*.log
+*.cache
+.cache/
+Thumbs.db
+Desktop.ini

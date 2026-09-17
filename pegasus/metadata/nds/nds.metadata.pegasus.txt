@@ -1,0 +1,7 @@
+collection: Nintendo DS
+shortname: nds
+launch: "C:/Users/alexi/Documents/NDS/melonDS-1.1-windows-x86_64/melonDS.exe" "{file.path}"
+workdir: C:/Users/alexi/Documents/NDS/melonDS-1.1-windows-x86_64
+
+game: Pokémon Version Diamant
+file: C:/Users/alexi/Documents/NDS/Pokemon - Version Diamant (France) (Rev 5)/Pokemon - Version Diamant (France) (Rev 5).nds
