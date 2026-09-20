@@ -38,8 +38,10 @@ Item {
         "dc": "dreamcast"
     })
 
-    readonly property var carouselArtwork: ["ds", "3ds", "ps1", "n64", "music"]
-    readonly property var consoleArtwork: ["ds"]
+    // Which consoles have artwork in the Figma file. Listing them avoids asking
+    // Qt to load images that do not exist, which would log a warning per frame.
+    readonly property var carouselArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
+    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "gamecube", "3ds"]
 
     readonly property string bodyFont: fontChakraMedium.status === FontLoader.Ready ? fontChakraMedium.name : "Sans"
     readonly property string bodyBoldFont: fontChakraBold.status === FontLoader.Ready ? fontChakraBold.name : "Sans"
