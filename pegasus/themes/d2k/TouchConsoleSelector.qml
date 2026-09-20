@@ -47,10 +47,11 @@ Item {
     }
 
     // Both ring assets measure their centre at (400, 205) in panel coordinates,
-    // so a 189x189 tile centres at y = 205 - 94.5. Figma's own frames drift
-    // between y 86 and 126 across the selector states.
+    // so a 189x189 tile centres at x = 400 - 94.5 and y = 205 - 94.5. The tiles
+    // are re-centred on their own artwork at build time, so this lands the
+    // console in the middle of the ring.
     Image {
-        x: 305; y: 110; width: 189; height: 189
+        x: 305.5; y: 110.5; width: 189; height: 189
         source: panel.theme.carouselSource(panel.collection)
         visible: source != ""
         fillMode: Image.PreserveAspectFit
@@ -62,22 +63,6 @@ Item {
         source: "assets/console-frame-front.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
-    }
-
-    // Figma only ever shows short ids here ("DS"), which sit inside the ring's
-    // clear centre and below the chrome overlay. DREAMCAST and GAMECUBE are
-    // wide enough to reach the ring, so the box is widened (still centred on
-    // 400 as in the design) and the label is drawn above the chrome.
-    Text {
-        x: 190; y: 300; width: 420; height: 24
-        text: panel.theme.consoleId(panel.collection).toUpperCase()
-        color: panel.theme.limeInk
-        font.family: panel.theme.badgeFont
-        font.pixelSize: 29
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 13
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
     }
 
     ControlButton {

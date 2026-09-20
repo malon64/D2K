@@ -74,11 +74,31 @@ Item {
     // truncates "NINTENDO DS". The box is widened to the glass button's inner
     // width, still centred on 404.5, and long console names shrink to fit
     // rather than elide.
+    //
+    // Figma puts a drop shadow under this title. QML cannot blur without
+    // QtGraphicalEffects, so the shadow is a second copy of the same text drawn
+    // behind and offset, which lifts the gradient off the glass button.
+    Text {
+        x: 174; y: 401; width: 461; height: 57
+        text: panel.theme.consoleDisplayName(panel.collection).toUpperCase()
+        color: "#000000"
+        opacity: 0.45
+        font.family: panel.theme.consoleFont
+        font.pixelSize: 40
+        font.letterSpacing: -1
+        fontSizeMode: Text.HorizontalFit
+        minimumPixelSize: 22
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
+
     Text {
         x: 174; y: 398; width: 461; height: 57
         text: panel.theme.gradientMarkup(
                   panel.theme.consoleDisplayName(panel.collection).toUpperCase())
         textFormat: Text.StyledText
+        style: Text.Outline
+        styleColor: "#40102040"
         color: panel.theme.pearlMist
         font.family: panel.theme.consoleFont
         font.pixelSize: 40
