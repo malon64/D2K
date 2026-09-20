@@ -1,0 +1,13 @@
+collection: Nintendo DS
+shortname: nds
+launch: "@REPO@/scripts/linux/launch-melonds.sh" "{file.path}"
+workdir: @ROM_DIR@
+
+game: The Legend of Zelda: Phantom Hourglass
+file: @ROM_DIR@/zelda-phantom-hourglass.nds
+
+game: Mario & Luigi: Bowser's Inside Story
+file: @ROM_DIR@/mario-luigi-bowsers-inside-story.nds
+
+game: Pokémon Version Diamant
+file: @ROM_DIR@/pokemon-diamond.nds

@@ -1,0 +1,14 @@
+# D2K dual-display reference for melonDS 1.1.
+# Apply these sections to the active melonDS.toml. Geometry is intentionally
+# omitted: arrange the two Windows preview windows, then close melonDS to save it.
+# Do not close Window 1 by itself: melonDS records that as Enabled = false.
+
+[Instance0.Window0]
+Enabled = true
+# screenSizing_TopOnly
+ScreenSizing = 4
+
+[Instance0.Window1]
+Enabled = true
+# screenSizing_BotOnly
+ScreenSizing = 5

@@ -1,0 +1,157 @@
+# Portable melonDS 1.1 baseline for the ROCK 4D.
+# ROM history, Qt window geometry, saves, and personal firmware data stay local.
+# melonDS rewrites this file while running; the installer copies it to
+# ~/.config/melonDS/melonDS.toml rather than linking it into Git.
+
+UITheme = ""
+FastForwardFPS = 1000.0
+PauseLostFocus = false
+AudioSync = false
+TargetFPS = 60.0
+LimitFPS = true
+SlowmoFPS = 30.0
+
+[DLDI]
+Enable = false
+
+[DSi]
+NANDPath = ""
+
+[DSi.Camera0]
+DeviceName = ""
+ImagePath = ""
+InputType = 0
+XFlip = false
+
+[DSi.Camera1]
+DeviceName = ""
+ImagePath = ""
+InputType = 0
+XFlip = false
+
+[Mouse]
+Hide = false
+HideSeconds = 5
+
+[Audio]
+Interpolation = 0
+BitDepth = 0
+
+[Instance0]
+EnableCheats = false
+SaveFilePath = ""
+JoystickID = 0
+SavestatePath = ""
+CheatFilePath = ""
+
+[Instance0.Audio]
+DSiVolumeSync = false
+Volume = 256
+
+[Instance0.Window0]
+Enabled = true
+ScreenFilter = false
+ScreenAspectTop = 0
+IntegerScaling = false
+ScreenSizing = 4 # DS top only
+ScreenSwap = false
+ScreenGap = 0
+ScreenAspectBot = 0
+ScreenRotation = 0
+ScreenLayout = 0
+ShowOSD = true
+
+[Instance0.Window1]
+Enabled = true
+ScreenFilter = false
+ScreenAspectTop = 0
+IntegerScaling = false
+ScreenSizing = 5 # DS bottom only
+ScreenSwap = false
+ScreenGap = 0
+ScreenAspectBot = 0
+ScreenRotation = 0
+ScreenLayout = 0
+ShowOSD = true
+
+[Instance0.Window2]
+Enabled = false
+
+[Instance0.Window3]
+Enabled = false
+
+[Instance0.Gdb]
+Enabled = false
+
+[Instance0.Gdb.ARM9]
+BreakOnStartup = false
+Port = 3333
+
+[Instance0.Gdb.ARM7]
+BreakOnStartup = false
+Port = 3334
+
+[Instance0.DS]
+
+[Instance0.DS.Battery]
+LevelOkay = true
+
+[Instance0.RTC]
+Offset = 0
+
+[Instance0.Firmware]
+MAC = ""
+Message = ""
+BirthdayDay = 1
+BirthdayMonth = 1
+FavouriteColour = 0
+Language = 1
+Username = "melonDS"
+
+# Input mapping stays at melonDS defaults until the ESP32 controller is ready.
+[Instance0.Keyboard]
+
+[Instance0.Joystick]
+
+[3D]
+Renderer = 0
+
+[3D.GL]
+HiresCoordinates = true
+BetterPolygons = false
+ScaleFactor = 1
+
+[3D.Soft]
+Threaded = true
+
+[Savestate]
+RelocSRAM = false
+
+[Emu]
+DirectBoot = true
+ExternalBIOSEnable = false
+ConsoleType = 0
+
+[MP]
+AudioMode = 1
+RecvTimeout = 25
+
+[LAN]
+DirectMode = false
+
+[JIT]
+Enable = false
+FastMemory = true
+BranchOptimisations = true
+LiteralOptimisations = true
+MaxBlockSize = 32
+
+[Screen]
+VSyncInterval = 1
+VSync = false
+UseGL = false
+
+[Mic]
+WavPath = ""
+Device = ""
+InputType = 1

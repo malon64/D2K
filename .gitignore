@@ -15,6 +15,8 @@
 /pegasus/lastrun.log
 /pegasus/stats.db
 /pegasus/theme_settings/
+/pegasus/melonds/melonDS.toml
+/pegasus/melonds/*.local.toml
 /cache/
 
 # Local game and emulator content
@@ -29,6 +31,9 @@
 /pegasus/metadata/**/roms/
 /pegasus/metadata/**/bios/
 /pegasus/metadata/**/saves/
+
+# Private D2K library: ROMs, covers, music and local Pegasus metadata.
+/library/
 
 # Common generated files
 *.log
