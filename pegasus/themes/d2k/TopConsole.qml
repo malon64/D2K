@@ -76,7 +76,9 @@ Item {
     // rather than elide.
     Text {
         x: 174; y: 398; width: 461; height: 57
-        text: panel.collection ? ("" + panel.collection.name).toUpperCase() : ""
+        text: panel.theme.gradientMarkup(panel.collection
+                                         ? ("" + panel.collection.name).toUpperCase() : "")
+        textFormat: Text.StyledText
         color: panel.theme.pearlMist
         font.family: panel.theme.consoleFont
         font.pixelSize: 40
@@ -88,10 +90,12 @@ Item {
         elide: Text.ElideRight
     }
 
+    // Figma's "image 1" is the shared chrome frame that overlays the console
+    // picture, not per-console art — it is identical across every selector
+    // frame in the file.
     Image {
         x: 220; y: 44; width: 359; height: 359
-        source: panel.theme.consoleRenderSource(panel.collection)
-        visible: source != ""
+        source: "assets/console-frame-chrome.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
     }

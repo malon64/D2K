@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $themeSource = Join-Path $repoRoot 'pegasus/themes/d2k'
-$librarySource = Join-Path $repoRoot 'library/consoles/ds'
+$librarySource = Join-Path $repoRoot 'library/consoles'
 $pegasusDir = Join-Path $env:USERPROFILE 'scoop/apps/pegasus/current'
 $executable = Join-Path $pegasusDir 'pegasus-fe.exe'
 $configDir = Join-Path $pegasusDir 'config'
@@ -47,8 +47,18 @@ if (-not (Test-Path -LiteralPath $librarySource -PathType Container)) {
     throw "The D2K library was not found at $librarySource."
 }
 
-$libraryPath = (Resolve-Path -LiteralPath $librarySource).Path
-Set-Content -LiteralPath $gameDirsPath -Value $libraryPath -Encoding UTF8
+# Every console directory holding a metadata file becomes a Pegasus game
+# directory, which is what gives the theme one collection per carousel entry.
+$consoleDirs = Get-ChildItem -LiteralPath $librarySource -Directory |
+    Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'metadata.pegasus.txt') } |
+    Sort-Object Name
+
+if (-not $consoleDirs) {
+    throw "No console metadata found under $librarySource."
+}
+
+$libraryPaths = $consoleDirs | ForEach-Object { $_.FullName }
+Set-Content -LiteralPath $gameDirsPath -Value $libraryPaths -Encoding UTF8
 
 if (-not (Test-Path -LiteralPath $settingsPath -PathType Leaf)) {
     @(
@@ -58,5 +68,6 @@ if (-not (Test-Path -LiteralPath $settingsPath -PathType Leaf)) {
 }
 
 Write-Host "D2K is linked into Scoop Pegasus: $themeTarget"
-Write-Host "D2K library is indexed from: $libraryPath"
+Write-Host "D2K library is indexed from $($consoleDirs.Count) console directories:"
+$consoleDirs | ForEach-Object { Write-Host "  $($_.Name)" }
 Write-Host 'Run: .\scripts\windows\run.ps1'

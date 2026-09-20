@@ -54,12 +54,16 @@ Item {
         smooth: true
     }
 
+    // Figma only ever shows short ids here ("DS"). Longer ones such as
+    // DREAMCAST and GAMECUBE overflow the box, so they shrink to fit.
     Text {
         x: 290; y: 300; width: 220; height: 24
         text: panel.theme.consoleId(panel.collection).toUpperCase()
         color: panel.theme.limeInk
         font.family: panel.theme.badgeFont
         font.pixelSize: 29
+        fontSizeMode: Text.HorizontalFit
+        minimumPixelSize: 13
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight

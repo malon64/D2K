@@ -33,13 +33,13 @@ Item {
         "nds": "ds",
         "n3ds": "3ds",
         "psx": "ps1",
+        "gc": "gamecube",
         "ngc": "gamecube",
         "dc": "dreamcast"
     })
 
     readonly property var carouselArtwork: ["ds", "3ds", "ps1", "n64", "music"]
     readonly property var consoleArtwork: ["ds"]
-    readonly property var consoleRenders: ["ds"]
 
     readonly property string bodyFont: fontChakraMedium.status === FontLoader.Ready ? fontChakraMedium.name : "Sans"
     readonly property string bodyBoldFont: fontChakraBold.status === FontLoader.Ready ? fontChakraBold.name : "Sans"
@@ -50,6 +50,66 @@ Item {
     readonly property string consoleFont: fontRubikGlitch.status === FontLoader.Ready ? fontRubikGlitch.name : "Sans"
     readonly property string badgeFont: fontBungeeShade.status === FontLoader.Ready ? fontBungeeShade.name : "Sans"
     readonly property string countFont: fontDanfo.status === FontLoader.Ready ? fontDanfo.name : "Sans"
+
+    // Figma fills the console name with a left-to-right rainbow. QML Text
+    // cannot gradient-fill a string, but the Figma render steps the colour per
+    // letter, so StyledText markup reproduces it faithfully without a shader
+    // and without pulling QtGraphicalEffects into the ARM64 build. Stops were
+    // sampled from an export of the Figma text node.
+    readonly property var nameGradient: [
+        [0.00, 0xfd, 0xe7, 0x9e],
+        [0.33, 0x9e, 0x97, 0xf8],
+        [0.55, 0x82, 0x7a, 0xfe],
+        [0.78, 0xc0, 0x5f, 0xd0],
+        [1.00, 0xfe, 0x06, 0x9c]
+    ]
+
+    function hexByte(value) {
+        var text = Math.max(0, Math.min(255, Math.round(value))).toString(16)
+        return text.length < 2 ? "0" + text : text
+    }
+
+    function gradientHex(position) {
+        var stops = nameGradient
+        var last = stops.length - 1
+
+        if (position <= stops[0][0])
+            return "#" + hexByte(stops[0][1]) + hexByte(stops[0][2]) + hexByte(stops[0][3])
+
+        for (var i = 1; i <= last; i++) {
+            if (position > stops[i][0])
+                continue
+
+            var from = stops[i - 1]
+            var to = stops[i]
+            var span = to[0] - from[0]
+            var k = span > 0 ? (position - from[0]) / span : 0
+            return "#" + hexByte(from[1] + (to[1] - from[1]) * k)
+                       + hexByte(from[2] + (to[2] - from[2]) * k)
+                       + hexByte(from[3] + (to[3] - from[3]) * k)
+        }
+
+        return "#" + hexByte(stops[last][1]) + hexByte(stops[last][2]) + hexByte(stops[last][3])
+    }
+
+    function gradientMarkup(value) {
+        var text = "" + (value === undefined || value === null ? "" : value)
+        if (!text.length)
+            return ""
+
+        var markup = ""
+        for (var i = 0; i < text.length; i++) {
+            var character = text.charAt(i)
+            var glyph = character === "&" ? "&amp;"
+                      : character === "<" ? "&lt;"
+                      : character === ">" ? "&gt;"
+                      : character === " " ? "&nbsp;"
+                      : character
+            var position = text.length > 1 ? i / (text.length - 1) : 0
+            markup += '<font color="' + gradientHex(position) + '">' + glyph + '</font>'
+        }
+        return markup
+    }
 
     function consoleId(collection) {
         if (!collection || !collection.shortName)
@@ -69,7 +129,6 @@ Item {
 
     function carouselSource(collection) { return consoleAsset(collection, "carousel", carouselArtwork) }
     function consoleArtSource(collection) { return consoleAsset(collection, "art", consoleArtwork) }
-    function consoleRenderSource(collection) { return consoleAsset(collection, "render", consoleRenders) }
 
     FontLoader { id: fontChakraMedium; source: "assets/fonts/ChakraPetch-Medium.ttf" }
     FontLoader { id: fontChakraSemiBold; source: "assets/fonts/ChakraPetch-SemiBold.ttf" }
