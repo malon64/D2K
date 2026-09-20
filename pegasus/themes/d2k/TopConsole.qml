@@ -70,13 +70,19 @@ Item {
         smooth: true
     }
 
+    // Rubik Glitch measures wider in Qt than in Figma, so Figma's 301px box
+    // truncates "NINTENDO DS". The box is widened to the glass button's inner
+    // width, still centred on 404.5, and long console names shrink to fit
+    // rather than elide.
     Text {
-        x: 254; y: 398; width: 301; height: 57
-        text: panel.collection ? panel.collection.name : ""
+        x: 174; y: 398; width: 461; height: 57
+        text: panel.collection ? ("" + panel.collection.name).toUpperCase() : ""
         color: panel.theme.pearlMist
         font.family: panel.theme.consoleFont
         font.pixelSize: 40
         font.letterSpacing: 1.6
+        fontSizeMode: Text.HorizontalFit
+        minimumPixelSize: 22
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
@@ -165,8 +171,10 @@ Item {
         smooth: true
     }
 
+    // Figma sizes this box for the single-digit prototype value. Keep its
+    // centre on 539 but widen it so real library counts stay inside the badge.
     Text {
-        x: 523; y: 80; width: 32; height: 35
+        x: 507; y: 80; width: 64; height: 35
         text: panel.gameCount
         color: panel.theme.countInk
         font.family: panel.theme.countFont

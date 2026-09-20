@@ -47,43 +47,6 @@ Item {
         }
     }
 
-    Text {
-        x: 318; y: 112; width: 400
-        text: panel.game ? ("" + panel.game.title).toUpperCase() : ""
-        color: panel.theme.titleInk
-        font.family: panel.theme.titleFont
-        font.pixelSize: 18
-        lineHeight: 22
-        lineHeightMode: Text.FixedHeight
-        wrapMode: Text.WordWrap
-        maximumLineCount: 2
-        elide: Text.ElideRight
-    }
-
-    Text {
-        x: 318; y: 165; width: 400
-        text: panel.metaLine
-        color: panel.theme.metaInk
-        font.family: panel.theme.bodyFont
-        font.pixelSize: 13
-        lineHeight: 18
-        lineHeightMode: Text.FixedHeight
-        elide: Text.ElideRight
-    }
-
-    Text {
-        x: 318; y: 204; width: 330
-        text: panel.game ? panel.game.description : ""
-        color: panel.theme.bodyInk
-        font.family: panel.theme.bodyFont
-        font.pixelSize: 14
-        lineHeight: 20
-        lineHeightMode: Text.FixedHeight
-        wrapMode: Text.WordWrap
-        maximumLineCount: 5
-        elide: Text.ElideRight
-    }
-
     CoverArt {
         x: 157; y: 121; width: 142; height: 142
         game: panel.game
@@ -115,5 +78,53 @@ Item {
         source: "assets/ornament-07.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
+    }
+
+    // Figma stacks the top-right ornament above the text, which only works for
+    // the short prototype title. Real library titles run under it, so the game
+    // facts are drawn last: the decorative layer stays peripheral texture and
+    // the primary information stays readable.
+    //
+    // Qt only elides wrapped text when the item is height-constrained, so these
+    // three blocks carry the explicit heights from the Figma frame.
+    //
+    // The title box is narrowed from Figma's 400 to 285 so it wraps at the
+    // ornament's left edge (318 + 285 = 603) instead of running beneath it.
+    // Figma's own two-line reference title still fits unchanged.
+    Text {
+        x: 318; y: 112; width: 285; height: 44
+        text: panel.game ? ("" + panel.game.title).toUpperCase() : ""
+        color: panel.theme.titleInk
+        font.family: panel.theme.titleFont
+        font.pixelSize: 18
+        lineHeight: 22
+        lineHeightMode: Text.FixedHeight
+        wrapMode: Text.WordWrap
+        maximumLineCount: 2
+        elide: Text.ElideRight
+    }
+
+    Text {
+        x: 318; y: 165; width: 400; height: 18
+        text: panel.metaLine
+        color: panel.theme.metaInk
+        font.family: panel.theme.bodyFont
+        font.pixelSize: 13
+        lineHeight: 18
+        lineHeightMode: Text.FixedHeight
+        elide: Text.ElideRight
+    }
+
+    Text {
+        x: 318; y: 204; width: 330; height: 100
+        text: panel.game ? panel.game.description : ""
+        color: panel.theme.bodyInk
+        font.family: panel.theme.bodyFont
+        font.pixelSize: 14
+        lineHeight: 20
+        lineHeightMode: Text.FixedHeight
+        wrapMode: Text.WordWrap
+        maximumLineCount: 5
+        elide: Text.ElideRight
     }
 }
