@@ -41,10 +41,7 @@ Item {
     // Which consoles have artwork in the Figma file. Listing them avoids asking
     // Qt to load images that do not exist, which would log a warning per frame.
     readonly property var carouselArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
-    // N64 and Music have no "Console art / selected" source in the Figma file
-    // yet, so their upper screen shows the empty chrome frame rather than the
-    // touch carousel tile, which is different artwork.
-    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "gamecube", "3ds"]
+    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
 
     // Shorter names for the upper screen, where the full collection name runs
     // past the glass button. Anything not listed keeps its collection name.
