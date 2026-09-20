@@ -2,12 +2,13 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $themeSource = Join-Path $repoRoot 'pegasus/themes/d2k'
-$metadataSource = Join-Path $repoRoot 'pegasus/metadata/nds'
+$librarySource = Join-Path $repoRoot 'library/consoles/ds'
 $pegasusDir = Join-Path $env:USERPROFILE 'scoop/apps/pegasus/current'
 $executable = Join-Path $pegasusDir 'pegasus-fe.exe'
 $configDir = Join-Path $pegasusDir 'config'
 $themeTarget = Join-Path $configDir 'themes/d2k'
 $metadataTarget = Join-Path $configDir 'metafiles'
+$gameDirsPath = Join-Path $configDir 'game_dirs.txt'
 $settingsPath = Join-Path $configDir 'settings.txt'
 
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
@@ -27,17 +28,27 @@ else {
     }
 }
 
-if (-not (Test-Path -LiteralPath $metadataTarget)) {
-    New-Item -ItemType Junction -Path $metadataTarget -Target $metadataSource | Out-Null
-}
-else {
+# The D2K theme now navigates by collection, so the library is indexed directly
+# as a Pegasus game directory. The old three-game preview under
+# pegasus/metadata/nds is no longer linked in: indexing both would list the same
+# Nintendo DS games twice.
+if (Test-Path -LiteralPath $metadataTarget) {
     $existingMetadata = Get-Item -LiteralPath $metadataTarget
-    $existingTarget = @($existingMetadata.Target)[0]
-    if ($existingMetadata.LinkType -ne 'Junction' -or -not $existingTarget -or
-        (Resolve-Path -LiteralPath $existingTarget).Path -ne (Resolve-Path -LiteralPath $metadataSource).Path) {
-        throw "Pegasus metafiles already exist at $metadataTarget. Replace them with a junction to $metadataSource."
+    if ($existingMetadata.LinkType -eq 'Junction') {
+        Remove-Item -LiteralPath $metadataTarget -Force -Recurse
+        Write-Host "Removed the superseded metafiles junction: $metadataTarget"
+    }
+    else {
+        throw "Pegasus metafiles at $metadataTarget are not a junction. Remove them by hand, then rerun this script."
     }
 }
+
+if (-not (Test-Path -LiteralPath $librarySource -PathType Container)) {
+    throw "The D2K library was not found at $librarySource."
+}
+
+$libraryPath = (Resolve-Path -LiteralPath $librarySource).Path
+Set-Content -LiteralPath $gameDirsPath -Value $libraryPath -Encoding UTF8
 
 if (-not (Test-Path -LiteralPath $settingsPath -PathType Leaf)) {
     @(
@@ -47,5 +58,5 @@ if (-not (Test-Path -LiteralPath $settingsPath -PathType Leaf)) {
 }
 
 Write-Host "D2K is linked into Scoop Pegasus: $themeTarget"
-Write-Host "DS metadata is linked into Scoop Pegasus: $metadataTarget"
+Write-Host "D2K library is indexed from: $libraryPath"
 Write-Host 'Run: .\scripts\windows\run.ps1'

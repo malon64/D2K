@@ -7,13 +7,60 @@ mode and stores generated configuration under Scoop's ignored installation.
 
 `theme.qml` uses 800×480 as the logical design baseline for two independent
 windows. The upper 5-inch visual panel previews at 600×360; the lower 4-inch
-touch panel previews at 480×288. The lower panel selects one of the three
-configured Nintendo DS games with mouse clicks, and Play launches it. Arrow
-keys select a game and Enter launches it.
+touch panel previews at 480×288. Each panel is authored at a literal 800×480
+with absolute integer coordinates and then scaled by `width / 800` from
+`Item.TopLeft`, so an 800×480 Figma frame maps 1:1 onto QML coordinates.
 
-The metadata is `pegasus/metadata/nds/nds.metadata.pegasus.txt`. It points to
-the current Windows melonDS and three ROM paths, so it must be replaced with
-Linux ARM64 paths during the device handoff.
+## Theme structure
+
+`theme.qml` owns all navigation state and both windows; the panels are passive
+and report user intent back through signals. `navState` moves through
+`boot` → `consoles` → `games`, and `TopPanel.qml` / `TouchPanel.qml` are routers
+that load the matching screen.
+
+| File | Role |
+| --- | --- |
+| `D2KTheme.qml` | Palette, type scale, fonts, console order and asset lookup |
+| `TopPanel.qml` / `TouchPanel.qml` | Per-screen routers driven by `navState` |
+| `TopConsole.qml` / `TopGame.qml` | Upper "technical notice" showcase |
+| `TouchConsoleSelector.qml` / `TouchGameLibrary.qml` | Lower interactive surface |
+| `GameTile.qml`, `CoverArt.qml`, `ControlButton.qml`, `BootScreen.qml` | Shared pieces |
+
+The token file is `D2KTheme.qml`, not `Theme.qml`: Windows filesystems are
+case-insensitive, so `Theme.qml` and the `theme.qml` entry point are the same
+file and would overwrite each other.
+
+`selectedGameIndex` is the single source of truth shared by both screens.
+`selectGame()` only moves the selection and never launches; only the `LAUNCH`
+control or the accept key calls `launchSelectedGame()`, which takes a lock so a
+double tap cannot start a ROM twice. Pagination is derived from the selection
+(`pageSize` is 12, in a 4×3 grid), so the selected tile is always on the visible
+page.
+
+Imports are limited to `QtQuick 2.0` and `QtQuick.Window 2.15`, both already
+covered by the packages `scripts/linux/install.sh` installs. Keep it that way —
+anything else (notably `QtGraphicalEffects`) needs a matching apt package added
+there, and will otherwise fail only once it reaches the device.
+
+## Assets
+
+Art and fonts live in `pegasus/themes/d2k/assets/`, which must stay inside the
+theme directory because that is what gets junctioned into Pegasus. Static
+ornament exported from Figma is downscaled to roughly twice its on-screen size;
+the full-bleed background is JPEG because it is opaque and photographic. Covers
+are bound from Pegasus metadata instead, and every `Image` that shows box art
+sets `sourceSize` so a 512×460 scan is not decoded at full resolution.
+
+Fonts are the seven Google families the Figma file uses (Chakra Petch, Orbitron,
+Rubik Glitch, Pixelify Sans, Press Start 2P, Bungee Shade, Danfo), bundled as
+static TTF instances with their OFL licences. Qt 5 does not apply variable-font
+axes, so static instances are required — a variable TTF renders at its default
+weight instead of the designed one.
+
+Console artwork is looked up by a D2K console id derived from the Pegasus
+`shortname` through an alias map in `D2KTheme.qml` (`nds` → `ds`, `psx` → `ps1`
+and so on). Carousel art exists for `ds`, `3ds`, `ps1`, `n64` and `music`;
+`dreamcast` and `gamecube` have none yet and render as an empty slot.
 
 ## Library layout
 
@@ -22,10 +69,20 @@ owns its renders, a `metadata.pegasus.txt` file, and `games/<game-id>/` folders
 containing a local `rom.<extension>` and optional `cover.png`. The first
 migrated library is `library/consoles/ds/`; its ROMs remain Git-ignored.
 
-The existing `pegasus/metadata/nds/` metadata stays in place for the current
-Windows preview. Switch Pegasus' game directory to `library/consoles/ds` only
-when the collection-based D2K navigation is implemented, so the same NDS games
-are not indexed twice.
+Collection-based navigation now exists, so that switch has been made:
+`setup.ps1` writes `config/game_dirs.txt` pointing at `library/consoles/ds` and
+removes the old `config/metafiles` junction. Indexing both would list the same
+Nintendo DS games twice. `pegasus/metadata/nds/` is kept only as the Linux
+handoff template and is no longer read on Windows.
+
+Each game in `library/consoles/ds/metadata.pegasus.txt` carries
+`assets.boxFront` and `assets.logo` lines pointing at its local `cover.png` and
+`title.png`. Without them the art on disk is invisible to QML, because Pegasus
+only exposes files it was told about through metadata.
+
+That metadata file holds a Windows `launch:` line, so the Linux install path
+still uses the `.in` template under `pegasus/metadata/nds/`. One metadata file
+cannot serve both platforms; reconcile this during the device handoff.
 
 Game artwork keeps its original box-art proportion. The lower display uses
 fixed square cells and must show it with `Image.PreserveAspectFit`; never crop

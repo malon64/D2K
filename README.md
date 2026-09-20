@@ -37,17 +37,24 @@ The theme uses two Windows preview windows:
 - Lower touch panel: 480×288 preview of the same 800×480 logical layout on a
   4-inch display.
 
-Click a game on the lower panel to update the upper preview, then click
-**PLAY**. Arrow keys select a game and Enter launches it. Edit `theme.qml`,
-then press `F5` to reload it. Details and the future Linux ARM64 handoff are
-in [docs/pegasus-development.md](docs/pegasus-development.md).
+The menu runs boot → console selector → game library. Every choice is on the
+lower panel; the upper panel is a non-interactive showcase that follows the
+selection. On the console selector, the side arrows change console and
+**SELECT CONSOLE** opens it. In the library, touching a tile only selects the
+game — only **LAUNCH** or the accept key starts a ROM. **BACK** returns to the
+consoles, and the side arrows page through the 4×3 grid.
+
+Keyboard: arrows move the selection, `PageUp`/`PageDown` change page, `Enter`
+accepts and `Escape` goes back. Edit any `.qml` file, then press `F5` to reload
+the theme. Details and the future Linux ARM64 handoff are in
+[docs/pegasus-development.md](docs/pegasus-development.md).
 
 ## Nintendo DS smoke test
 
-`setup.ps1` links `pegasus/metadata/nds/` into Scoop's Pegasus metafiles
-directory. The metadata contains Windows-only entries for Zelda: Phantom
-Hourglass, Mario & Luigi: Bowser's Inside Story, and Pokémon Version Diamant.
-They use the configured melonDS build and ROMs in `C:\Users\alexi\Documents\NDS`.
+`setup.ps1` points Pegasus at `library/consoles/ds` through
+`config/game_dirs.txt`, which indexes the full 19-game DS library with its
+cover art. The collection's metadata uses the configured melonDS build and the
+ROMs stored beside each game in the library.
 
 For two-screen game output, copy the Window 0 and Window 1 settings from
 `pegasus/melonds/melonDS.dual-screen.toml` to the active `melonDS.toml`, open
@@ -61,8 +68,8 @@ and 480×288 preview sizes. Use **Alt+F4** to close a game in this preview.
 ## Repository layout
 
 ```text
-pegasus/themes/d2k/  D2K theme source
-pegasus/metadata/nds/ Reserved for future DS metadata
+pegasus/themes/d2k/  D2K theme source, with Figma assets and fonts
+pegasus/metadata/nds/ Linux handoff metadata template
 scripts/windows/     Windows setup and run scripts
 scripts/linux/       Reserved for Linux ARM64 scripts
 docs/                Development notes
