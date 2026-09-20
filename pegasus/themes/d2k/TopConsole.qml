@@ -87,7 +87,6 @@ Item {
         minimumPixelSize: 22
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
     }
 
     // Figma's "image 1" is the shared chrome frame that overlays the console

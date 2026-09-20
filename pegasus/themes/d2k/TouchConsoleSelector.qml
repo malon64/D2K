@@ -54,10 +54,19 @@ Item {
         smooth: true
     }
 
-    // Figma only ever shows short ids here ("DS"). Longer ones such as
-    // DREAMCAST and GAMECUBE overflow the box, so they shrink to fit.
+    Image {
+        x: 193; y: 0; width: 413; height: 413
+        source: "assets/console-frame-front.png"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+    }
+
+    // Figma only ever shows short ids here ("DS"), which sit inside the ring's
+    // clear centre and below the chrome overlay. DREAMCAST and GAMECUBE are
+    // wide enough to reach the ring, so the box is widened (still centred on
+    // 400 as in the design) and the label is drawn above the chrome.
     Text {
-        x: 290; y: 300; width: 220; height: 24
+        x: 190; y: 300; width: 420; height: 24
         text: panel.theme.consoleId(panel.collection).toUpperCase()
         color: panel.theme.limeInk
         font.family: panel.theme.badgeFont
@@ -66,14 +75,6 @@ Item {
         minimumPixelSize: 13
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        elide: Text.ElideRight
-    }
-
-    Image {
-        x: 193; y: 0; width: 413; height: 413
-        source: "assets/console-frame-front.png"
-        fillMode: Image.PreserveAspectFit
-        smooth: true
     }
 
     ControlButton {
