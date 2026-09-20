@@ -41,7 +41,15 @@ Item {
     // Which consoles have artwork in the Figma file. Listing them avoids asking
     // Qt to load images that do not exist, which would log a warning per frame.
     readonly property var carouselArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
-    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "gamecube", "3ds"]
+    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
+
+    // Shorter names for the upper screen, where the full collection name runs
+    // past the glass button. Anything not listed keeps its collection name.
+    readonly property var consoleDisplayNames: ({
+        "dreamcast": "Dreamcast",
+        "gamecube": "Gamecube",
+        "ps1": "Playstation 1"
+    })
 
     readonly property string bodyFont: fontChakraMedium.status === FontLoader.Ready ? fontChakraMedium.name : "Sans"
     readonly property string bodyBoldFont: fontChakraBold.status === FontLoader.Ready ? fontChakraBold.name : "Sans"
@@ -119,6 +127,15 @@ Item {
 
         var shortName = ("" + collection.shortName).toLowerCase()
         return consoleAliases[shortName] !== undefined ? consoleAliases[shortName] : shortName
+    }
+
+    function consoleDisplayName(collection) {
+        if (!collection)
+            return ""
+
+        var id = consoleId(collection)
+        return consoleDisplayNames[id] !== undefined
+               ? consoleDisplayNames[id] : ("" + collection.name)
     }
 
     function consoleAsset(collection, suffix, available) {

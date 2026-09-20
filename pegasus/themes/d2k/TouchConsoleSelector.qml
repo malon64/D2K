@@ -46,8 +46,11 @@ Item {
         smooth: true
     }
 
+    // Both ring assets measure their centre at (400, 205) in panel coordinates,
+    // so a 189x189 tile centres at y = 205 - 94.5. Figma's own frames drift
+    // between y 86 and 126 across the selector states.
     Image {
-        x: 305; y: 116; width: 189; height: 189
+        x: 305; y: 110; width: 189; height: 189
         source: panel.theme.carouselSource(panel.collection)
         visible: source != ""
         fillMode: Image.PreserveAspectFit

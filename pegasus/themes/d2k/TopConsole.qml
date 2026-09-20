@@ -76,13 +76,13 @@ Item {
     // rather than elide.
     Text {
         x: 174; y: 398; width: 461; height: 57
-        text: panel.theme.gradientMarkup(panel.collection
-                                         ? ("" + panel.collection.name).toUpperCase() : "")
+        text: panel.theme.gradientMarkup(
+                  panel.theme.consoleDisplayName(panel.collection).toUpperCase())
         textFormat: Text.StyledText
         color: panel.theme.pearlMist
         font.family: panel.theme.consoleFont
         font.pixelSize: 40
-        font.letterSpacing: 1.6
+        font.letterSpacing: -1
         fontSizeMode: Text.HorizontalFit
         minimumPixelSize: 22
         horizontalAlignment: Text.AlignHCenter
