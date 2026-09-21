@@ -26,6 +26,36 @@ Item {
         color: panel.theme.topBase
     }
 
+    // Call and response between the two corner ornaments: the top-right one
+    // (ornament-12) beats, then the bottom-left one (ornament-05) answers. Same
+    // rhythm as the console screen: a quick "lub-dub" (530 ms) each, laid out in
+    // one 1600 ms cycle -- ask, rest, answer, rest -- inside a single looping
+    // animation so the answer can never drift ahead of the call.
+    property real pulse: 1   // ornament-12
+    property real echo: 1    // ornament-05
+
+    ParallelAnimation {
+        running: true
+        loops: Animation.Infinite
+
+        SequentialAnimation {
+            NumberAnimation { target: panel; property: "pulse"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+            PauseAnimation  { duration: 1070 }
+        }
+
+        SequentialAnimation {
+            PauseAnimation  { duration: 800 }
+            NumberAnimation { target: panel; property: "echo"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+            PauseAnimation  { duration: 270 }
+        }
+    }
+
     Image {
         x: 0; y: 0; width: 800; height: 480
         source: "assets/background.jpg"
@@ -58,6 +88,7 @@ Item {
         source: "assets/ornament-05.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
+        scale: panel.echo
     }
 
     Image {
@@ -72,6 +103,7 @@ Item {
         source: "assets/ornament-12.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
+        scale: panel.pulse
     }
 
     Image {

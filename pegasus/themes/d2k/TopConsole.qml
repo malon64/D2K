@@ -25,6 +25,37 @@ Item {
         color: panel.theme.topBase
     }
 
+    // Call and response: the D2K logo beats, then the orbital ornament answers.
+    // Each beat is a quick "lub-dub" (two small swells, 530 ms); the two are
+    // laid out inside one 1600 ms cycle -- logo, rest, ornament, rest -- and run
+    // in a single looping animation, so the ornament always answers the logo
+    // and the pair can never drift out of order. Scale is about each image's own
+    // centre.
+    property real pulse: 1   // logo
+    property real echo: 1    // ornament
+
+    ParallelAnimation {
+        running: true
+        loops: Animation.Infinite
+
+        SequentialAnimation {
+            NumberAnimation { target: panel; property: "pulse"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "pulse"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+            PauseAnimation  { duration: 1070 }
+        }
+
+        SequentialAnimation {
+            PauseAnimation  { duration: 800 }
+            NumberAnimation { target: panel; property: "echo"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+            NumberAnimation { target: panel; property: "echo"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+            PauseAnimation  { duration: 270 }
+        }
+    }
+
     Image {
         x: 0; y: 0; width: 800; height: 480
         source: "assets/background.jpg"
@@ -37,6 +68,7 @@ Item {
         source: "assets/masthead.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
+        scale: panel.pulse
     }
 
     Text {
@@ -299,6 +331,7 @@ Item {
             width: 181.405
             height: 181.405
             rotation: 20.2
+            scale: panel.echo
             source: "assets/ornament-04.png"
             fillMode: Image.PreserveAspectFit
             smooth: true
@@ -310,18 +343,47 @@ Item {
     // 90deg-rotated in place, but get_design_context's post-rotation bounds
     // (left 708, top 13, 79.663x238.989) are what actually lands on screen,
     // so those are used directly rather than reproducing the rotation.
-    Image {
-        x: 708; y: 13; width: 80; height: 239
-        source: "assets/metallic-strip.png"
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-    }
+    //
+    // The strip and ticket scroll down together as one banner. The pair spans
+    // y 13-445, so scrolling by exactly the panel height (480) and drawing a
+    // second copy one panel height above makes the loop seamless: when the
+    // first copy has left through the bottom, the second is exactly where the
+    // first began. At scroll 0 it is the Figma layout. The panel's own clip cuts
+    // the banner at the screen edges.
+    Item {
+        id: banner
+        width: 800; height: 480
 
-    Image {
-        x: 711; y: 266; width: 74; height: 179
-        source: "assets/vertical-ticket.png"
-        fillMode: Image.PreserveAspectFit
-        smooth: true
+        property real scroll: 0
+
+        NumberAnimation on scroll {
+            from: 0; to: 480
+            duration: 14000
+            loops: Animation.Infinite
+        }
+
+        Repeater {
+            model: 2
+
+            delegate: Item {
+                y: banner.scroll - index * 480
+                width: 800; height: 480
+
+                Image {
+                    x: 708; y: 13; width: 80; height: 239
+                    source: "assets/metallic-strip.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+
+                Image {
+                    x: 711; y: 266; width: 74; height: 179
+                    source: "assets/vertical-ticket.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
+            }
+        }
     }
 
     Image {
