@@ -3,6 +3,7 @@ Video
   WindowWidth: 800
   WindowHeight: 480
   Output: Stretch
+  AspectCorrectionMode: None
   AdaptiveSizing: false
   AutoCentering: true
 General

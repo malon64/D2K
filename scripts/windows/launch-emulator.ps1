@@ -91,6 +91,9 @@ public static class D2KEmulatorWindows
     private static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
 
     [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr window, int command);
+
+    [DllImport("user32.dll")]
     private static extern bool GetClientRect(IntPtr window, out RECT rect);
 
     [DllImport("user32.dll")]
@@ -139,6 +142,7 @@ public static class D2KEmulatorWindows
     private const uint SwpNoZOrder = 0x0004;
     private const uint SwpNoActivate = 0x0010;
     private const uint SwpFrameChanged = 0x0020;
+    private const int SwHide = 0;
 
     private static List<Window> WindowsForProcess(int processId)
     {
@@ -168,6 +172,11 @@ public static class D2KEmulatorWindows
         SetMenu(window.Handle, IntPtr.Zero);
         SetWindowPos(window.Handle, IntPtr.Zero, x, y, PanelWidth, PanelHeight,
                      SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
+    }
+
+    private static void Hide(Window window)
+    {
+        ShowWindow(window.Handle, SwHide);
     }
 
     private static bool Matches(Window window, int x, int y)
@@ -233,6 +242,10 @@ public static class D2KEmulatorWindows
             primary = Largest(primaryCandidates);
         if (primary == null || secondary == null)
             return false;
+
+        foreach (var window in primaryCandidates)
+            if (window.Handle != primary.Handle)
+                Hide(window);
 
         if (!Matches(primary, left, top))
             Frame(primary, left, top);
