@@ -128,11 +128,21 @@ public static class D2KWindows
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern int GetWindowText(IntPtr window, StringBuilder text, int maxCount);
 
-    [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
-    private static extern IntPtr GetWindowLongPtr(IntPtr window, int index);
+    // GetWindowLongPtrW/SetWindowLongPtrW are not exported by the 32-bit
+    // user32.dll at all (on Win32 they are a compile-time macro that expands
+    // to the plain, non-Ptr functions -- there is no such DLL entry point to
+    // call). pegasus-fe.exe is itself a 32-bit executable, so the
+    // powershell.exe it launches is the WOW64-redirected 32-bit PowerShell,
+    // and every call here was throwing "Impossible de trouver le point
+    // d'entree" and silently skipping the whole frame -- the actual cause of
+    // melonDS staying at its small saved size. The plain functions carry a
+    // 32-bit style value regardless of process bitness, so they are correct
+    // (and exported) on both architectures.
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")]
+    private static extern int GetWindowLong(IntPtr window, int index);
 
-    [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
-    private static extern IntPtr SetWindowLongPtr(IntPtr window, int index, IntPtr value);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
+    private static extern int SetWindowLong(IntPtr window, int index, int value);
 
     [DllImport("user32.dll")]
     private static extern bool SetMenu(IntPtr window, IntPtr menu);
@@ -170,7 +180,7 @@ public static class D2KWindows
     private const int Hinge = 32;
 
     private const int GwlStyle = -16;
-    private const long WindowChrome = 0x00CC0000L;
+    private const int WindowChrome = 0x00CC0000;
     private const uint SwpNoZOrder = 0x0004;
     private const uint SwpNoActivate = 0x0010;
     private const uint SwpFrameChanged = 0x0020;
@@ -197,8 +207,8 @@ public static class D2KWindows
 
     private static void Frame(IntPtr window, int x, int y, int width, int height)
     {
-        var style = GetWindowLongPtr(window, GwlStyle).ToInt64() & ~WindowChrome;
-        SetWindowLongPtr(window, GwlStyle, new IntPtr(style));
+        int style = GetWindowLong(window, GwlStyle) & ~WindowChrome;
+        SetWindowLong(window, GwlStyle, style);
         SetMenu(window, IntPtr.Zero);
         SetWindowPos(window, IntPtr.Zero, x, y, width, height, SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
     }
