@@ -102,13 +102,17 @@ Item {
         return "#" + hexByte(stops[last][1]) + hexByte(stops[last][2]) + hexByte(stops[last][3])
     }
 
-    function gradientMarkup(value) {
+    // `visibleCount` reveals only the first N letters (all when omitted) while
+    // each letter keeps the colour it has in the complete string, so a typewriter
+    // reveal does not shift the gradient as it grows.
+    function gradientMarkup(value, visibleCount) {
         var text = "" + (value === undefined || value === null ? "" : value)
         if (!text.length)
             return ""
 
+        var shown = visibleCount === undefined ? text.length : Math.min(text.length, visibleCount)
         var markup = ""
-        for (var i = 0; i < text.length; i++) {
+        for (var i = 0; i < shown; i++) {
             var character = text.charAt(i)
             var glyph = character === "&" ? "&amp;"
                       : character === "<" ? "&lt;"

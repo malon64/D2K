@@ -55,15 +55,47 @@ Item {
         smooth: true
     }
 
+    // On every console change the art shrinks to nothing, swaps, and grows back
+    // (also plays on first appearance, growing in from nothing). `shownArt`
+    // trails the live source so the old console is the one that shrinks.
+    property url shownArt: ""
+
+    onConsoleArtChanged: artSwap.restart()
+
+    Component.onCompleted: {
+        artSwap.restart()
+        startTyping()
+    }
+
+    readonly property url consoleArt: theme.consoleArtSource(collection)
+
+    SequentialAnimation {
+        id: artSwap
+
+        NumberAnimation {
+            target: artImage; property: "scale"
+            to: 0; duration: 150
+            easing.type: Easing.InQuad
+        }
+        ScriptAction { script: panel.shownArt = panel.consoleArt }
+        NumberAnimation {
+            target: artImage; property: "scale"
+            to: 1; duration: 260
+            easing.type: Easing.OutBack
+        }
+    }
+
     // Centred on the chrome frame rather than on Figma's slot: the frame's
     // opaque bounds measure their centre at (399.3, 221.8) in panel
     // coordinates, so a 203x203 render sits at 298, 120.
     Image {
+        id: artImage
         x: 298; y: 120; width: 203; height: 203
-        source: panel.theme.consoleArtSource(panel.collection)
+        source: panel.shownArt
         visible: source != ""
         fillMode: Image.PreserveAspectFit
         smooth: true
+        scale: 0
     }
 
     Image {
@@ -74,41 +106,82 @@ Item {
     }
 
     // Rubik Glitch measures wider in Qt than in Figma, so Figma's 301px box
-    // truncates "NINTENDO DS". The box is widened to the glass button's inner
-    // width, still centred on 404.5, and long console names shrink to fit
+    // truncates "NINTENDO DS". The title area is the glass button's inner
+    // width (461, centred on 404.5) and long console names shrink to fit
     // rather than elide.
     //
+    // The name is typed out letter by letter. Qt has no such effect built in,
+    // so `typed` counts revealed letters and both title layers show only that
+    // many, left-aligned at the x where the finished, centred name would start
+    // -- centring the partial text would make it drift as letters arrive.
+    // Both layers share one fixed pixel size (measured below) so the size does
+    // not jump as the text lengthens either.
+    readonly property string consoleName:
+        theme.consoleDisplayName(collection).toUpperCase()
+
+    property real typed: 0
+
+    // `to` is set here rather than bound: this runs from the change handler,
+    // before a `to: panel.consoleName.length` binding has re-evaluated, so a
+    // binding would still hold the previous console's length and every name
+    // would stop after as many letters as the one before it had.
+    function startTyping() {
+        typeIn.stop()
+        typed = 0
+        typeIn.to = consoleName.length
+        typeIn.duration = Math.max(1, consoleName.length) * 70
+        typeIn.start()
+    }
+
+    onConsoleNameChanged: startTyping()
+
+    // Measures the full name once at 40px to work out the fitted size and width.
+    Text {
+        id: nameSizer
+        visible: false
+        text: panel.consoleName
+        font.family: panel.theme.consoleFont
+        font.pixelSize: 40
+        font.letterSpacing: -1
+    }
+
+    readonly property real nameSize:
+        nameSizer.contentWidth > 461 ? Math.max(22, Math.floor(40 * 461 / nameSizer.contentWidth)) : 40
+    readonly property real nameWidth: nameSizer.contentWidth * nameSize / 40
+    readonly property real nameX: 174 + (461 - Math.min(461, nameWidth)) / 2
+
+    NumberAnimation {
+        id: typeIn
+        target: panel
+        property: "typed"
+        from: 0
+        easing.type: Easing.Linear
+    }
+
     // Figma puts a drop shadow under this title. QML cannot blur without
     // QtGraphicalEffects, so the shadow is a second copy of the same text drawn
     // behind and offset, which lifts the gradient off the glass button.
     Text {
-        x: 174; y: 401; width: 461; height: 57
-        text: panel.theme.consoleDisplayName(panel.collection).toUpperCase()
+        x: panel.nameX; y: 401; height: 57
+        text: panel.consoleName.substring(0, Math.floor(panel.typed))
         color: "#000000"
         opacity: 0.45
         font.family: panel.theme.consoleFont
-        font.pixelSize: 40
+        font.pixelSize: panel.nameSize
         font.letterSpacing: -1
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 22
-        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
 
     Text {
-        x: 174; y: 398; width: 461; height: 57
-        text: panel.theme.gradientMarkup(
-                  panel.theme.consoleDisplayName(panel.collection).toUpperCase())
+        x: panel.nameX; y: 398; height: 57
+        text: panel.theme.gradientMarkup(panel.consoleName, Math.floor(panel.typed))
         textFormat: Text.StyledText
         style: Text.Outline
         styleColor: "#40102040"
         color: panel.theme.pearlMist
         font.family: panel.theme.consoleFont
-        font.pixelSize: 40
+        font.pixelSize: panel.nameSize
         font.letterSpacing: -1
-        fontSizeMode: Text.HorizontalFit
-        minimumPixelSize: 22
-        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
 
