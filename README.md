@@ -33,9 +33,13 @@ and fullscreen off.
 
 The theme uses two Windows preview windows:
 
-- Upper visual panel: 600×360 preview of an 800×480, 5-inch display.
-- Lower touch panel: 480×288 preview of the same 800×480 logical layout on a
-  4-inch display.
+- Upper visual panel: 800×480, matching the Waveshare 5-inch HDMI display.
+- Lower touch panel: 800×480, matching the Waveshare 4-DSI-TOUCH-A rotated to
+  landscape.
+
+Both windows run at the panels' native resolution rather than scaled down, so
+what you read on the desktop is what the device shows. They are stacked and
+centred like the clamshell, and need a desktop at least 1050px tall.
 
 The menu runs boot → console selector → game library. Every choice is on the
 lower panel; the upper panel is a non-interactive showcase that follows the
@@ -62,8 +66,9 @@ a game, arrange the two melonDS windows to match the upper and lower previews,
 then close the primary melonDS window normally to save its local geometry. Do
 not close the second window by itself, as melonDS disables it for the next run.
 The Pegasus launcher re-enables it before every game launch, removes melonDS'
-Windows title bars and menus, and frames the game outputs at the same 600×360
-and 480×288 preview sizes. Use **Alt+F4** to close a game in this preview.
+Windows title bars and menus, and frames the game outputs on exactly the same
+800×480 rectangles as the Pegasus panels. Use **Alt+F4** to close a game in this
+preview.
 
 ## Repository layout
 

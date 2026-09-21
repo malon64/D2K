@@ -73,6 +73,20 @@ public static class D2KWindows
     [DllImport("user32.dll")]
     public static extern bool SetProcessDpiAwarenessContext(IntPtr value);
 
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int index);
+
+    // Mirrors the preview geometry in pegasus/themes/d2k/theme.qml so melonDS
+    // lands on exactly the rectangles Pegasus was using. Both target panels are
+    // 800x480: a Waveshare 5-inch HDMI on top and a 4-DSI-TOUCH-A rotated to
+    // landscape below. These windows are stripped of their chrome, so the
+    // window rectangle is the client area; TitleBar only reserves the space the
+    // Pegasus lower window's caption occupies between the two panels.
+    private const int PanelWidth = 800;
+    private const int PanelHeight = 480;
+    private const int TitleBar = 58;
+    private const int Hinge = 32;
+
     private const int GwlStyle = -16;
     private const long WindowChrome = 0x00CC0000L;
     private const uint SwpNoZOrder = 0x0004;
@@ -112,14 +126,21 @@ public static class D2KWindows
         bool topFound = false;
         bool bottomFound = false;
 
+        int screenWidth = GetSystemMetrics(0);
+        int screenHeight = GetSystemMetrics(1);
+        int stackHeight = PanelHeight * 2 + TitleBar + Hinge;
+        int left = (int)Math.Round((screenWidth - PanelWidth) / 2.0);
+        int top = (int)Math.Round(Math.Max(40.0, (screenHeight - stackHeight) / 2.0));
+        int bottom = top + PanelHeight + TitleBar + Hinge;
+
         foreach (var window in WindowsForProcess(processId)) {
             var title = Title(window);
             if (title.Contains("[w1]")) {
-                Frame(window, 12, 70, 600, 360);
+                Frame(window, left, top, PanelWidth, PanelHeight);
                 topFound = true;
             }
             else if (title.Contains("[w2]")) {
-                Frame(window, 628, 106, 480, 288);
+                Frame(window, left, bottom, PanelWidth, PanelHeight);
                 bottomFound = true;
             }
         }
@@ -130,7 +151,7 @@ public static class D2KWindows
 '@
 
 # Use physical desktop pixels so the two borderless emulator windows match the
-# Pegasus 5-inch (600x360) and 4-inch (480x288) previews.
+# Pegasus 800x480 previews, matching the target Waveshare panels.
 [D2KWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
 
 $process = Start-Process -FilePath $emulator -ArgumentList ('"{0}"' -f $RomPath) -WorkingDirectory $emulatorDir -PassThru

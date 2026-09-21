@@ -119,15 +119,47 @@ FocusScope {
         }
     }
 
+    // Windows preview geometry. Both target panels are 800x480 -- a Waveshare
+    // 5-inch HDMI on top and a 4-DSI-TOUCH-A rotated to landscape below -- so
+    // the preview runs at native size rather than scaled down, and legibility
+    // on the desktop matches the device. Qt sizes and positions the client
+    // area, so no allowance is needed for the title bar itself; titleBar only
+    // reserves room for the lower window's caption between the two panels.
+    // scripts/windows/launch-melonds.ps1 repeats this layout so melonDS lands
+    // on exactly the same rectangles.
+    // previewTitleBar is the measured Windows caption plus border above a
+    // client area (SM_CYCAPTION + SM_CYSIZEFRAME + SM_CXPADDEDBORDER = 58
+    // here); previewHinge is the visible gap left between the two windows.
+    // Adjust both together with launch-melonds.ps1 if the desktop theme
+    // changes. None of this applies on the device, which has no chrome.
+    readonly property int previewPanelWidth: 800
+    readonly property int previewPanelHeight: 480
+    readonly property int previewTitleBar: 58
+    readonly property int previewHinge: 32
+
     Component.onCompleted: {
         if (!hostWindow)
             return
 
         if (Qt.platform.os === "windows") {
-            hostWindow.width = 600
-            hostWindow.height = 360
-            hostWindow.x = 12
-            hostWindow.y = 70
+            var screen = Qt.application.screens[0]
+            var stackHeight = previewPanelHeight * 2 + previewTitleBar + previewHinge
+            var left = Math.round(screen.virtualX + (screen.width - previewPanelWidth) / 2)
+            var top = Math.round(screen.virtualY + Math.max(40, (screen.height - stackHeight) / 2))
+
+            hostWindow.width = previewPanelWidth
+            hostWindow.height = previewPanelHeight
+            hostWindow.x = left
+            hostWindow.y = top
+
+            touchWindow.width = previewPanelWidth
+            touchWindow.height = previewPanelHeight
+            touchWindow.x = left
+            touchWindow.y = top + previewPanelHeight + previewTitleBar + previewHinge
+
+            console.log("D2K preview: screen " + screen.width + "x" + screen.height
+                        + "  top " + left + "," + top
+                        + "  touch " + touchWindow.x + "," + touchWindow.y)
         }
         else if (Qt.application.screens.length >= 2) {
             var upper = Qt.application.screens[0]
@@ -212,10 +244,10 @@ FocusScope {
     Window {
         id: touchWindow
         title: "D2K Touch"
-        width: 480
-        height: 288
-        x: 628
-        y: 106
+        width: root.previewPanelWidth
+        height: root.previewPanelHeight
+        x: 40
+        y: 640
         visible: true
         transientParent: null
         color: d2k.touchBase
