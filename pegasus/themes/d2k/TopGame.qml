@@ -116,8 +116,12 @@ Item {
         elide: Text.ElideRight
     }
 
+    // Figma's own box is 330 wide (node 226:19), but that runs real library
+    // descriptions right up against the panel's decorative inner border --
+    // the prototype's short placeholder text never reached it. Narrowed to
+    // leave a visible margin.
     Text {
-        x: 318; y: 204; width: 330; height: 100
+        x: 318; y: 204; width: 300; height: 100
         text: panel.game ? panel.game.description : ""
         color: panel.theme.bodyInk
         font.family: panel.theme.bodyFont

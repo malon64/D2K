@@ -230,6 +230,18 @@ Item {
         }
     }
 
+    // Figma "Metallic 7" (node 297:8) -- the chevron strip that caps the
+    // vertical ticket below it. Its own layer is authored pre-rotation and
+    // 90deg-rotated in place, but get_design_context's post-rotation bounds
+    // (left 708, top 13, 79.663x238.989) are what actually lands on screen,
+    // so those are used directly rather than reproducing the rotation.
+    Image {
+        x: 708; y: 13; width: 80; height: 239
+        source: "assets/metallic-strip.png"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+    }
+
     Image {
         x: 711; y: 266; width: 74; height: 179
         source: "assets/vertical-ticket.png"
