@@ -1,0 +1,27 @@
+[Instance0.Window0]
+ShowOSD = true
+ScreenLayout = 0
+Geometry = ""
+ScreenRotation = 0
+ScreenAspectBot = 0
+ScreenGap = 0
+ScreenSwap = false
+ScreenSizing = 4
+IntegerScaling = false
+ScreenAspectTop = 0
+ScreenFilter = false
+Enabled = true
+
+[Instance0.Window1]
+ShowOSD = true
+ScreenLayout = 0
+Geometry = ""
+ScreenRotation = 0
+ScreenAspectBot = 0
+ScreenGap = 0
+ScreenSwap = false
+ScreenSizing = 5
+IntegerScaling = false
+ScreenAspectTop = 0
+ScreenFilter = false
+Enabled = true

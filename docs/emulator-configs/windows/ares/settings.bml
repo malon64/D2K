@@ -1,0 +1,8 @@
+Video
+  NativeFullScreen: false
+  WindowWidth: 800
+  WindowHeight: 480
+  Output: Stretch
+  AdaptiveSizing: false
+General
+  ShowStatusBar: false
