@@ -181,7 +181,7 @@ FocusScope {
     // it below and restored on the next boot instead of being kept as
     // in-memory-only state.
     //
-    // Ending a game is therefore entirely scripts/windows/launch-melonds.ps1's
+    // Ending a DS game is therefore entirely scripts/windows/launch-emulator.ps1's
     // job, not this theme's: it is the only D2K code alive for the whole
     // session. The physical Home button (ESP32, not yet built) will signal it
     // directly; until then dropping a file at
@@ -207,7 +207,7 @@ FocusScope {
     // previewTitleBar is the measured Windows caption plus border above a
     // client area (SM_CYCAPTION + SM_CYSIZEFRAME + SM_CXPADDEDBORDER = 58
     // here); previewHinge is the visible gap left between the two windows.
-    // Adjust both together with launch-melonds.ps1 if the desktop theme
+    // Adjust both together with launch-emulator.ps1 if the desktop theme
     // changes. None of this applies on the device, which has no chrome.
     readonly property int previewPanelWidth: 800
     readonly property int previewPanelHeight: 480

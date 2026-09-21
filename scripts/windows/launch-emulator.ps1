@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('dreamcast', 'ps1', 'n64', 'gamecube', '3ds')]
+    [ValidateSet('ds', 'dreamcast', 'ps1', 'n64', 'gamecube', '3ds')]
     [string]$Console,
 
     [string]$RomPath,
@@ -22,6 +22,7 @@ function Get-EmulatorArguments {
     # argument makes Pegasus paths with spaces safe for every supported emulator.
     $quotedRom = '"{0}"' -f $Rom
     switch ($System) {
+        'ds' { return $quotedRom }
         'dreamcast' { return $quotedRom }
         'ps1' { return "-batch -fastboot -- $quotedRom" }
         'n64' { return ('--system "Nintendo 64" --no-file-prompt {0}' -f $quotedRom) }
@@ -31,10 +32,12 @@ function Get-EmulatorArguments {
 }
 
 if (-not $SelfTest -and (-not $Console -or -not $RomPath)) {
-    throw 'Usage: launch-emulator.ps1 -Console dreamcast|ps1|n64|gamecube|3ds -RomPath <path>'
+    throw 'Usage: launch-emulator.ps1 -Console ds|dreamcast|ps1|n64|gamecube|3ds -RomPath <path>'
 }
 
+$melonDSDir = 'C:\Users\alexi\Documents\NDS\melonDS-1.1-windows-x86_64'
 $emulators = @{
+    ds = Join-Path $melonDSDir 'melonDS.exe'
     dreamcast = 'C:\Users\alexi\Downloads\flycast-master\build\Debug\flycast.exe'
     ps1 = Join-Path $env:LOCALAPPDATA 'Programs\DuckStation\duckstation-qt-x64-ReleaseLTCG.exe'
     n64 = 'C:\Program Files (x86)\ares-v148\ares.exe'
@@ -54,6 +57,40 @@ if (-not (Test-Path -LiteralPath $logDir)) {
 function Write-Log {
     param([string]$Message)
     Add-Content -LiteralPath $logPath -Value ("{0:yyyy-MM-ddTHH:mm:ss.fff}  {1}" -f (Get-Date), $Message)
+}
+
+function Reset-MelonDSWindowGeometry {
+    param([string]$ConfigPath)
+
+    $lines = Get-Content -LiteralPath $ConfigPath
+    $section = ''
+    $window1Seen = $false
+    $window1EnabledSeen = $false
+
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^\[(.+)\]\s*$') {
+            $section = $Matches[1]
+            continue
+        }
+
+        if ($section -eq 'Instance0.Window1') {
+            $window1Seen = $true
+            if ($lines[$i] -match '^Enabled\s*=\s*\w+\s*$') {
+                $window1EnabledSeen = $true
+                $lines[$i] = 'Enabled = true'
+            }
+        }
+
+        if ($section -match '^Instance0\.Window[0-3]$' -and $lines[$i] -match '^Geometry\s*=') {
+            $lines[$i] = 'Geometry = ""'
+        }
+    }
+
+    if (-not $window1Seen -or -not $window1EnabledSeen) {
+        throw "[Instance0.Window1] with an Enabled setting was not found in $ConfigPath"
+    }
+
+    [System.IO.File]::WriteAllLines($ConfigPath, $lines, [System.Text.UTF8Encoding]::new($false))
 }
 
 Add-Type @'
@@ -221,6 +258,33 @@ public static class D2KEmulatorWindows
         return Matches(window, left, top, PanelWidth, height);
     }
 
+    public static bool CheckMelonDSLayout(int processId)
+    {
+        int left, top, bottom;
+        Layout(out left, out top, out bottom);
+        bool topFound = false;
+        bool bottomFound = false;
+        bool stable = true;
+
+        foreach (var window in WindowsForProcess(processId)) {
+            if (window.Title.IndexOf("[w1]", StringComparison.OrdinalIgnoreCase) >= 0) {
+                topFound = true;
+                if (!Matches(window, left, top, PanelWidth, PanelHeight)) {
+                    stable = false;
+                    Frame(window, left, top, PanelWidth, PanelHeight);
+                }
+            } else if (window.Title.IndexOf("[w2]", StringComparison.OrdinalIgnoreCase) >= 0) {
+                bottomFound = true;
+                if (!Matches(window, left, bottom, PanelWidth, PanelHeight)) {
+                    stable = false;
+                    Frame(window, left, bottom, PanelWidth, PanelHeight);
+                }
+            }
+        }
+
+        return topFound && bottomFound && stable;
+    }
+
     public static bool CheckAzaharLayout(int processId)
     {
         int left, top, bottom;
@@ -260,6 +324,9 @@ public static class D2KEmulatorWindows
 '@
 
 if ($SelfTest) {
+    if ((Get-EmulatorArguments -System ds -Rom 'C:\Games\Test Game.nds') -ne '"C:\Games\Test Game.nds"') {
+        throw 'DS argument construction failed.'
+    }
     if ((Get-EmulatorArguments -System dreamcast -Rom 'C:\Games\Test Game.chd') -ne '"C:\Games\Test Game.chd"') {
         throw 'Dreamcast argument construction failed.'
     }
@@ -298,6 +365,16 @@ try {
         throw "ROM was not found at $RomPath"
     }
 
+    if ($Console -eq 'ds') {
+        try {
+            Reset-MelonDSWindowGeometry (Join-Path $melonDSDir 'melonDS.toml')
+            Write-Log 'melonDS config reset'
+        }
+        catch {
+            Write-Log "melonDS config reset FAILED (non-fatal): $($_.Exception.Message)"
+        }
+    }
+
     try {
         [D2KEmulatorWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
     }
@@ -321,7 +398,10 @@ try {
     while (-not $process.HasExited) {
         if (-not $layoutSettled) {
             try {
-                $stable = if ($Console -eq '3ds') {
+                $stable = if ($Console -eq 'ds') {
+                    [D2KEmulatorWindows]::CheckMelonDSLayout($process.Id)
+                }
+                elseif ($Console -eq '3ds') {
                     [D2KEmulatorWindows]::CheckAzaharLayout($process.Id)
                 }
                 else {

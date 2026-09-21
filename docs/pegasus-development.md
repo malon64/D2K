@@ -15,7 +15,7 @@ coordinates; at native size that scale is exactly 1.
 
 The preview stacks the two windows centred like the clamshell. `theme.qml`
 computes the layout from the primary screen and
-`scripts/windows/launch-melonds.ps1` repeats the same formula, so the two must
+`scripts/windows/launch-emulator.ps1 -Console ds` repeats the same formula, so the two must
 be edited together. It needs a desktop at least 1050px tall.
 
 ## Theme structure
@@ -113,7 +113,7 @@ Windows configuration at
 `C:\Users\alexi\Documents\NDS\melonDS-1.1-windows-x86_64\melonDS.toml`, then
 arrange the two windows and close melonDS normally to save machine-local
 geometry. Do not close Window 1 by itself: melonDS records that as disabled
-for the next launch. `scripts/windows/launch-melonds.ps1` restores its enabled
+for the next launch. `scripts/windows/launch-emulator.ps1 -Console ds` restores its enabled
 setting before Pegasus starts a game. It also displays the top and bottom game
 windows without Windows chrome, on exactly the same 800×480 rectangles as the
 Pegasus panels: both files derive the layout from the same constants, so the
@@ -144,7 +144,7 @@ Practical consequences:
 - **No code in `theme.qml` can run while a game plays.** There is nothing to
   hide, nothing to restore, and no signal to listen for — the theme instance
   is simply gone. Ending a game and returning to the menu is entirely
-  `scripts/windows/launch-melonds.ps1`'s job, since it is the only D2K code
+  `scripts/windows/launch-emulator.ps1 -Console ds`'s job, since it is the only D2K code
   alive for the whole session.
 - **`api.memory` is the only channel that survives.** It is written to
   `config/theme_settings/d2k.json` outside the QML engine, so it is how state
@@ -158,13 +158,13 @@ Practical consequences:
   restart the console" always plays the boot screen. A future Linux startup
   script needs the same clear (or an equivalent full-state reset) — it is
   presently Windows-only.
-- **A failure inside `launch-melonds.ps1` must never end the session early.**
+- **A failure inside `launch-emulator.ps1 -Console ds` must never end the session early.**
   Its own lifetime is what Pegasus is timing the game against: if it exits
   before melonDS does, Pegasus treats the game as over and rebuilds the menu
   on top of a still-running emulator. Every non-essential phase (config
   patching, window framing) is wrapped so it can fail without ending the
   script, and the script always exits `0`. It logs its own run to
-  `%LOCALAPPDATA%\D2K\launch-melonds.log`, which is the place to look first
+  `%LOCALAPPDATA%\D2K\launch-ds.log`, which is the place to look first
   when a launch misbehaves — Pegasus forwards the child process's stderr to
   its own console rather than into `lastrun.log`, so that log is otherwise
   the only record.
@@ -174,7 +174,7 @@ Practical consequences:
 There is no hardware yet, so ending a game today is `Alt+F4`, same as
 before. The eventual Home button (ESP32, not yet built) is expected to end
 the game the same way anything else would: by asking
-`launch-melonds.ps1` to close melonDS. The seam for that is a signal file —
+`launch-emulator.ps1 -Console ds` to close melonDS. The seam for that is a signal file —
 dropping any file at `%LOCALAPPDATA%\D2K\home-request` makes the script close
 melonDS gracefully (falling back to a kill) within its next poll tick, after
 which Pegasus rebuilds and the menu resumes on the same game. This can be

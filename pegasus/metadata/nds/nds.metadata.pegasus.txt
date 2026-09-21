@@ -1,7 +1,6 @@
 collection: Nintendo DS
 shortname: nds
-launch: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/alexi/Repos/D2K/scripts/windows/launch-melonds.ps1" "{file.path}"
-workdir: C:/Users/alexi/Documents/NDS/melonDS-1.1-windows-x86_64
+launch: powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:/Users/alexi/Repos/D2K/scripts/windows/launch-emulator.ps1" -Console ds -RomPath "{file.path}"
 
 game: The Legend of Zelda: Phantom Hourglass
 file: C:/Users/alexi/Documents/NDS/Legend of Zelda, The - Phantom Hourglass (Europe) (En,Fr,De,Es,It)/Legend of Zelda, The - Phantom Hourglass (Europe) (En,Fr,De,Es,It).nds
