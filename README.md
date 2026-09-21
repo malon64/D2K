@@ -38,9 +38,9 @@ and stops it when Pegasus closes. Check the integration without opening Pegasus:
 
 ## Raspberry Pi 5 setup
 
-The Pi target is Debian ARM64 (including Raspberry Pi OS 64-bit) and currently
-runs the full D2K library UI with Nintendo DS launching through melonDS. The
-other collections stay browse-only until their emulator work begins.
+The Pi target is Debian ARM64 (including Raspberry Pi OS 64-bit) and runs all
+six D2K collections: melonDS (DS), Flycast (Dreamcast), DuckStation (PS1),
+ares (N64), Dolphin (GameCube), and Azahar (3DS).
 
 Clone this repository on the Pi as `alex` at `/home/alex/D2K`, then copy the
 private library one way from the Windows workspace before installing. The
@@ -51,9 +51,10 @@ rsync -a --delete /mnt/c/Users/alexi/Repos/D2K/library/ alex@192.168.1.66:/home/
 ssh alex@192.168.1.66 'cd /home/alex/D2K && ./scripts/linux/install.sh'
 ```
 
-The installer builds the pinned Pegasus revision, installs MPD and the ARM64
-melonDS release, generates the Pi-local DS launch metadata, and adds D2K to
-Alex's graphical-session autostart. Check music without opening Pegasus with:
+The installer builds the pinned Pegasus revision, installs native ARM64
+emulators and the required AppImages/Flatpaks, generates Pi-local launch
+metadata, and adds D2K to Alex's graphical-session autostart. Check the
+launcher and music paths without opening Pegasus with:
 
 ```bash
 ./scripts/linux/smoke-test.sh

@@ -1,6 +1,6 @@
 collection: Nintendo DS
 shortname: nds
-launch: "@REPO@/scripts/linux/launch-melonds.sh" "{file.path}"
+launch: "@REPO@/scripts/linux/launch-emulator.sh" ds "{file.path}"
 workdir: @ROM_DIR@
 
 game: The Legend of Zelda: Phantom Hourglass

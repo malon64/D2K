@@ -5,9 +5,11 @@ emulator once, then merge the matching template into its generated config.
 They deliberately exclude BIOS locations, game folders, controllers, analytics
 IDs, recent games, and saved desktop positions.
 
-The Windows launcher still sets the final 800x480 D2K window rectangles. The
-templates provide the emulator-side defaults and are the portable reference for
-a later Linux setup; config locations vary by package and platform.
+Both launchers set the final D2K window rectangles. Linux uses native Debian
+packages for ares and Dolphin, ARM64 AppImages for melonDS and DuckStation,
+and ARM64 Flathub packages for Flycast and Azahar. The Linux installer merges
+the display overlays into each Pi-local configuration. DuckStation is the
+exception: it preserves Alex's setup and changes only its 800×480 window size.
 
 | Emulator | Template |
 | --- | --- |
