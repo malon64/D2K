@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Start', 'Pause', 'Resume', 'Stop', 'SmokeTest')]
+    [ValidateSet('Prepare', 'Boot', 'Start', 'Pause', 'Resume', 'Stop', 'SmokeTest')]
     [string]$Action
 )
 
@@ -53,7 +53,10 @@ function Get-MpdStatus {
 }
 
 function Fade-MpdVolume {
-    param([int]$Target)
+    param(
+        [int]$Target,
+        [int]$DurationMilliseconds = 1500
+    )
 
     $status = Get-MpdStatus
     $current = if ($status.ContainsKey('volume')) { [int]$status['volume'] } else { 100 }
@@ -62,7 +65,7 @@ function Fade-MpdVolume {
     for ($step = 1; $step -le 5; $step++) {
         $volume = [Math]::Round($current + ($Target - $current) * $step / 5)
         Invoke-Mpd @("setvol $volume") | Out-Null
-        Start-Sleep -Milliseconds 300
+        Start-Sleep -Milliseconds ([Math]::Max(1, [Math]::Round($DurationMilliseconds / 5)))
     }
 }
 
@@ -106,6 +109,8 @@ function Quote-Mpd {
 }
 
 function Start-D2KMpd {
+    param([switch]$Muted)
+
     if (-not (Test-Path -LiteralPath $mpd -PathType Leaf)) { throw 'MPD is not installed. Run: scoop install mpd' }
     $tracks = Get-PlaylistTracks
     New-Item -ItemType Directory -Path $stateDirectory -Force | Out-Null
@@ -141,19 +146,12 @@ function Start-D2KMpd {
     } while ([DateTime]::UtcNow -lt $deadline)
     if ([DateTime]::UtcNow -ge $deadline) { throw 'MPD did not become ready within 5 seconds.' }
 
-    Invoke-Mpd @('update') | Out-Null
-    $deadline = [DateTime]::UtcNow.AddSeconds(30)
-    do {
-        Start-Sleep -Milliseconds 200
-        $status = Get-MpdStatus
-    } while ($status.ContainsKey('updating_db') -and [DateTime]::UtcNow -lt $deadline)
-    if ($status.ContainsKey('updating_db')) { throw 'MPD did not finish indexing the playlist within 30 seconds.' }
-
     $commands = @('clear')
     foreach ($track in $tracks) { $commands += 'add ' + (Quote-Mpd $track.Replace('\', '/')) }
     $commands += 'random 1', 'repeat 1', 'single 0', 'crossfade 5', 'setvol 0', 'play'
     Invoke-Mpd $commands | Out-Null
-    Fade-MpdVolume 100
+    if ($Muted) { Invoke-Mpd @('pause 1') | Out-Null }
+    else { Fade-MpdVolume 100 }
 }
 
 function Stop-D2KMpd {
@@ -170,6 +168,8 @@ function Stop-D2KMpd {
 }
 
 switch ($Action) {
+    'Prepare' { Start-D2KMpd -Muted }
+    'Boot' { Invoke-Mpd @('pause 0') | Out-Null; Fade-MpdVolume 100 300 }
     'Start' { Start-D2KMpd }
     'Pause' { Fade-MpdVolume 0; Invoke-Mpd @('pause 1') | Out-Null }
     'Resume' { Invoke-Mpd @('pause 0') | Out-Null; Fade-MpdVolume 100 }
