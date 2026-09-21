@@ -8,6 +8,9 @@ FocusScope {
 
     property string navState: "boot"
     property int consoleIndex: 0
+
+    // Direction of the last console change: +1 for next, -1 for previous.
+    property int consoleStep: 1
     property int gameIndex: 0
     property bool launching: false
     property var orderedCollections: []
@@ -97,7 +100,18 @@ FocusScope {
             return
 
         navigationSound.play()
-        consoleIndex = (index + orderedCollections.length) % orderedCollections.length
+
+        // The selector slides its console art sideways, and the direction has
+        // to come from the press rather than from the resulting index: the
+        // ends of the list wrap around, so the index alone would send the last
+        // -> first step scrolling backwards through the whole carousel.
+        // Assigned before consoleIndex so the panels always see the step that
+        // belongs to the change they are about to render.
+        var wrapped = (index + orderedCollections.length) % orderedCollections.length
+        if (wrapped !== consoleIndex)
+            consoleStep = index > consoleIndex ? 1 : -1
+
+        consoleIndex = wrapped
         api.memory.set("d2kConsole", d2k.consoleId(currentCollection))
     }
 
@@ -373,6 +387,7 @@ FocusScope {
             transformOrigin: Item.TopLeft
             navState: root.navState
             collection: root.currentCollection
+            consoleStep: root.consoleStep
             games: root.games
             gameCount: root.gameCount
             gameIndex: root.gameIndex

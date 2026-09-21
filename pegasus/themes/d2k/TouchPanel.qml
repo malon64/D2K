@@ -8,6 +8,7 @@ Item {
     property var theme
     property string navState: "boot"
     property var collection
+    property int consoleStep: 1
     property var games
     property int gameCount: 0
     property int gameIndex: 0
@@ -43,6 +44,7 @@ Item {
         TouchConsoleSelector {
             theme: panel.theme
             collection: panel.collection
+            consoleStep: panel.consoleStep
 
             onPrevious: panel.previousConsole()
             onNext: panel.nextConsole()

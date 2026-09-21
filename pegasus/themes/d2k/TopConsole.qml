@@ -199,8 +199,10 @@ Item {
 
     // Figma sizes this box for the single-digit prototype value. Keep its
     // centre on 539 but widen it so real library counts stay inside the badge.
+    // Raised 2px from Figma's y 80: the count font's digits sit low in their
+    // line box, so the box centre is not the glyph centre.
     Text {
-        x: 507; y: 80; width: 64; height: 35
+        x: 507; y: 78; width: 64; height: 35
         text: panel.gameCount
         color: panel.theme.countInk
         font.family: panel.theme.countFont
