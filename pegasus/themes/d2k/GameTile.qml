@@ -18,11 +18,50 @@ Item {
 
     Image {
         anchors.fill: parent
-        source: tile.selected ? "assets/tile-frame-selected.png" : "assets/tile-frame.png"
+        source: "assets/tile-frame.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
         sourceSize.width: 216
         sourceSize.height: 216
+    }
+
+    // The selected frame pulses over the normal one. It never fades out
+    // entirely: the art direction requires the focus to stay readable without
+    // depending on animation, so the selected artwork is always at least
+    // partly on screen.
+    Image {
+        id: selectedFrame
+        anchors.fill: parent
+        source: "assets/tile-frame-selected.png"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        sourceSize.width: 216
+        sourceSize.height: 216
+        visible: tile.selected
+        opacity: 1
+
+        onVisibleChanged: if (!visible) opacity = 1
+
+        SequentialAnimation {
+            running: tile.selected
+            loops: Animation.Infinite
+
+            NumberAnimation {
+                target: selectedFrame
+                property: "opacity"
+                to: 0.3
+                duration: 520
+                easing.type: Easing.InOutQuad
+            }
+
+            NumberAnimation {
+                target: selectedFrame
+                property: "opacity"
+                to: 1.0
+                duration: 520
+                easing.type: Easing.InOutQuad
+            }
+        }
     }
 
     MouseArea {

@@ -5,8 +5,19 @@ Item {
 
     property var game
 
-    readonly property url coverSource: game && game.assets && game.assets.boxFront
-                                       ? game.assets.boxFront : ""
+    // The upper screen prefers the game's title screen over its box art; the
+    // grid tiles keep the box art. Falls back either way when only one exists.
+    property bool preferTitle: false
+
+    readonly property url coverSource: {
+        if (!game || !game.assets)
+            return ""
+
+        if (preferTitle && game.assets.logo)
+            return game.assets.logo
+
+        return game.assets.boxFront ? game.assets.boxFront : ""
+    }
 
     Image {
         anchors.fill: parent

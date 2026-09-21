@@ -55,8 +55,11 @@ Item {
         smooth: true
     }
 
+    // Centred on the chrome frame rather than on Figma's slot: the frame's
+    // opaque bounds measure their centre at (399.3, 221.8) in panel
+    // coordinates, so a 203x203 render sits at 298, 120.
     Image {
-        x: 286; y: 110; width: 203; height: 203
+        x: 298; y: 120; width: 203; height: 203
         source: panel.theme.consoleArtSource(panel.collection)
         visible: source != ""
         fillMode: Image.PreserveAspectFit

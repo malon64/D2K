@@ -50,6 +50,7 @@ Item {
     CoverArt {
         x: 157; y: 121; width: 142; height: 142
         game: panel.game
+        preferTitle: true
     }
 
     Image {
