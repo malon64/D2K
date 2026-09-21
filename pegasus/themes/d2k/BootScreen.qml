@@ -22,7 +22,6 @@ Item {
     }
 
     Image {
-        id: masthead
         visible: !boot.touchVariant
         anchors.centerIn: parent
         width: 430
@@ -30,14 +29,6 @@ Item {
         source: "assets/masthead.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
-        Component.onCompleted: {
-            if (status === Image.Ready)
-                api.memory.set("d2kMusicReady", true)
-        }
-        onStatusChanged: {
-            if (status === Image.Ready)
-                api.memory.set("d2kMusicReady", true)
-        }
     }
 
     Text {

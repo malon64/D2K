@@ -55,7 +55,7 @@ function Get-MpdStatus {
 function Fade-MpdVolume {
     param(
         [int]$Target,
-        [int]$DurationMilliseconds = 1500
+        [int]$DurationMilliseconds = 600
     )
 
     $status = Get-MpdStatus

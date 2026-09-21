@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Window 2.15
+import QtMultimedia 5.9
 
 FocusScope {
     id: root
@@ -11,6 +12,7 @@ FocusScope {
     property bool launching: false
     property var orderedCollections: []
     property var hostWindow: Window.window
+    readonly property real soundEffectVolume: 0.75
 
     readonly property var currentCollection: orderedCollections.length > consoleIndex
                                              ? orderedCollections[consoleIndex] : null
@@ -21,6 +23,42 @@ FocusScope {
     readonly property int pageIndex: Math.floor(gameIndex / d2k.pageSize)
 
     D2KTheme { id: d2k }
+
+    SoundEffect {
+        id: navigationSound
+        source: "assets/sound-effects/MNT_YTK_fx_reflect.wav"
+        volume: root.soundEffectVolume
+    }
+
+    SoundEffect {
+        id: backSound
+        source: "assets/sound-effects/MNT_YTK_drums_perc_blooper.wav"
+        volume: 1.0
+    }
+
+    SoundEffect {
+        id: consoleSound
+        source: "assets/sound-effects/ESM_Mellow_Message_Ping_Notification_Synth_Electronic_Cartoon.wav"
+        volume: 1.0
+    }
+
+    SoundEffect {
+        id: gameSound
+        source: "assets/sound-effects/MNT_YTK_ui_button.wav"
+        volume: root.soundEffectVolume
+    }
+
+    SoundEffect {
+        id: launchSound
+        source: "assets/sound-effects/MNT_YTK_fx_course_clear_C.wav"
+        volume: root.soundEffectVolume
+    }
+
+    SoundEffect {
+        id: bootSound
+        source: "assets/sound-effects/MNT_YTK_ui_console_awake.wav"
+        volume: root.soundEffectVolume
+    }
 
     function rebuildCollections() {
         var list = []
@@ -58,6 +96,7 @@ FocusScope {
         if (!orderedCollections.length)
             return
 
+        navigationSound.play()
         consoleIndex = (index + orderedCollections.length) % orderedCollections.length
         api.memory.set("d2kConsole", d2k.consoleId(currentCollection))
     }
@@ -66,6 +105,7 @@ FocusScope {
         if (!currentCollection || !gameCount)
             return
 
+        consoleSound.play()
         var saved = api.memory.get("d2kGame:" + d2k.consoleId(currentCollection))
         gameIndex = (typeof saved === "number" && saved >= 0 && saved < gameCount) ? saved : 0
         navState = "games"
@@ -85,6 +125,7 @@ FocusScope {
         if (!gameCount)
             return
 
+        navigationSound.play()
         selectGame(gameIndex + delta * d2k.pageSize)
     }
 
@@ -92,18 +133,21 @@ FocusScope {
         if (launching || !selectedGame)
             return
 
+        api.memory.set("d2kMusicLaunch", Date.now())
+        launchSound.play()
         launching = true
         launchGuard.restart()
     }
 
     function backToCollections() {
+        backSound.play()
         navState = "consoles"
         api.memory.set("d2kNav", "consoles")
     }
 
     Timer {
         id: launchGuard
-        interval: 240
+        interval: 1350 // The launch effect is 1310 ms; leave time for its ending before teardown.
         onTriggered: {
             root.selectedGame.launch()
         }
@@ -133,11 +177,12 @@ FocusScope {
 
     Timer {
         id: bootSequence
-        interval: 900
+        interval: 2050 // The boot effect is 2000 ms; keep the logo visible through its ending.
         running: true
         onTriggered: {
             root.rebuildCollections()
             root.restoreConsole()
+            api.memory.set("d2kMusicReady", true)
             root.navState = "consoles"
         }
     }
@@ -161,42 +206,41 @@ FocusScope {
     readonly property int previewHinge: 32
 
     Component.onCompleted: {
-        if (!hostWindow)
-            return
+        if (hostWindow) {
+            if (Qt.platform.os === "windows") {
+                var screen = Qt.application.screens[0]
+                var stackHeight = previewPanelHeight * 2 + previewTitleBar + previewHinge
+                var left = Math.round(screen.virtualX + (screen.width - previewPanelWidth) / 2)
+                var top = Math.round(screen.virtualY + Math.max(40, (screen.height - stackHeight) / 2))
 
-        if (Qt.platform.os === "windows") {
-            var screen = Qt.application.screens[0]
-            var stackHeight = previewPanelHeight * 2 + previewTitleBar + previewHinge
-            var left = Math.round(screen.virtualX + (screen.width - previewPanelWidth) / 2)
-            var top = Math.round(screen.virtualY + Math.max(40, (screen.height - stackHeight) / 2))
+                hostWindow.width = previewPanelWidth
+                hostWindow.height = previewPanelHeight
+                hostWindow.x = left
+                hostWindow.y = top
 
-            hostWindow.width = previewPanelWidth
-            hostWindow.height = previewPanelHeight
-            hostWindow.x = left
-            hostWindow.y = top
+                touchWindow.width = previewPanelWidth
+                touchWindow.height = previewPanelHeight
+                touchWindow.x = left
+                touchWindow.y = top + previewPanelHeight + previewTitleBar + previewHinge
 
-            touchWindow.width = previewPanelWidth
-            touchWindow.height = previewPanelHeight
-            touchWindow.x = left
-            touchWindow.y = top + previewPanelHeight + previewTitleBar + previewHinge
-
-            console.log("D2K preview: screen " + screen.width + "x" + screen.height
-                        + "  top " + left + "," + top
-                        + "  touch " + touchWindow.x + "," + touchWindow.y)
-        }
-        else if (Qt.application.screens.length >= 2) {
-            var upper = Qt.application.screens[0]
-            var lower = Qt.application.screens[1]
-            hostWindow.screen = upper
-            hostWindow.x = upper.virtualX
-            hostWindow.y = upper.virtualY
-            hostWindow.width = upper.width
-            hostWindow.height = upper.height
-            touchWindow.screen = lower
-            touchWindow.x = lower.virtualX
-            touchWindow.y = lower.virtualY
-            touchWindow.width = lower.width
-            touchWindow.height = lower.height
+                console.log("D2K preview: screen " + screen.width + "x" + screen.height
+                            + "  top " + left + "," + top
+                            + "  touch " + touchWindow.x + "," + touchWindow.y)
+            }
+            else if (Qt.application.screens.length >= 2) {
+                var upper = Qt.application.screens[0]
+                var lower = Qt.application.screens[1]
+                hostWindow.screen = upper
+                hostWindow.x = upper.virtualX
+                hostWindow.y = upper.virtualY
+                hostWindow.width = upper.width
+                hostWindow.height = upper.height
+                touchWindow.screen = lower
+                touchWindow.x = lower.virtualX
+                touchWindow.y = lower.virtualY
+                touchWindow.width = lower.width
+                touchWindow.height = lower.height
+            }
         }
 
         // Resume where the last game left off. run.ps1 clears d2kNav on every
@@ -219,6 +263,9 @@ FocusScope {
             }
 
             bootSequence.stop()
+        }
+        else {
+            bootSound.play()
         }
     }
 
@@ -244,18 +291,22 @@ FocusScope {
 
         if (event.key === Qt.Key_Left) {
             event.accepted = true
+            navigationSound.play()
             selectGame(gameIndex - 1)
         }
         else if (event.key === Qt.Key_Right) {
             event.accepted = true
+            navigationSound.play()
             selectGame(gameIndex + 1)
         }
         else if (event.key === Qt.Key_Up) {
             event.accepted = true
+            navigationSound.play()
             selectGame(gameIndex - d2k.gridColumns)
         }
         else if (event.key === Qt.Key_Down) {
             event.accepted = true
+            navigationSound.play()
             selectGame(gameIndex + d2k.gridColumns)
         }
         else if (event.key === Qt.Key_PageUp) {
@@ -313,7 +364,10 @@ FocusScope {
             onPreviousConsole: root.selectConsole(root.consoleIndex - 1)
             onNextConsole: root.selectConsole(root.consoleIndex + 1)
             onOpenConsole: root.openConsole()
-            onChooseGame: root.selectGame(index)
+            onChooseGame: {
+                gameSound.play()
+                root.selectGame(index)
+            }
             onStepPage: root.stepPage(delta)
             onLaunch: root.launchSelectedGame()
             onBack: root.backToCollections()

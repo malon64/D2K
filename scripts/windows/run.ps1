@@ -14,7 +14,7 @@ if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
 # script runs exactly once per power-on, so it is where that key is cleared.
 # A JSON round trip is used rather than a text/regex edit, which is what
 # previously corrupted melonDS.toml -- clearing this must never risk the rest
-# of the saved state (d2kConsole, d2kGame:<id>, d2kMusicReady), and must never block
+# of the saved state (d2kConsole, d2kGame:<id>, d2kMusicReady, d2kMusicLaunch), and must never block
 # launching Pegasus if anything here goes wrong.
 $themeSettingsPath = Join-Path $env:USERPROFILE 'scoop/apps/pegasus/current/config/theme_settings/d2k.json'
 if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
@@ -27,6 +27,10 @@ if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
         }
         if ($settings.PSObject.Properties.Match('d2kMusicReady').Count -gt 0) {
             $settings.PSObject.Properties.Remove('d2kMusicReady')
+            $changed = $true
+        }
+        if ($settings.PSObject.Properties.Match('d2kMusicLaunch').Count -gt 0) {
+            $settings.PSObject.Properties.Remove('d2kMusicLaunch')
             $changed = $true
         }
         if ($changed) {
@@ -48,6 +52,16 @@ function Test-D2KMusicReady {
     catch { return $false }
 }
 
+function Get-D2KMusicLaunch {
+    try {
+        if (-not (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf)) { return $null }
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        if ($settings.PSObject.Properties.Match('d2kMusicLaunch').Count -eq 0) { return $null }
+        return $settings.d2kMusicLaunch
+    }
+    catch { return $null }
+}
+
 try {
     $musicPrepared = $false
     try {
@@ -56,21 +70,30 @@ try {
     }
     catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
 
+    $lastMusicLaunch = Get-D2KMusicLaunch
     $pegasus = Start-Process -FilePath $executable -ArgumentList '--portable' -PassThru
-    $deadline = [DateTime]::UtcNow.AddSeconds(30)
-    while (-not $pegasus.HasExited -and [DateTime]::UtcNow -lt $deadline) {
-        if (Test-D2KMusicReady) {
+    $musicBooted = $false
+    while (-not $pegasus.HasExited) {
+        if (-not $musicBooted -and (Test-D2KMusicReady)) {
             if ($musicPrepared) {
                 try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Boot }
                 catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
             }
-            break
+            $musicBooted = $true
         }
+
+        $musicLaunch = Get-D2KMusicLaunch
+        if ($null -ne $musicLaunch -and $musicLaunch -ne $lastMusicLaunch) {
+            $lastMusicLaunch = $musicLaunch
+            if ($musicPrepared) {
+                try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Pause }
+                catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
+            }
+        }
+
         Start-Sleep -Milliseconds 100
         $pegasus.Refresh()
     }
-
-    $pegasus.WaitForExit()
 }
 finally {
     try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Stop }

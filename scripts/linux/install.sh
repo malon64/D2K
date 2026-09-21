@@ -31,7 +31,7 @@ sudo apt-get install -y \
     qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools \
     qttools5-dev qttools5-dev-tools qtmultimedia5-dev libqt5svg5-dev \
     libqt5sql5-sqlite libsdl2-dev \
-    qml-module-qtquick2 qml-module-qtquick-window2 \
+    qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtmultimedia \
     libgstreamer1.0-0 libfontconfig1 libssl3 libzstd1
 
 mkdir -p "$software_dir" "$pegasus_config/themes" "$pegasus_config/metafiles" \
