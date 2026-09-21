@@ -135,6 +135,7 @@ public static class D2KEmulatorWindows
 
     private const int PanelWidth = 800;
     private const int PanelHeight = 480;
+    private const int N64PanelHeight = 441;
     private const int TitleBar = 58;
     private const int Hinge = 32;
     private const int GwlStyle = -16;
@@ -165,12 +166,12 @@ public static class D2KEmulatorWindows
         return windows;
     }
 
-    private static void Frame(Window window, int x, int y)
+    private static void Frame(Window window, int x, int y, int width, int height)
     {
         int style = GetWindowLong(window.Handle, GwlStyle) & ~WindowChrome;
         SetWindowLong(window.Handle, GwlStyle, style);
         SetMenu(window.Handle, IntPtr.Zero);
-        SetWindowPos(window.Handle, IntPtr.Zero, x, y, PanelWidth, PanelHeight,
+        SetWindowPos(window.Handle, IntPtr.Zero, x, y, width, height,
                      SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
     }
 
@@ -179,13 +180,13 @@ public static class D2KEmulatorWindows
         ShowWindow(window.Handle, SwHide);
     }
 
-    private static bool Matches(Window window, int x, int y)
+    private static bool Matches(Window window, int x, int y, int width, int height)
     {
         RECT rect;
         POINT origin = new POINT();
         GetClientRect(window.Handle, out rect);
         ClientToScreen(window.Handle, ref origin);
-        return origin.X == x && origin.Y == y && rect.R == PanelWidth && rect.B == PanelHeight;
+        return origin.X == x && origin.Y == y && rect.R == width && rect.B == height;
     }
 
     private static Window Largest(IEnumerable<Window> windows)
@@ -207,16 +208,17 @@ public static class D2KEmulatorWindows
         bottom = top + PanelHeight + TitleBar + Hinge;
     }
 
-    public static bool CheckSingleLayout(int processId)
+    public static bool CheckSingleLayout(int processId, bool isN64)
     {
         int left, top, bottom;
         Layout(out left, out top, out bottom);
         var window = Largest(WindowsForProcess(processId));
         if (window == null)
             return false;
-        if (!Matches(window, left, top))
-            Frame(window, left, top);
-        return Matches(window, left, top);
+        int height = isN64 ? N64PanelHeight : PanelHeight;
+        if (!Matches(window, left, top, PanelWidth, height))
+            Frame(window, left, top, PanelWidth, height);
+        return Matches(window, left, top, PanelWidth, height);
     }
 
     public static bool CheckAzaharLayout(int processId)
@@ -247,11 +249,12 @@ public static class D2KEmulatorWindows
             if (window.Handle != primary.Handle)
                 Hide(window);
 
-        if (!Matches(primary, left, top))
-            Frame(primary, left, top);
-        if (!Matches(secondary, left, bottom))
-            Frame(secondary, left, bottom);
-        return Matches(primary, left, top) && Matches(secondary, left, bottom);
+        if (!Matches(primary, left, top, PanelWidth, PanelHeight))
+            Frame(primary, left, top, PanelWidth, PanelHeight);
+        if (!Matches(secondary, left, bottom, PanelWidth, PanelHeight))
+            Frame(secondary, left, bottom, PanelWidth, PanelHeight);
+        return Matches(primary, left, top, PanelWidth, PanelHeight) &&
+               Matches(secondary, left, bottom, PanelWidth, PanelHeight);
     }
 }
 '@
@@ -322,7 +325,7 @@ try {
                     [D2KEmulatorWindows]::CheckAzaharLayout($process.Id)
                 }
                 else {
-                    [D2KEmulatorWindows]::CheckSingleLayout($process.Id)
+                    [D2KEmulatorWindows]::CheckSingleLayout($process.Id, $Console -eq 'n64')
                 }
                 if ($stable) {
                     $stableChecks += 1

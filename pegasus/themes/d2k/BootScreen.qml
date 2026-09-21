@@ -22,6 +22,13 @@ Item {
         source: "assets/masthead.png"
         fillMode: Image.PreserveAspectFit
         smooth: true
+        opacity: 0
+
+        NumberAnimation on opacity {
+            from: 0; to: 1
+            duration: 1000
+            easing.type: Easing.InOutQuad
+        }
     }
 
     Text {
