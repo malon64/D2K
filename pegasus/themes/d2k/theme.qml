@@ -12,21 +12,6 @@ FocusScope {
     property var orderedCollections: []
     property var hostWindow: Window.window
 
-    // Both preview windows' remembered position, restored once the game ends.
-    // Off-screen coordinates back up the visible:false hide below -- on this
-    // desktop preview, Window.visible = false does not reliably take the
-    // native window off screen even though the QML property itself does
-    // change (confirmed by tracing touchWindow.onVisibleChanged and by
-    // screenshot: the property read back false while the window stayed drawn).
-    // Moving it off-screen is a second, independent mechanism that cannot
-    // have that failure mode, so hiding relies on both rather than trusting
-    // either alone. None of this applies on the device, which has no window
-    // manager to disagree with.
-    property int hostWindowX: 0
-    property int hostWindowY: 0
-    property int touchWindowX: 0
-    property int touchWindowY: 0
-
     readonly property var currentCollection: orderedCollections.length > consoleIndex
                                              ? orderedCollections[consoleIndex] : null
     readonly property var games: currentCollection ? currentCollection.games : null
@@ -84,6 +69,7 @@ FocusScope {
         var saved = api.memory.get("d2kGame:" + d2k.consoleId(currentCollection))
         gameIndex = (typeof saved === "number" && saved >= 0 && saved < gameCount) ? saved : 0
         navState = "games"
+        api.memory.set("d2kNav", "games")
     }
 
     function selectGame(index) {
@@ -112,68 +98,38 @@ FocusScope {
 
     function backToCollections() {
         navState = "consoles"
-    }
-
-    // Hides a preview window. Window.visible = false alone is not reliable in
-    // the Windows desktop preview: tracing touchWindow.onVisibleChanged
-    // confirmed the QML property does flip to false and stays there, yet a
-    // screenshot taken moments later still showed the window fully drawn on
-    // screen -- a Qt/Windows quirk, not something visible in the QML layer to
-    // detect or work around directly. Moving the window off-screen there is a
-    // second, independent mechanism that cannot fail the same way. On the
-    // device this is skipped: the windows are fullscreen kiosk outputs on a
-    // real compositor, where visible = false is the correct mechanism and an
-    // off-screen reposition would only risk its own display glitch.
-    function hidePreviewWindow(window) {
-        window.visible = false
-        if (Qt.platform.os === "windows") {
-            window.x = -10000
-            window.y = -10000
-        }
-    }
-
-    function restorePreviewWindow(window, x, y) {
-        if (Qt.platform.os === "windows") {
-            window.x = x
-            window.y = y
-        }
-        window.visible = true
+        api.memory.set("d2kNav", "consoles")
     }
 
     Timer {
         id: launchGuard
         interval: 240
         onTriggered: {
-            root.hidePreviewWindow(touchWindow)
-            root.hidePreviewWindow(root.hostWindow)
             root.selectedGame.launch()
         }
     }
 
-    // By design, there is no automatic "game finished" detection. Pegasus does
-    // not hide its own window while a launched game runs, does not signal the
-    // theme when that external process exits (api.onGameProcessFinished, the
-    // signal that looks purpose-built for this, does not fire for a game
-    // launched this way -- confirmed: a control signal on the same api
-    // object, onMemoryChanged, does fire for our own calls, so the target is
-    // valid; the launch-specific signals simply never arrive), and no such
-    // detection is wanted even where it might be made to work. Returning to
-    // the menu is only ever a deliberate action: the physical Home button
-    // (ESP32 controls, not yet built) calling restoreFromGame() directly, or
-    // power-cycling the console, which restarts Pegasus with a clean slate
-    // and needs no code path here at all.
+    // Pegasus tears down this entire QML scene before the game process starts
+    // and only rebuilds it -- cold, from Component.onCompleted -- once that
+    // process exits (confirmed via lastrun.log: the "D2K preview" boot log
+    // line reappears in the same second the launched process is reported
+    // finished, and the binary exports processLaunchOk / teardownComplete /
+    // rebuild symbols consistent with that). So there is no window to hide or
+    // restore here, no code that can run while a game is playing, and no
+    // signal that "the game is still running" to react to -- this theme
+    // instance is simply gone for the whole game. The only channel that
+    // survives is api.memory (persisted to
+    // config/theme_settings/d2k.json), which is why navState is mirrored into
+    // it below and restored on the next boot instead of being kept as
+    // in-memory-only state.
     //
-    // isMenu is bound now, ahead of that hardware, because Pegasus already
-    // exposes it as a standard api.keys predicate alongside isAccept/isCancel
-    // and a physical Home button is expected to surface as a gamepad "Guide"-
-    // style input. Pegasus polls those via SDL at the process level, so
-    // unlike a keyboard key they are not gated on hostWindow being the OS
-    // foreground window -- which it deliberately is not while hidden.
-    function restoreFromGame() {
-        restorePreviewWindow(hostWindow, hostWindowX, hostWindowY)
-        restorePreviewWindow(touchWindow, touchWindowX, touchWindowY)
-        launching = false
-    }
+    // Ending a game is therefore entirely scripts/windows/launch-melonds.ps1's
+    // job, not this theme's: it is the only D2K code alive for the whole
+    // session. The physical Home button (ESP32, not yet built) will signal it
+    // directly; until then dropping a file at
+    // %LOCALAPPDATA%\D2K\home-request has the same effect. When melonDS
+    // exits, Pegasus rebuilds this scene and bootSequence below restores
+    // navState from memory.
 
     Timer {
         id: bootSequence
@@ -243,23 +199,30 @@ FocusScope {
             touchWindow.height = lower.height
         }
 
-        hostWindowX = hostWindow.x
-        hostWindowY = hostWindow.y
-        touchWindowX = touchWindow.x
-        touchWindowY = touchWindow.y
+        // Resume where the last game left off. run.ps1 clears d2kNav on every
+        // power-on, so this only fires on the mid-session rebuild that
+        // follows a game exiting (see the note above launchGuard) -- never
+        // on an actual cold boot, which always plays the boot screen and
+        // lands on the console selector as before.
+        var savedNav = api.memory.get("d2kNav")
+        if (savedNav === "games" || savedNav === "consoles") {
+            rebuildCollections()
+            restoreConsole()
+
+            if (savedNav === "games" && currentCollection && gameCount) {
+                var savedGame = api.memory.get("d2kGame:" + d2k.consoleId(currentCollection))
+                gameIndex = (typeof savedGame === "number" && savedGame >= 0 && savedGame < gameCount) ? savedGame : 0
+                navState = "games"
+            }
+            else {
+                navState = "consoles"
+            }
+
+            bootSequence.stop()
+        }
     }
 
     Keys.onPressed: {
-        // The physical Home button (planned, not yet built) reaches here as a
-        // gamepad "Guide"-style input regardless of navState, since it is the
-        // only way back to the menu while a game is running -- see
-        // restoreFromGame() above for why nothing else attempts this.
-        if (launching && api.keys.isMenu(event)) {
-            event.accepted = true
-            restoreFromGame()
-            return
-        }
-
         if (navState === "boot")
             return
 

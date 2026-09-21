@@ -9,74 +9,104 @@ $emulatorDir = 'C:\Users\alexi\Documents\NDS\melonDS-1.1-windows-x86_64'
 $emulator = Join-Path $emulatorDir 'melonDS.exe'
 $configPath = Join-Path $emulatorDir 'melonDS.toml'
 
-if (-not (Test-Path -LiteralPath $emulator -PathType Leaf)) {
-    throw "melonDS was not found at $emulator"
+$logDir = Join-Path $env:LOCALAPPDATA 'D2K'
+if (-not (Test-Path -LiteralPath $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
+$logPath = Join-Path $logDir 'launch-melonds.log'
+$homeRequestPath = Join-Path $logDir 'home-request'
+
+function Write-Log {
+    param([string]$Message)
+    $line = "{0:yyyy-MM-ddTHH:mm:ss.fff}  {1}" -f (Get-Date), $Message
+    Add-Content -LiteralPath $logPath -Value $line
 }
 
-if (-not (Test-Path -LiteralPath $RomPath -PathType Leaf)) {
-    throw "ROM was not found at $RomPath"
-}
+Write-Log "===== launch-melonds start: rom=$RomPath ====="
 
-# Patched line by line rather than by regex-slicing the raw text: an earlier
-# version of this script extracted each [Instance0.WindowN] section as a
-# substring and spliced a modified copy back in, which on at least one run
-# ate the newline between a section's last line and the next section's
-# header, gluing them together (e.g. "Enabled = true[Instance0.Firmware]")
-# and corrupting the file for every launch after that. Operating on the line
-# array instead makes that class of corruption structurally impossible: every
-# line keeps its own boundary no matter what gets rewritten.
-$lines = Get-Content -LiteralPath $configPath
-$currentSection = ''
-$window1Seen = $false
-$window1EnabledSeen = $false
+# This script's lifetime IS the game's lifetime as far as Pegasus is concerned:
+# Pegasus tears down its whole QML scene before this runs and only rebuilds it
+# once this script (and the process it launched) exits. Nothing below may ever
+# let that happen early -- a cosmetic window-framing failure must never end the
+# game, so only the emulator launch and its own exit are allowed to be fatal.
 
-for ($i = 0; $i -lt $lines.Count; $i++) {
-    $line = $lines[$i]
-
-    if ($line -match '^\[(.+)\]\s*$') {
-        $currentSection = $Matches[1]
-        continue
+try {
+    if (-not (Test-Path -LiteralPath $emulator -PathType Leaf)) {
+        throw "melonDS was not found at $emulator"
     }
 
-    if ($currentSection -eq 'Instance0.Window1') {
-        $window1Seen = $true
+    if (-not (Test-Path -LiteralPath $RomPath -PathType Leaf)) {
+        throw "ROM was not found at $RomPath"
+    }
 
-        # Window 1 starts disabled by default and melonDS re-disables it
-        # whenever its own window is closed on its own (rather than the whole
-        # app exiting), so this re-enables it before every launch. Leaving an
-        # already-true value alone (rather than treating "no change needed"
-        # as an error) matters because that is also the steady state after
-        # any successful prior run.
-        if ($line -match '^Enabled\s*=\s*\w+\s*$') {
-            $window1EnabledSeen = $true
-            $lines[$i] = 'Enabled = true'
+    try {
+        # Patched line by line rather than by regex-slicing the raw text: an earlier
+        # version of this script extracted each [Instance0.WindowN] section as a
+        # substring and spliced a modified copy back in, which on at least one run
+        # ate the newline between a section's last line and the next section's
+        # header, gluing them together (e.g. "Enabled = true[Instance0.Firmware]")
+        # and corrupting the file for every launch after that. Operating on the line
+        # array instead makes that class of corruption structurally impossible: every
+        # line keeps its own boundary no matter what gets rewritten.
+        $lines = Get-Content -LiteralPath $configPath
+        $currentSection = ''
+        $window1Seen = $false
+        $window1EnabledSeen = $false
+
+        for ($i = 0; $i -lt $lines.Count; $i++) {
+            $line = $lines[$i]
+
+            if ($line -match '^\[(.+)\]\s*$') {
+                $currentSection = $Matches[1]
+                continue
+            }
+
+            if ($currentSection -eq 'Instance0.Window1') {
+                $window1Seen = $true
+
+                # Window 1 starts disabled by default and melonDS re-disables it
+                # whenever its own window is closed on its own (rather than the whole
+                # app exiting), so this re-enables it before every launch. Leaving an
+                # already-true value alone (rather than treating "no change needed"
+                # as an error) matters because that is also the steady state after
+                # any successful prior run.
+                if ($line -match '^Enabled\s*=\s*\w+\s*$') {
+                    $window1EnabledSeen = $true
+                    $lines[$i] = 'Enabled = true'
+                }
+            }
+
+            # melonDS saves each window's position and size to a Qt Geometry blob on
+            # exit and restores it on the next launch, after this script's own
+            # SetWindowPos call -- silently undoing it. Blank the saved blob (rather
+            # than deleting the line, which is what previously required the fragile
+            # section-slicing this replaced) so melonDS has nothing to restore,
+            # leaving CheckD2KLayout below as the only thing that ever sets geometry.
+            if ($currentSection -match '^Instance0\.Window[0-3]$' -and $line -match '^Geometry\s*=') {
+                $lines[$i] = 'Geometry = ""'
+            }
         }
+
+        if (-not $window1Seen) {
+            throw "[Instance0.Window1] was not found in $configPath"
+        }
+        if (-not $window1EnabledSeen) {
+            throw "Window 1 has no Enabled setting in $configPath"
+        }
+
+        # Set-Content's utf8 encoding writes a BOM, which the original WriteAllText
+        # call deliberately avoided; match that here since a BOM at the top of a TOML
+        # file is exactly the kind of thing that could silently break melonDS's parser.
+        [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.UTF8Encoding]::new($false))
+        Write-Log "Config patched OK"
+    }
+    catch {
+        # A config-patch failure is cosmetic (wrong window size/position at worst),
+        # not fatal -- melonDS still runs the game. Log and carry on.
+        Write-Log "Config patch FAILED (non-fatal): $($_.Exception.Message)"
     }
 
-    # melonDS saves each window's position and size to a Qt Geometry blob on
-    # exit and restores it on the next launch, after this script's own
-    # SetWindowPos call -- silently undoing it. Blank the saved blob (rather
-    # than deleting the line, which is what previously required the fragile
-    # section-slicing this replaced) so melonDS has nothing to restore,
-    # leaving CheckD2KLayout below as the only thing that ever sets geometry.
-    if ($currentSection -match '^Instance0\.Window[0-3]$' -and $line -match '^Geometry\s*=') {
-        $lines[$i] = 'Geometry = ""'
-    }
-}
-
-if (-not $window1Seen) {
-    throw "[Instance0.Window1] was not found in $configPath"
-}
-if (-not $window1EnabledSeen) {
-    throw "Window 1 has no Enabled setting in $configPath"
-}
-
-# Set-Content's utf8 encoding writes a BOM, which the original WriteAllText
-# call deliberately avoided; match that here since a BOM at the top of a TOML
-# file is exactly the kind of thing that could silently break melonDS's parser.
-[System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.UTF8Encoding]::new($false))
-
-Add-Type @'
+    Add-Type @'
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -225,28 +255,108 @@ public static class D2KWindows
 }
 '@
 
-# Use physical desktop pixels so the two borderless emulator windows match the
-# Pegasus 800x480 previews, matching the target Waveshare panels.
-[D2KWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
-
-$process = Start-Process -FilePath $emulator -ArgumentList ('"{0}"' -f $RomPath) -WorkingDirectory $emulatorDir -PassThru
-
-# Keep correcting the window layout until it has read back correct on several
-# consecutive checks, rather than stopping at the first time both windows
-# exist. melonDS loads its BIOS, firmware and ROM before it settles, and its
-# own startup layout logic can resize a window well after it first appears,
-# silently undoing an earlier fix; how long that takes varies run to run.
-$deadline = [DateTime]::UtcNow.AddSeconds(15)
-$consecutiveStable = 0
-$stableTarget = 5
-while ([DateTime]::UtcNow -lt $deadline -and -not $process.HasExited -and $consecutiveStable -lt $stableTarget) {
-    if ([D2KWindows]::CheckD2KLayout($process.Id)) {
-        $consecutiveStable += 1
+    # Use physical desktop pixels so the two borderless emulator windows match the
+    # Pegasus 800x480 previews, matching the target Waveshare panels.
+    try {
+        [D2KWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
     }
-    else {
+    catch {
+        Write-Log "SetProcessDpiAwarenessContext FAILED (non-fatal): $($_.Exception.Message)"
+    }
+
+    # Process.Start either returns a real process object or throws -- unlike
+    # Start-Process -PassThru, which can hand back a stale/incomplete object on
+    # some failure paths. A null or bad $process here must be a hard failure:
+    # everything below assumes it is real.
+    $startInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $startInfo.FileName = $emulator
+    $startInfo.Arguments = '"{0}"' -f $RomPath
+    $startInfo.WorkingDirectory = $emulatorDir
+    $startInfo.UseShellExecute = $false
+
+    $process = [System.Diagnostics.Process]::Start($startInfo)
+    if (-not $process) {
+        throw "Failed to start melonDS process"
+    }
+    Write-Log "melonDS started: pid=$($process.Id)"
+
+    try {
+        # This is the whole game session, not just a startup-settling window:
+        # the loop keeps correcting the window layout for as long as it is
+        # unstable, and on every tick also checks the Home seam so a request
+        # dropped at any point during play is honored quickly. WaitForExit is
+        # no longer a separate blocking call -- the loop itself IS the wait,
+        # so a Home-triggered close is noticed immediately rather than only
+        # after some earlier fixed deadline.
         $consecutiveStable = 0
+        $stableTarget = 5
+        $layoutSettled = $false
+
+        while (-not $process.HasExited) {
+            if (-not $layoutSettled) {
+                try {
+                    if ([D2KWindows]::CheckD2KLayout($process.Id)) {
+                        $consecutiveStable += 1
+                        if ($consecutiveStable -ge $stableTarget) {
+                            $layoutSettled = $true
+                            Write-Log "Layout settled after $consecutiveStable consecutive stable checks"
+                        }
+                    }
+                    else {
+                        $consecutiveStable = 0
+                    }
+                }
+                catch {
+                    Write-Log "CheckD2KLayout FAILED (non-fatal): $($_.Exception.Message)"
+                    $layoutSettled = $true
+                }
+            }
+
+            if (Test-Path -LiteralPath $homeRequestPath) {
+                Write-Log "Home request detected -- closing melonDS"
+                Remove-Item -LiteralPath $homeRequestPath -Force -ErrorAction SilentlyContinue
+
+                try {
+                    $process.CloseMainWindow() | Out-Null
+                }
+                catch {
+                    Write-Log "CloseMainWindow FAILED (non-fatal): $($_.Exception.Message)"
+                }
+
+                if (-not $process.WaitForExit(3000)) {
+                    Write-Log "melonDS did not exit gracefully -- killing"
+                    try { $process.Kill() } catch { Write-Log "Kill FAILED: $($_.Exception.Message)" }
+                }
+                break
+            }
+
+            Start-Sleep -Milliseconds 150
+        }
+
+        $process.WaitForExit()
+        Write-Log "melonDS exited: code=$($process.ExitCode)"
     }
-    Start-Sleep -Milliseconds 150
+    finally {
+        if (-not $process.HasExited) {
+            Write-Log "Ensuring melonDS process is closed before returning"
+            try { $process.CloseMainWindow() | Out-Null } catch {}
+            if (-not $process.WaitForExit(2000)) {
+                try { $process.Kill() } catch {}
+            }
+        }
+    }
+
+    Write-Log "===== launch-melonds end (ok) ====="
+}
+catch {
+    Write-Log "FATAL: $($_.Exception.Message)"
+    Write-Log $_.ScriptStackTrace
+    Write-Log "===== launch-melonds end (error, suppressed) ====="
 }
 
-$process.WaitForExit()
+# Regardless of what happened above, this script must exit cleanly (code 0) so
+# Pegasus never treats a cosmetic failure here as "the game crashed" and skips
+# straight back to the menu while melonDS is still on screen -- that was the
+# original bug. The real game process's own lifetime is what Pegasus should be
+# timing itself against, and by this point it has already ended.
+exit 0

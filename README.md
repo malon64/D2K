@@ -68,7 +68,10 @@ not close the second window by itself, as melonDS disables it for the next run.
 The Pegasus launcher re-enables it before every game launch, removes melonDS'
 Windows title bars and menus, and frames the game outputs on exactly the same
 800×480 rectangles as the Pegasus panels. Use **Alt+F4** to close a game in this
-preview.
+preview — that is also what the eventual Home button will do internally, via a
+file-drop seam described in
+[docs/pegasus-development.md](docs/pegasus-development.md), until the ESP32
+hardware exists.
 
 ## Repository layout
 

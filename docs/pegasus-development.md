@@ -128,3 +128,59 @@ the logical layout at 800×480 while validating the lower display's rotation.
 
 With D2K selected, press `F5` in Pegasus after editing QML to reload the theme.
 Check Pegasus' `lastrun.log` if a QML change does not load.
+
+## Launch lifecycle: the theme does not survive a game
+
+Pegasus does not keep the theme's QML scene alive while a launched game runs.
+It tears the whole scene down before starting the process (`FrontendLayer`
+teardown/rebuild, visible in the binary's exported symbols:
+`processLaunchOk`, `teardownComplete`, `rebuild`, `processFinished`) and only
+rebuilds it — cold, from `Component.onCompleted` again — once that process
+exits. This was confirmed by tracing `lastrun.log`: the theme's boot log line
+reappears in the same second the launched process is reported finished.
+
+Practical consequences:
+
+- **No code in `theme.qml` can run while a game plays.** There is nothing to
+  hide, nothing to restore, and no signal to listen for — the theme instance
+  is simply gone. Ending a game and returning to the menu is entirely
+  `scripts/windows/launch-melonds.ps1`'s job, since it is the only D2K code
+  alive for the whole session.
+- **`api.memory` is the only channel that survives.** It is written to
+  `config/theme_settings/d2k.json` outside the QML engine, so it is how state
+  crosses the teardown/rebuild boundary. `theme.qml` mirrors `navState` into
+  it as `d2kNav` (alongside the existing `d2kConsole` / `d2kGame:<id>` keys)
+  and restores from it in `Component.onCompleted`, skipping the boot screen
+  when it finds one — that is what makes the menu come back on the same game
+  instead of replaying boot → consoles.
+- **`d2kNav` must not survive an actual power cycle.** `scripts/windows/run.ps1`
+  clears it once per launch, before starting Pegasus, so "shut down and
+  restart the console" always plays the boot screen. A future Linux startup
+  script needs the same clear (or an equivalent full-state reset) — it is
+  presently Windows-only.
+- **A failure inside `launch-melonds.ps1` must never end the session early.**
+  Its own lifetime is what Pegasus is timing the game against: if it exits
+  before melonDS does, Pegasus treats the game as over and rebuilds the menu
+  on top of a still-running emulator. Every non-essential phase (config
+  patching, window framing) is wrapped so it can fail without ending the
+  script, and the script always exits `0`. It logs its own run to
+  `%LOCALAPPDATA%\D2K\launch-melonds.log`, which is the place to look first
+  when a launch misbehaves — Pegasus forwards the child process's stderr to
+  its own console rather than into `lastrun.log`, so that log is otherwise
+  the only record.
+
+## Home button seam
+
+There is no hardware yet, so ending a game today is `Alt+F4`, same as
+before. The eventual Home button (ESP32, not yet built) is expected to end
+the game the same way anything else would: by asking
+`launch-melonds.ps1` to close melonDS. The seam for that is a signal file —
+dropping any file at `%LOCALAPPDATA%\D2K\home-request` makes the script close
+melonDS gracefully (falling back to a kill) within its next poll tick, after
+which Pegasus rebuilds and the menu resumes on the same game. This can be
+exercised by hand today (`New-Item` that path while a game is running) to
+test the return path without waiting on hardware. The planned first version
+is an on-screen button in the side band melonDS leaves empty on the lower
+screen (its DS output is letterboxed to 640×480 inside the 800×480 window);
+that still needs its own always-on-top overlay, since the theme does not
+exist while a game runs, and is not built yet.
