@@ -9,6 +9,10 @@ Item {
     // grid tiles keep the box art. Falls back either way when only one exists.
     property bool preferTitle: false
 
+    // Fill the whole box, cropping the overflowing edges evenly, instead of
+    // letterboxing. Used by the grid tiles so covers reach the frame.
+    property bool fillCrop: false
+
     readonly property url coverSource: {
         if (!game || !game.assets)
             return ""
@@ -22,10 +26,13 @@ Item {
     Image {
         anchors.fill: parent
         source: art.coverSource
-        fillMode: Image.PreserveAspectFit
+        fillMode: art.fillCrop ? Image.PreserveAspectCrop : Image.PreserveAspectFit
+        horizontalAlignment: Image.AlignHCenter
+        verticalAlignment: Image.AlignVCenter
+        clip: art.fillCrop
         asynchronous: true
         smooth: true
-        sourceSize.width: Math.round(art.width * 2)
-        sourceSize.height: Math.round(art.height * 2)
+        sourceSize.width: Math.round(art.width * (art.fillCrop ? 4 : 2))
+        sourceSize.height: art.fillCrop ? 0 : Math.round(art.height * 2)
     }
 }

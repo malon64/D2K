@@ -84,6 +84,10 @@ Item {
         x: 299; y: 369; width: 201; height: 138
         source: "assets/control-launch.png"
         pressedSource: "assets/control-launch-pressed.png"
+        // Body of the pressed art sits ~6x12 source px up-left of the normal
+        // art (402px wide source drawn at 201).
+        pressedOffsetX: 3
+        pressedOffsetY: 6
         active: panel.gameCount > 0
         held: panel.launching
         onActivated: panel.launch()

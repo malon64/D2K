@@ -11,14 +11,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        color: boot.touchVariant ? boot.theme.touchBase : boot.theme.topBase
-    }
-
-    Image {
-        anchors.fill: parent
-        source: "assets/background.jpg"
-        fillMode: Image.PreserveAspectCrop
-        opacity: 0.88
+        color: "black"
     }
 
     Image {
@@ -32,12 +25,13 @@ Item {
     }
 
     Text {
+        visible: boot.touchVariant
         anchors.horizontalCenter: parent.horizontalCenter
-        y: boot.touchVariant ? 228 : 392
-        text: boot.touchVariant ? "LOADING" : "D2K  /  PEGASUS"
+        y: 228
+        text: "LOADING"
         color: boot.theme.cyanInk
-        font.family: boot.touchVariant ? boot.theme.pixelFont : boot.theme.bodyFont
-        font.pixelSize: boot.touchVariant ? 26 : 16
+        font.family: boot.theme.pixelFont
+        font.pixelSize: 26
         font.letterSpacing: 2
     }
 }

@@ -11,9 +11,13 @@ Item {
 
     signal chosen()
 
+    // Fills the frame's transparent window (x 21.5-98, y 24-86.5 at 108px;
+    // the selected frame's is slightly smaller). Drawn under the frame, so a
+    // small overscan hides any seam against the frame border.
     CoverArt {
-        x: 10; y: 17; width: 89; height: 76
+        x: 20; y: 23; width: 80; height: 65
         game: tile.game
+        fillCrop: true
     }
 
     Image {
@@ -50,7 +54,7 @@ Item {
                 target: selectedFrame
                 property: "opacity"
                 to: 0.3
-                duration: 520
+                duration: 260
                 easing.type: Easing.InOutQuad
             }
 
@@ -58,7 +62,7 @@ Item {
                 target: selectedFrame
                 property: "opacity"
                 to: 1.0
-                duration: 520
+                duration: 260
                 easing.type: Easing.InOutQuad
             }
         }

@@ -81,6 +81,16 @@ Item {
         smooth: true
     }
 
+    // Figma "Metallic 2" (node 302:11): the corner bracket at the bottom right
+    // of the detail panel. The asset is the Figma source image (transparent)
+    // rotated 180deg and trimmed to its content, placed where it lands on screen.
+    Image {
+        x: 590; y: 280; width: 195; height: 189
+        source: "assets/metallic-corner.png"
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+    }
+
     // Figma stacks the top-right ornament above the text, which only works for
     // the short prototype title. Real library titles run under it, so the game
     // facts are drawn last: the decorative layer stays peripheral texture and
