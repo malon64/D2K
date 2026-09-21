@@ -12,6 +12,21 @@ FocusScope {
     property var orderedCollections: []
     property var hostWindow: Window.window
 
+    // Both preview windows' remembered position, restored once the game ends.
+    // Off-screen coordinates back up the visible:false hide below -- on this
+    // desktop preview, Window.visible = false does not reliably take the
+    // native window off screen even though the QML property itself does
+    // change (confirmed by tracing touchWindow.onVisibleChanged and by
+    // screenshot: the property read back false while the window stayed drawn).
+    // Moving it off-screen is a second, independent mechanism that cannot
+    // have that failure mode, so hiding relies on both rather than trusting
+    // either alone. None of this applies on the device, which has no window
+    // manager to disagree with.
+    property int hostWindowX: 0
+    property int hostWindowY: 0
+    property int touchWindowX: 0
+    property int touchWindowY: 0
+
     readonly property var currentCollection: orderedCollections.length > consoleIndex
                                              ? orderedCollections[consoleIndex] : null
     readonly property var games: currentCollection ? currentCollection.games : null
@@ -99,13 +114,67 @@ FocusScope {
         navState = "consoles"
     }
 
+    // Hides a preview window. Window.visible = false alone is not reliable in
+    // the Windows desktop preview: tracing touchWindow.onVisibleChanged
+    // confirmed the QML property does flip to false and stays there, yet a
+    // screenshot taken moments later still showed the window fully drawn on
+    // screen -- a Qt/Windows quirk, not something visible in the QML layer to
+    // detect or work around directly. Moving the window off-screen there is a
+    // second, independent mechanism that cannot fail the same way. On the
+    // device this is skipped: the windows are fullscreen kiosk outputs on a
+    // real compositor, where visible = false is the correct mechanism and an
+    // off-screen reposition would only risk its own display glitch.
+    function hidePreviewWindow(window) {
+        window.visible = false
+        if (Qt.platform.os === "windows") {
+            window.x = -10000
+            window.y = -10000
+        }
+    }
+
+    function restorePreviewWindow(window, x, y) {
+        if (Qt.platform.os === "windows") {
+            window.x = x
+            window.y = y
+        }
+        window.visible = true
+    }
+
     Timer {
         id: launchGuard
         interval: 240
         onTriggered: {
-            touchWindow.visible = false
+            root.hidePreviewWindow(touchWindow)
+            root.hidePreviewWindow(root.hostWindow)
             root.selectedGame.launch()
         }
+    }
+
+    // Pegasus does not hide its own window while a launched game runs, and
+    // does not signal back to the theme when that external process exits --
+    // api.onGameProcessFinished, the signal that looks purpose-built for this,
+    // does not fire for a game launched this way (confirmed: a control signal
+    // on the same api object, onMemoryChanged, does fire for our own calls, so
+    // the target is valid; the launch-specific signals simply never arrive).
+    // hostWindow regaining input focus is the least-unreliable signal QML
+    // exposes for "the emulator is gone" -- close enough to detect return
+    // reliably in testing, at the cost of occasionally restoring a beat before
+    // the truly right moment. A physical Home button that calls
+    // restoreFromGame() directly, bypassing detection entirely, is the robust
+    // long-term fix and is already planned for the ESP32 controls.
+    Timer {
+        id: restoreDebounce
+        interval: 400
+        onTriggered: {
+            if (root.hostWindow && root.hostWindow.active)
+                root.restoreFromGame()
+        }
+    }
+
+    function restoreFromGame() {
+        restorePreviewWindow(hostWindow, hostWindowX, hostWindowY)
+        restorePreviewWindow(touchWindow, touchWindowX, touchWindowY)
+        launching = false
     }
 
     Timer {
@@ -175,6 +244,11 @@ FocusScope {
             touchWindow.width = lower.width
             touchWindow.height = lower.height
         }
+
+        hostWindowX = hostWindow.x
+        hostWindowY = hostWindow.y
+        touchWindowX = touchWindow.x
+        touchWindowY = touchWindow.y
     }
 
     Keys.onPressed: {
@@ -277,13 +351,9 @@ FocusScope {
 
     Connections {
         target: root.hostWindow
-        function onVisibleChanged() {
-            if (!root.hostWindow)
-                return
-
-            touchWindow.visible = root.hostWindow.visible
-            if (root.hostWindow.visible)
-                root.launching = false
+        function onActiveChanged() {
+            if (root.launching && root.hostWindow && root.hostWindow.active)
+                restoreDebounce.restart()
         }
     }
 }

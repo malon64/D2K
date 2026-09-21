@@ -17,24 +17,64 @@ if (-not (Test-Path -LiteralPath $RomPath -PathType Leaf)) {
     throw "ROM was not found at $RomPath"
 }
 
-$config = Get-Content -LiteralPath $configPath -Raw
-$window1 = [regex]::Match($config, '(?ms)^\[Instance0\.Window1\]\r?\n.*?(?=^\[|\z)')
-if (-not $window1.Success) {
-    throw "[Instance0.Window1] was not found in $configPath"
+# Patched line by line rather than by regex-slicing the raw text: an earlier
+# version of this script extracted each [Instance0.WindowN] section as a
+# substring and spliced a modified copy back in, which on at least one run
+# ate the newline between a section's last line and the next section's
+# header, gluing them together (e.g. "Enabled = true[Instance0.Firmware]")
+# and corrupting the file for every launch after that. Operating on the line
+# array instead makes that class of corruption structurally impossible: every
+# line keeps its own boundary no matter what gets rewritten.
+$lines = Get-Content -LiteralPath $configPath
+$currentSection = ''
+$window1Seen = $false
+$window1EnabledSeen = $false
+
+for ($i = 0; $i -lt $lines.Count; $i++) {
+    $line = $lines[$i]
+
+    if ($line -match '^\[(.+)\]\s*$') {
+        $currentSection = $Matches[1]
+        continue
+    }
+
+    if ($currentSection -eq 'Instance0.Window1') {
+        $window1Seen = $true
+
+        # Window 1 starts disabled by default and melonDS re-disables it
+        # whenever its own window is closed on its own (rather than the whole
+        # app exiting), so this re-enables it before every launch. Leaving an
+        # already-true value alone (rather than treating "no change needed"
+        # as an error) matters because that is also the steady state after
+        # any successful prior run.
+        if ($line -match '^Enabled\s*=\s*\w+\s*$') {
+            $window1EnabledSeen = $true
+            $lines[$i] = 'Enabled = true'
+        }
+    }
+
+    # melonDS saves each window's position and size to a Qt Geometry blob on
+    # exit and restores it on the next launch, after this script's own
+    # SetWindowPos call -- silently undoing it. Blank the saved blob (rather
+    # than deleting the line, which is what previously required the fragile
+    # section-slicing this replaced) so melonDS has nothing to restore,
+    # leaving CheckD2KLayout below as the only thing that ever sets geometry.
+    if ($currentSection -match '^Instance0\.Window[0-3]$' -and $line -match '^Geometry\s*=') {
+        $lines[$i] = 'Geometry = ""'
+    }
 }
 
-$updatedWindow1 = [regex]::Replace($window1.Value, '(?m)^Enabled\s*=\s*\w+\s*$', 'Enabled = true')
-if ($updatedWindow1 -eq $window1.Value) {
+if (-not $window1Seen) {
+    throw "[Instance0.Window1] was not found in $configPath"
+}
+if (-not $window1EnabledSeen) {
     throw "Window 1 has no Enabled setting in $configPath"
 }
 
-if ($updatedWindow1 -ne $window1.Value) {
-    [System.IO.File]::WriteAllText(
-        $configPath,
-        $config.Replace($window1.Value, $updatedWindow1),
-        [System.Text.UTF8Encoding]::new($false)
-    )
-}
+# Set-Content's utf8 encoding writes a BOM, which the original WriteAllText
+# call deliberately avoided; match that here since a BOM at the top of a TOML
+# file is exactly the kind of thing that could silently break melonDS's parser.
+[System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.UTF8Encoding]::new($false))
 
 Add-Type @'
 using System;
@@ -69,6 +109,18 @@ public static class D2KWindows
 
     [DllImport("user32.dll")]
     private static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetClientRect(IntPtr window, out RECT rect);
+
+    [DllImport("user32.dll")]
+    private static extern bool ClientToScreen(IntPtr window, ref POINT point);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT { public int L, T, R, B; }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT { public int X, Y; }
 
     [DllImport("user32.dll")]
     public static extern bool SetProcessDpiAwarenessContext(IntPtr value);
@@ -121,10 +173,27 @@ public static class D2KWindows
         SetWindowPos(window, IntPtr.Zero, x, y, width, height, SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
     }
 
-    public static bool ApplyD2KLayout(int processId)
+    private static bool Matches(IntPtr window, int x, int y, int width, int height)
+    {
+        RECT client;
+        GetClientRect(window, out client);
+        POINT origin = new POINT();
+        ClientToScreen(window, ref origin);
+        return origin.X == x && origin.Y == y && client.R == width && client.B == height;
+    }
+
+    // Finds both D2K windows for the process, forces any mismatched one back to
+    // its target rectangle, and reports whether both were found and already
+    // matched before this call (i.e. nothing needed correcting). melonDS loads
+    // its BIOS, firmware and ROM before it settles, and its own startup layout
+    // logic can still resize a window well after it first appears, silently
+    // undoing an earlier fix -- so the caller polls this until it comes back
+    // stable, rather than stopping at the first time both windows exist.
+    public static bool CheckD2KLayout(int processId)
     {
         bool topFound = false;
         bool bottomFound = false;
+        bool stable = true;
 
         int screenWidth = GetSystemMetrics(0);
         int screenHeight = GetSystemMetrics(1);
@@ -136,16 +205,22 @@ public static class D2KWindows
         foreach (var window in WindowsForProcess(processId)) {
             var title = Title(window);
             if (title.Contains("[w1]")) {
-                Frame(window, left, top, PanelWidth, PanelHeight);
                 topFound = true;
+                if (!Matches(window, left, top, PanelWidth, PanelHeight)) {
+                    stable = false;
+                    Frame(window, left, top, PanelWidth, PanelHeight);
+                }
             }
             else if (title.Contains("[w2]")) {
-                Frame(window, left, bottom, PanelWidth, PanelHeight);
                 bottomFound = true;
+                if (!Matches(window, left, bottom, PanelWidth, PanelHeight)) {
+                    stable = false;
+                    Frame(window, left, bottom, PanelWidth, PanelHeight);
+                }
             }
         }
 
-        return topFound && bottomFound;
+        return topFound && bottomFound && stable;
     }
 }
 '@
@@ -155,12 +230,23 @@ public static class D2KWindows
 [D2KWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
 
 $process = Start-Process -FilePath $emulator -ArgumentList ('"{0}"' -f $RomPath) -WorkingDirectory $emulatorDir -PassThru
-$deadline = [DateTime]::UtcNow.AddSeconds(10)
-while ([DateTime]::UtcNow -lt $deadline -and -not $process.HasExited) {
-    if ([D2KWindows]::ApplyD2KLayout($process.Id)) {
-        break
+
+# Keep correcting the window layout until it has read back correct on several
+# consecutive checks, rather than stopping at the first time both windows
+# exist. melonDS loads its BIOS, firmware and ROM before it settles, and its
+# own startup layout logic can resize a window well after it first appears,
+# silently undoing an earlier fix; how long that takes varies run to run.
+$deadline = [DateTime]::UtcNow.AddSeconds(15)
+$consecutiveStable = 0
+$stableTarget = 5
+while ([DateTime]::UtcNow -lt $deadline -and -not $process.HasExited -and $consecutiveStable -lt $stableTarget) {
+    if ([D2KWindows]::CheckD2KLayout($process.Id)) {
+        $consecutiveStable += 1
     }
-    Start-Sleep -Milliseconds 100
+    else {
+        $consecutiveStable = 0
+    }
+    Start-Sleep -Milliseconds 150
 }
 
 $process.WaitForExit()
