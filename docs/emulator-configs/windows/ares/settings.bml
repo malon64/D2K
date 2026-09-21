@@ -4,5 +4,6 @@ Video
   WindowHeight: 480
   Output: Stretch
   AdaptiveSizing: false
+  AutoCentering: true
 General
   ShowStatusBar: false

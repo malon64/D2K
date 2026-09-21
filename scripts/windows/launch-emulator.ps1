@@ -110,6 +110,13 @@ public static class D2KEmulatorWindows
              title.IndexOf("bottom", StringComparison.OrdinalIgnoreCase) >= 0);
     }
 
+    public static bool IsPrimaryTitle(string title)
+    {
+        return title != null &&
+            (title.IndexOf("primary", StringComparison.OrdinalIgnoreCase) >= 0 ||
+             title.IndexOf("princip", StringComparison.OrdinalIgnoreCase) >= 0);
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT { public int L, T, R, B; }
 
@@ -209,17 +216,21 @@ public static class D2KEmulatorWindows
         Layout(out left, out top, out bottom);
         var windows = WindowsForProcess(processId);
         Window secondary = null;
+        Window primary = null;
         var primaryCandidates = new List<Window>();
 
         foreach (var window in windows) {
             if (IsSecondaryTitle(window.Title)) {
                 secondary = window;
+            } else if (IsPrimaryTitle(window.Title)) {
+                primary = window;
             } else if (!String.Equals(window.Title, "Azahar", StringComparison.OrdinalIgnoreCase)) {
                 primaryCandidates.Add(window);
             }
         }
 
-        var primary = Largest(primaryCandidates);
+        if (primary == null)
+            primary = Largest(primaryCandidates);
         if (primary == null || secondary == null)
             return false;
 
@@ -244,6 +255,9 @@ if ($SelfTest) {
     }
     if (-not [D2KEmulatorWindows]::IsSecondaryTitle('Fenêtre secondaire')) {
         throw 'Localized Azahar secondary-window detection failed.'
+    }
+    if (-not [D2KEmulatorWindows]::IsPrimaryTitle('Fenêtre principale')) {
+        throw 'Localized Azahar primary-window detection failed.'
     }
     Write-Host 'launch-emulator self-test passed.'
     exit 0
