@@ -24,6 +24,15 @@ function Write-Log {
 
 Write-Log "===== launch-melonds start: rom=$RomPath ====="
 
+$mpdScript = Join-Path $PSScriptRoot 'mpd.ps1'
+try {
+    & $mpdScript -Action Pause
+    Write-Log 'MPD paused'
+}
+catch {
+    Write-Log "MPD pause FAILED (non-fatal): $($_.Exception.Message)"
+}
+
 # This script's lifetime IS the game's lifetime as far as Pegasus is concerned:
 # Pegasus tears down its whole QML scene before this runs and only rebuilds it
 # once this script (and the process it launched) exits. Nothing below may ever
@@ -362,6 +371,14 @@ catch {
     Write-Log "FATAL: $($_.Exception.Message)"
     Write-Log $_.ScriptStackTrace
     Write-Log "===== launch-melonds end (error, suppressed) ====="
+}
+
+try {
+    & $mpdScript -Action Resume
+    Write-Log 'MPD resumed'
+}
+catch {
+    Write-Log "MPD resume FAILED (non-fatal): $($_.Exception.Message)"
 }
 
 # Regardless of what happened above, this script must exit cleanly (code 0) so

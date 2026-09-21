@@ -9,7 +9,7 @@ with an 800×480 Waveshare display.
 
    ```powershell
    scoop bucket add games
-   scoop install pegasus
+   scoop install pegasus mpd
    ```
 
 2. From the repository root, link the tracked D2K theme into Scoop's Pegasus
@@ -28,6 +28,13 @@ with an 800×480 Waveshare display.
 The setup creates a directory junction from Scoop's Pegasus theme directory to
 this repository, then writes its `settings.txt` on first run with D2K selected
 and fullscreen off.
+
+`run.ps1` starts MPD for the menu music from `library/consoles/music/playlist.m3u`
+and stops it when Pegasus closes. Check the integration without opening Pegasus:
+
+```powershell
+.\scripts\windows\mpd.ps1 -Action SmokeTest
+```
 
 ## Theme development
 

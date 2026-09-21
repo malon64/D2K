@@ -31,4 +31,13 @@ if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
     }
 }
 
-& $executable --portable
+try {
+    try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Start }
+    catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
+
+    Start-Process -FilePath $executable -ArgumentList '--portable' -Wait
+}
+finally {
+    try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Stop }
+    catch { Write-Warning "D2K music could not be stopped: $($_.Exception.Message)" }
+}
