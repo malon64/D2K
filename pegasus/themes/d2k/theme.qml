@@ -187,14 +187,9 @@ FocusScope {
         }
     }
 
-    // Windows preview geometry. Both target panels are 800x480 -- a Waveshare
-    // 5-inch HDMI on top and a 4-DSI-TOUCH-A rotated to landscape below -- so
-    // the preview runs at native size rather than scaled down, and legibility
-    // on the desktop matches the device. Qt sizes and positions the client
-    // area, so no allowance is needed for the title bar itself; titleBar only
-    // reserves room for the lower window's caption between the two panels.
-    // scripts/windows/launch-melonds.ps1 repeats this layout so melonDS lands
-    // on exactly the same rectangles.
+    // Both target panels are 800x480. Windows keeps its existing desktop
+    // preview; Linux uses the two physical outputs when present, or scales a
+    // vertical preview to fit a single TV while the hardware screens are away.
     // previewTitleBar is the measured Windows caption plus border above a
     // client area (SM_CYCAPTION + SM_CYSIZEFRAME + SM_CXPADDEDBORDER = 58
     // here); previewHinge is the visible gap left between the two windows.
@@ -228,6 +223,7 @@ FocusScope {
                             + "  touch " + touchWindow.x + "," + touchWindow.y)
             }
             else if (Qt.application.screens.length >= 2) {
+                hostWindow.flags = Qt.FramelessWindowHint
                 var upper = Qt.application.screens[0]
                 var lower = Qt.application.screens[1]
                 hostWindow.screen = upper
@@ -240,6 +236,28 @@ FocusScope {
                 touchWindow.y = lower.virtualY
                 touchWindow.width = lower.width
                 touchWindow.height = lower.height
+            }
+            else {
+                hostWindow.flags = Qt.FramelessWindowHint
+                var tv = Qt.application.screens[0]
+                var tvGap = 20
+                var tvScale = Math.min(tv.width / previewPanelWidth,
+                                       (tv.height - tvGap) / (previewPanelHeight * 2))
+                var tvWidth = Math.max(1, Math.round(previewPanelWidth * tvScale))
+                var tvHeight = Math.max(1, Math.round(previewPanelHeight * tvScale))
+                var tvLeft = Math.round(tv.virtualX + (tv.width - tvWidth) / 2)
+                var tvTop = Math.round(tv.virtualY + (tv.height - (tvHeight * 2 + tvGap)) / 2)
+
+                hostWindow.screen = tv
+                hostWindow.x = tvLeft
+                hostWindow.y = tvTop
+                hostWindow.width = tvWidth
+                hostWindow.height = tvHeight
+                touchWindow.screen = tv
+                touchWindow.x = tvLeft
+                touchWindow.y = tvTop + tvHeight + tvGap
+                touchWindow.width = tvWidth
+                touchWindow.height = tvHeight
             }
         }
 
@@ -340,6 +358,7 @@ FocusScope {
     Window {
         id: touchWindow
         title: "D2K Touch"
+        flags: Qt.platform.os === "windows" ? Qt.Window : Qt.FramelessWindowHint
         width: root.previewPanelWidth
         height: root.previewPanelHeight
         x: 40

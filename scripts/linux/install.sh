@@ -7,7 +7,7 @@ source_dir="$HOME/.cache/d2k/pegasus-source"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 pegasus_config="$config_home/pegasus-frontend"
 melonds_config="$config_home/melonDS/melonDS.toml"
-rom_dir="$HOME/Games/NDS"
+library_dir="$repo_root/library/consoles"
 pegasus_commit=83fd27f40b1535c8479321ce03490e515bcf0d15
 melonds_url=https://github.com/melonDS-emu/melonDS/releases/download/1.1/melonDS-1.1-appimage-aarch64.zip
 melonds_sha256=c537ae018d6dcedfe9da0317a1d5c0163e69201e23abfa163fa2a63e437ace09
@@ -17,26 +17,30 @@ if [[ $# -gt 1 || ( $# -eq 1 && $1 != --refresh-melonds-config ) ]]; then
     exit 2
 fi
 if [[ $(uname -m) != aarch64 || ! -f /etc/debian_version ]]; then
-    echo 'This installer requires a Debian ARM64 desktop, such as Radxa OS on ROCK 4D.' >&2
+    echo 'This installer requires a Debian ARM64 desktop, such as Raspberry Pi OS 64-bit.' >&2
     exit 1
 fi
 if [[ $EUID -eq 0 ]]; then
     echo 'Run this script as your desktop user; it invokes sudo only for apt.' >&2
     exit 1
 fi
+if [[ ! -d $library_dir ]]; then
+    echo "D2K library is missing at $library_dir. Sync library/ from the Windows workspace first." >&2
+    exit 1
+fi
 
 sudo apt-get update
 sudo apt-get install -y \
-    git curl unzip build-essential cmake pkg-config \
+    git curl unzip build-essential cmake pkg-config python3 \
     qtbase5-dev qtdeclarative5-dev qtdeclarative5-dev-tools \
     qttools5-dev qttools5-dev-tools qtmultimedia5-dev libqt5svg5-dev \
     libqt5sql5-sqlite libsdl2-dev \
     qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtmultimedia \
-    libgstreamer1.0-0 libfontconfig1 libssl3 libzstd1
+    libgstreamer1.0-0 libfontconfig1 libssl3 libzstd1 \
+    mpd mpc xdotool xwayland
 
 mkdir -p "$software_dir" "$pegasus_config/themes" "$pegasus_config/metafiles" \
-    "$(dirname "$melonds_config")" "$rom_dir" "$(dirname "$source_dir")" \
-    "$config_home/autostart"
+    "$(dirname "$melonds_config")" "$config_home/autostart" "$HOME/.cache/d2k"
 
 if [[ ! -x $software_dir/pegasus/bin/pegasus-fe ]]; then
     if [[ ! -d $source_dir/.git ]]; then
@@ -74,14 +78,45 @@ else
     ln -s "$repo_root/pegasus/themes/d2k" "$theme_link"
 fi
 
+mapfile -t console_dirs < <(find "$library_dir" -mindepth 1 -maxdepth 1 -type d -exec test -f '{}/metadata.pegasus.txt' \; -print | sort)
+if (( ${#console_dirs[@]} == 0 )); then
+    echo "No Pegasus collection metadata found under $library_dir." >&2
+    exit 1
+fi
+printf '%s\n' "${console_dirs[@]}" > "$pegasus_config/game_dirs.txt"
+
+# The private library is copied one-way to the Pi, so it can hold the Linux DS
+# launch command without altering the Windows source library.
+python3 - "$library_dir/ds/metadata.pegasus.txt" "$repo_root/scripts/linux/launch-melonds.sh" "$library_dir/ds" <<'PY'
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+launcher = sys.argv[2]
+workdir = sys.argv[3]
+if not path.is_file():
+    raise SystemExit(f"Nintendo DS metadata is missing: {path}")
+
+lines = path.read_text(encoding="utf-8").splitlines()
+lines = [line for line in lines if not line.startswith(("launch:", "workdir:"))]
+for index, line in enumerate(lines):
+    if line.startswith("shortname:"):
+        lines[index + 1:index + 1] = [
+            f'launch: "{launcher}" "{{file.path}}"',
+            f"workdir: {workdir}",
+        ]
+        break
+else:
+    raise SystemExit(f"Nintendo DS metadata has no shortname: {path}")
+path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+PY
+
+# The old three-game template is superseded by the synced, full library.
+rm -f "$pegasus_config/metafiles/d2k-nds.metadata.pegasus.txt"
+
 if [[ ! -e $pegasus_config/settings.txt ]]; then
     printf 'general.theme: themes/d2k\ngeneral.fullscreen: false\n' > "$pegasus_config/settings.txt"
 fi
-
-# Paths are generated for the current desktop user; the source template stays in Git.
-sed -e "s|@REPO@|$repo_root|g" -e "s|@ROM_DIR@|$rom_dir|g" \
-    "$repo_root/pegasus/metadata/nds/nds.hardware.pegasus.txt.in" \
-    > "$pegasus_config/metafiles/d2k-nds.metadata.pegasus.txt"
 
 if [[ ! -e $melonds_config || ${1:-} == --refresh-melonds-config ]]; then
     if [[ -e $melonds_config ]]; then
@@ -94,9 +129,9 @@ cat > "$config_home/autostart/d2k.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=D2K
-Exec="$repo_root/scripts/linux/run.sh"
+Exec=$repo_root/scripts/linux/run.sh
 Terminal=false
 X-GNOME-Autostart-enabled=true
 EOF
 
-echo 'D2K installed. Copy your three named ROMs into ~/Games/NDS, then run scripts/linux/run.sh from the desktop.'
+echo "D2K installed with ${#console_dirs[@]} collections. Run scripts/linux/smoke-test.sh before opening D2K."

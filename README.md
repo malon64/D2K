@@ -36,6 +36,34 @@ and stops it when Pegasus closes. Check the integration without opening Pegasus:
 .\scripts\windows\mpd.ps1 -Action SmokeTest
 ```
 
+## Raspberry Pi 5 setup
+
+The Pi target is Debian ARM64 (including Raspberry Pi OS 64-bit) and currently
+runs the full D2K library UI with Nintendo DS launching through melonDS. The
+other collections stay browse-only until their emulator work begins.
+
+Clone this repository on the Pi as `alex` at `/home/alex/D2K`, then copy the
+private library one way from the Windows workspace before installing. The
+library is ignored by Git, so it must be copied separately:
+
+```bash
+rsync -a --delete /mnt/c/Users/alexi/Repos/D2K/library/ alex@192.168.1.66:/home/alex/D2K/library/
+ssh alex@192.168.1.66 'cd /home/alex/D2K && ./scripts/linux/install.sh'
+```
+
+The installer builds the pinned Pegasus revision, installs MPD and the ARM64
+melonDS release, generates the Pi-local DS launch metadata, and adds D2K to
+Alex's graphical-session autostart. Check music without opening Pegasus with:
+
+```bash
+./scripts/linux/smoke-test.sh
+```
+
+With one TV connected, D2K and melonDS place their upper and touch windows in
+a vertically stacked layout scaled to fit. With two physical 800×480 panels,
+the theme maps one window to each output; finish output order, rotation, and
+touch calibration after those panels are attached.
+
 ## Theme development
 
 The theme uses two Windows preview windows:
