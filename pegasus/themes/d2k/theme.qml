@@ -150,27 +150,25 @@ FocusScope {
         }
     }
 
-    // Pegasus does not hide its own window while a launched game runs, and
-    // does not signal back to the theme when that external process exits --
-    // api.onGameProcessFinished, the signal that looks purpose-built for this,
-    // does not fire for a game launched this way (confirmed: a control signal
-    // on the same api object, onMemoryChanged, does fire for our own calls, so
-    // the target is valid; the launch-specific signals simply never arrive).
-    // hostWindow regaining input focus is the least-unreliable signal QML
-    // exposes for "the emulator is gone" -- close enough to detect return
-    // reliably in testing, at the cost of occasionally restoring a beat before
-    // the truly right moment. A physical Home button that calls
-    // restoreFromGame() directly, bypassing detection entirely, is the robust
-    // long-term fix and is already planned for the ESP32 controls.
-    Timer {
-        id: restoreDebounce
-        interval: 400
-        onTriggered: {
-            if (root.hostWindow && root.hostWindow.active)
-                root.restoreFromGame()
-        }
-    }
-
+    // By design, there is no automatic "game finished" detection. Pegasus does
+    // not hide its own window while a launched game runs, does not signal the
+    // theme when that external process exits (api.onGameProcessFinished, the
+    // signal that looks purpose-built for this, does not fire for a game
+    // launched this way -- confirmed: a control signal on the same api
+    // object, onMemoryChanged, does fire for our own calls, so the target is
+    // valid; the launch-specific signals simply never arrive), and no such
+    // detection is wanted even where it might be made to work. Returning to
+    // the menu is only ever a deliberate action: the physical Home button
+    // (ESP32 controls, not yet built) calling restoreFromGame() directly, or
+    // power-cycling the console, which restarts Pegasus with a clean slate
+    // and needs no code path here at all.
+    //
+    // isMenu is bound now, ahead of that hardware, because Pegasus already
+    // exposes it as a standard api.keys predicate alongside isAccept/isCancel
+    // and a physical Home button is expected to surface as a gamepad "Guide"-
+    // style input. Pegasus polls those via SDL at the process level, so
+    // unlike a keyboard key they are not gated on hostWindow being the OS
+    // foreground window -- which it deliberately is not while hidden.
     function restoreFromGame() {
         restorePreviewWindow(hostWindow, hostWindowX, hostWindowY)
         restorePreviewWindow(touchWindow, touchWindowX, touchWindowY)
@@ -252,6 +250,16 @@ FocusScope {
     }
 
     Keys.onPressed: {
+        // The physical Home button (planned, not yet built) reaches here as a
+        // gamepad "Guide"-style input regardless of navState, since it is the
+        // only way back to the menu while a game is running -- see
+        // restoreFromGame() above for why nothing else attempts this.
+        if (launching && api.keys.isMenu(event)) {
+            event.accepted = true
+            restoreFromGame()
+            return
+        }
+
         if (navState === "boot")
             return
 
@@ -346,14 +354,6 @@ FocusScope {
             onStepPage: root.stepPage(delta)
             onLaunch: root.launchSelectedGame()
             onBack: root.backToCollections()
-        }
-    }
-
-    Connections {
-        target: root.hostWindow
-        function onActiveChanged() {
-            if (root.launching && root.hostWindow && root.hostWindow.active)
-                restoreDebounce.restart()
         }
     }
 }
