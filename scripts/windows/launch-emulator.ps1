@@ -30,21 +30,7 @@ function Get-EmulatorArguments {
     }
 }
 
-if ($SelfTest) {
-    if ((Get-EmulatorArguments -System dreamcast -Rom 'C:\Games\Test Game.chd') -ne '"C:\Games\Test Game.chd"') {
-        throw 'Dreamcast argument construction failed.'
-    }
-    if ((Get-EmulatorArguments -System ps1 -Rom 'C:\Games\Test Disc.cue') -ne '-batch -fastboot -- "C:\Games\Test Disc.cue"') {
-        throw 'PS1 argument construction failed.'
-    }
-    if ((Get-EmulatorArguments -System n64 -Rom 'C:\Games\Test.z64') -notmatch '--system "Nintendo 64"') {
-        throw 'N64 argument construction failed.'
-    }
-    Write-Host 'launch-emulator self-test passed.'
-    exit 0
-}
-
-if (-not $Console -or -not $RomPath) {
+if (-not $SelfTest -and (-not $Console -or -not $RomPath)) {
     throw 'Usage: launch-emulator.ps1 -Console dreamcast|ps1|n64|gamecube|3ds -RomPath <path>'
 }
 
@@ -115,6 +101,14 @@ public static class D2KEmulatorWindows
 
     [DllImport("user32.dll")]
     public static extern bool SetProcessDpiAwarenessContext(IntPtr value);
+
+    public static bool IsSecondaryTitle(string title)
+    {
+        return title != null &&
+            (title.IndexOf("secondary", StringComparison.OrdinalIgnoreCase) >= 0 ||
+             title.IndexOf("second", StringComparison.OrdinalIgnoreCase) >= 0 ||
+             title.IndexOf("bottom", StringComparison.OrdinalIgnoreCase) >= 0);
+    }
 
     [StructLayout(LayoutKind.Sequential)]
     private struct RECT { public int L, T, R, B; }
@@ -218,8 +212,7 @@ public static class D2KEmulatorWindows
         var primaryCandidates = new List<Window>();
 
         foreach (var window in windows) {
-            if (window.Title.IndexOf("secondary", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                window.Title.IndexOf("bottom", StringComparison.OrdinalIgnoreCase) >= 0) {
+            if (IsSecondaryTitle(window.Title)) {
                 secondary = window;
             } else if (!String.Equals(window.Title, "Azahar", StringComparison.OrdinalIgnoreCase)) {
                 primaryCandidates.Add(window);
@@ -238,6 +231,23 @@ public static class D2KEmulatorWindows
     }
 }
 '@
+
+if ($SelfTest) {
+    if ((Get-EmulatorArguments -System dreamcast -Rom 'C:\Games\Test Game.chd') -ne '"C:\Games\Test Game.chd"') {
+        throw 'Dreamcast argument construction failed.'
+    }
+    if ((Get-EmulatorArguments -System ps1 -Rom 'C:\Games\Test Disc.cue') -ne '-batch -fastboot -- "C:\Games\Test Disc.cue"') {
+        throw 'PS1 argument construction failed.'
+    }
+    if ((Get-EmulatorArguments -System n64 -Rom 'C:\Games\Test.z64') -notmatch '--system "Nintendo 64"') {
+        throw 'N64 argument construction failed.'
+    }
+    if (-not [D2KEmulatorWindows]::IsSecondaryTitle('Fenêtre secondaire')) {
+        throw 'Localized Azahar secondary-window detection failed.'
+    }
+    Write-Host 'launch-emulator self-test passed.'
+    exit 0
+}
 
 Write-Log "===== launch-$Console start: rom=$RomPath ====="
 $mpdScript = Join-Path $PSScriptRoot 'mpd.ps1'
