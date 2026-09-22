@@ -106,7 +106,8 @@ Item {
         Image {
             id: departingArt
             x: 65.5 + carousel.slot * panel.consoleStep * (carousel.phase - 1)
-            y: 63.5; width: carousel.artSize; height: carousel.artSize
+            y: 63.5 + panel.theme.carouselOffsetFor(departingArt.source)
+            width: carousel.artSize; height: carousel.artSize
             fillMode: Image.PreserveAspectFit
             smooth: true
         }
@@ -114,7 +115,8 @@ Item {
         Image {
             id: arrivingArt
             x: 65.5 + carousel.slot * panel.consoleStep * carousel.phase
-            y: 63.5; width: carousel.artSize; height: carousel.artSize
+            y: 63.5 + panel.theme.carouselOffsetFor(panel.carouselSource)
+            width: carousel.artSize; height: carousel.artSize
             source: panel.carouselSource
             fillMode: Image.PreserveAspectFit
             smooth: true

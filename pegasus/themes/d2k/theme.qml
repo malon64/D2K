@@ -67,6 +67,14 @@ FocusScope {
         volume: 1.0
     }
 
+    // Same sample as backSound, kept as its own instance so the two can be
+    // retuned independently.
+    SoundEffect {
+        id: musicToggleSound
+        source: "assets/sound-effects/MNT_YTK_drums_perc_blooper.wav"
+        volume: root.soundEffectVolume
+    }
+
     SoundEffect {
         id: consoleSound
         source: "assets/sound-effects/ESM_Mellow_Message_Ping_Notification_Synth_Electronic_Cartoon.wav"
@@ -201,7 +209,7 @@ FocusScope {
         if (playingIndex < 0)
             return
 
-        navigationSound.play()
+        musicToggleSound.play()
         musicPaused = !musicPaused
         musicCommandAt = Date.now()
         sendMusicCommand(musicPaused ? "pause" : "resume")

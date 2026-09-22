@@ -43,6 +43,23 @@ Item {
     readonly property var carouselArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
     readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
 
+    // Vertical nudge for carousel art, in the 189px art space. The renders are
+    // not all balanced the same way: music's alpha box is centred, but its
+    // trailing earbud drags the visible mass 5px low, so it reads as sitting
+    // below the middle of the ring without this.
+    readonly property var carouselOffsets: ({ "music": -5 })
+
+    // Keyed off the art URL rather than the collection, because the carousel
+    // also has to nudge the departing tile and only keeps its source.
+    function carouselOffsetFor(source) {
+        var text = "" + source
+        for (var id in carouselOffsets) {
+            if (text.indexOf("/" + id + "-carousel.png") >= 0)
+                return carouselOffsets[id]
+        }
+        return 0
+    }
+
     // Shorter names for the upper screen, where the full collection name runs
     // past the glass button. Anything not listed keeps its collection name.
     readonly property var consoleDisplayNames: ({

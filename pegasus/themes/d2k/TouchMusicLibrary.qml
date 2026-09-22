@@ -123,15 +123,32 @@ Item {
                 verticalAlignment: Text.AlignVCenter
             }
 
-            Text {
-                x: 430; y: 33; width: 16; height: 16
+            // Playing marker. The pause bars are drawn rather than set from a
+            // glyph: at this size the two strokes of U+2016 sit almost on top
+            // of each other, which reads as a smudge instead of a pause icon.
+            Item {
+                x: 430; y: 32; width: 16; height: 16
                 visible: parent.isPlaying
-                text: panel.paused ? "‖" : "▶"
-                color: panel.theme.cyanInk
-                font.family: panel.theme.bodyBoldFont
-                font.pixelSize: 11
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+
+                Text {
+                    anchors.fill: parent
+                    visible: !panel.paused
+                    text: "▶"
+                    color: panel.theme.cyanInk
+                    font.family: panel.theme.bodyBoldFont
+                    font.pixelSize: 11
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Row {
+                    anchors.centerIn: parent
+                    visible: panel.paused
+                    spacing: 4
+
+                    Rectangle { width: 3; height: 12; radius: 1; color: panel.theme.cyanInk }
+                    Rectangle { width: 3; height: 12; radius: 1; color: panel.theme.cyanInk }
+                }
             }
 
             // metadata.pegasus.txt carries the track length in summary:,
@@ -261,9 +278,11 @@ Item {
     // change reads as a transition. It starts on the tap, off the theme's own
     // optimistic state -- MPD fades its volume over ~600ms before it reports
     // the new state, and waiting for that would make the button feel dead.
+    // Mirrors the back button: same box, same margins, opposite edge
+    // (800 - 14 - 76). Sitting any larger or higher ran it into the list frame.
     Item {
         id: transport
-        x: 690; y: 0; width: 104; height: 104
+        x: 710; y: 10; width: 76; height: 69
 
         opacity: panel.playingIndex >= 0 ? 1.0 : 0.38
         Behavior on opacity { NumberAnimation { duration: 140 } }
