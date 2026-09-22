@@ -74,27 +74,15 @@ Item {
         opacity: 0.28
     }
 
-    // Peripheral ornaments, same placement the game screen uses, so the music
-    // screen carries the same density as the rest of the menu.
+    // Ornaments are exported from the Figma frame as rendered, so the rotations
+    // they carry there are already baked in and each one is simply placed at
+    // its render bounds. This one sits under the card; the rest are drawn over
+    // everything, at the end of the file, matching the Figma layer order.
     Image {
-        x: 5; y: -5; width: 214; height: 214
-        source: "assets/cherub-corner.png"
-        fillMode: Image.PreserveAspectFit
-        opacity: 0.92
-    }
-
-    Image {
-        x: -26; y: 319; width: 220; height: 220
-        source: "assets/ornament-05.png"
-        fillMode: Image.PreserveAspectFit
-        opacity: 0.92
-    }
-
-    Image {
-        x: 603; y: -26; width: 220; height: 220
-        source: "assets/ornament-12.png"
-        fillMode: Image.PreserveAspectFit
-        opacity: 0.92
+        x: 49; y: 44; width: 73; height: 73
+        source: "assets/music-orn-badge.png"
+        fillMode: Image.Stretch
+        smooth: true
     }
 
     Text {
@@ -239,5 +227,51 @@ Item {
         font.pixelSize: 10
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+    }
+
+    // Foreground ornaments. In Figma these sit above every other layer on the
+    // frame, including the footer, and the banners deliberately run off the
+    // edges -- the panel clips them.
+    Image {
+        x: 564; y: 1; width: 226; height: 226
+        source: "assets/music-orn-earbuds.png"
+        fillMode: Image.Stretch
+        smooth: true
+    }
+
+    Image {
+        x: 545; y: 278; width: 255; height: 202
+        source: "assets/music-orn-planet.png"
+        fillMode: Image.Stretch
+        smooth: true
+        opacity: 0.92
+    }
+
+    Image {
+        x: 11; y: 3; width: 222; height: 222
+        source: "assets/music-orn-butterfly.png"
+        fillMode: Image.Stretch
+        smooth: true
+    }
+
+    Image {
+        x: 0; y: 361; width: 114; height: 119
+        source: "assets/music-orn-crystal.png"
+        fillMode: Image.Stretch
+        smooth: true
+    }
+
+    Image {
+        x: 201; y: 0; width: 599; height: 405
+        source: "assets/music-banner-top.png"
+        fillMode: Image.Stretch
+        smooth: true
+    }
+
+    Image {
+        x: 0; y: 0; width: 511; height: 393
+        source: "assets/music-banner-bottom.png"
+        fillMode: Image.Stretch
+        smooth: true
     }
 }

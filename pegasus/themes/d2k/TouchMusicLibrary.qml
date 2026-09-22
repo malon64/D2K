@@ -77,8 +77,10 @@ Item {
                 smooth: true
             }
 
+            // Sits just inside the selected panel's hollow window, whose left
+            // edge is at 0.0621 of the row width (38.5px here).
             Text {
-                x: 48; y: 25; width: 32; height: 32
+                x: 40; y: 25; width: 30; height: 32
                 text: (index + 1) < 10 ? "0" + (index + 1) : "" + (index + 1)
                 color: parent.isPlaying ? panel.theme.cyanInk : "#91a4d2"
                 font.family: panel.theme.titleFont
@@ -200,36 +202,16 @@ Item {
         verticalAlignment: Text.AlignVCenter
     }
 
-    // There is no dedicated transport artwork in the theme, so this reuses the
-    // square tile frame the game grid already uses and carries the state in the
-    // glyph rather than in two more PNGs.
-    Item {
-        id: transport
+    // The button shows the action it performs, not the current state: pause
+    // while a track is playing, play once it is paused. Each has its own
+    // selected artwork for the press.
+    ControlButton {
         x: 716; y: 14; width: 62; height: 59
-        opacity: panel.playingIndex >= 0 ? 1.0 : 0.38
-
-        Image {
-            anchors.fill: parent
-            source: transportArea.pressed ? "assets/tile-frame-selected.png" : "assets/tile-frame.png"
-            fillMode: Image.Stretch
-            smooth: true
-        }
-
-        Text {
-            anchors.fill: parent
-            text: panel.paused ? "▶" : "‖"
-            color: panel.theme.cyanInk
-            font.family: panel.theme.bodyBoldFont
-            font.pixelSize: 22
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-
-        MouseArea {
-            id: transportArea
-            anchors.fill: parent
-            enabled: panel.playingIndex >= 0
-            onClicked: panel.togglePlayback()
-        }
+        source: panel.paused ? "assets/control-music-play.png"
+                             : "assets/control-music-pause.png"
+        pressedSource: panel.paused ? "assets/control-music-play-pressed.png"
+                                    : "assets/control-music-pause-pressed.png"
+        active: panel.playingIndex >= 0
+        onActivated: panel.togglePlayback()
     }
 }
