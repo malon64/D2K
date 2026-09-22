@@ -85,28 +85,6 @@ Item {
         smooth: true
     }
 
-    Text {
-        x: 200; y: 16; width: 400; height: 30
-        text: "D2K // LOCAL MUSIC"
-        color: "#f4faff"
-        font.family: panel.theme.titleFont
-        font.pixelSize: 21
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-
-    Text {
-        x: 200; y: 46; width: 400; height: 18
-        text: panel.trackIndex >= 0
-              ? "NOW PLAYING  •  TRACK " + (panel.trackIndex + 1) + " OF " + panel.trackCount
-              : panel.trackCount + " TRACKS  •  PICK ONE BELOW"
-        color: "#b8d7ff"
-        font.family: panel.theme.bodyFont
-        font.pixelSize: 11
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
-
     // The card artwork is cropped to its opaque content, so it stretches
     // straight into place without a clipping wrapper.
     Image {
@@ -233,14 +211,14 @@ Item {
     // frame, including the footer, and the banners deliberately run off the
     // edges -- the panel clips them.
     Image {
-        x: 564; y: 1; width: 226; height: 226
+        x: 564; y: 1; width: 227; height: 227
         source: "assets/music-orn-earbuds.png"
         fillMode: Image.Stretch
         smooth: true
     }
 
     Image {
-        x: 545; y: 278; width: 255; height: 202
+        x: 545; y: 278; width: 264; height: 264
         source: "assets/music-orn-planet.png"
         fillMode: Image.Stretch
         smooth: true
@@ -255,23 +233,38 @@ Item {
     }
 
     Image {
-        x: 0; y: 361; width: 114; height: 119
+        x: -6; y: 361; width: 120; height: 119
         source: "assets/music-orn-crystal.png"
         fillMode: Image.Stretch
         smooth: true
     }
 
     Image {
-        x: 201; y: 0; width: 599; height: 405
+        x: 201; y: -166; width: 683; height: 571
         source: "assets/music-banner-top.png"
         fillMode: Image.Stretch
         smooth: true
     }
 
     Image {
-        x: 0; y: 0; width: 511; height: 393
+        x: -209; y: -78; width: 720; height: 471
         source: "assets/music-banner-bottom.png"
         fillMode: Image.Stretch
         smooth: true
+    }
+
+    // Drawn after the ornaments on purpose. Figma stacks the banners over the
+    // whole frame, which used to fall on the now-removed title; left in that
+    // order this line ends up sliced in half by the diagonal banner.
+    Text {
+        x: 200; y: 46; width: 400; height: 18
+        text: panel.trackIndex >= 0
+              ? "NOW PLAYING  •  TRACK " + (panel.trackIndex + 1) + " OF " + panel.trackCount
+              : panel.trackCount + " TRACKS  •  PICK ONE BELOW"
+        color: "#b8d7ff"
+        font.family: panel.theme.bodyFont
+        font.pixelSize: 11
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
     }
 }

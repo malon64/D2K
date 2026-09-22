@@ -19,7 +19,7 @@ if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
 $themeSettingsPath = Join-Path $env:USERPROFILE 'scoop/apps/pegasus/current/config/theme_settings/d2k.json'
 if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
     try {
-        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
         $changed = $false
         if ($settings.PSObject.Properties.Match('d2kNav').Count -gt 0) {
             $settings.PSObject.Properties.Remove('d2kNav')
@@ -55,7 +55,7 @@ if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
 function Test-D2KMusicReady {
     try {
         if (-not (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf)) { return $false }
-        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
         return $settings.PSObject.Properties.Match('d2kMusicReady').Count -gt 0 -and $settings.d2kMusicReady -eq $true
     }
     catch { return $false }
@@ -64,7 +64,7 @@ function Test-D2KMusicReady {
 function Get-D2KMusicLaunch {
     try {
         if (-not (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf)) { return $null }
-        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($settings.PSObject.Properties.Match('d2kMusicLaunch').Count -eq 0) { return $null }
         return $settings.d2kMusicLaunch
     }
@@ -77,7 +77,7 @@ function Get-D2KMusicLaunch {
 function Get-D2KMusicCommand {
     try {
         if (-not (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf)) { return $null }
-        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($settings.PSObject.Properties.Match('d2kMusicSeq').Count -eq 0) { return $null }
         return [pscustomobject]@{
             Seq    = $settings.d2kMusicSeq

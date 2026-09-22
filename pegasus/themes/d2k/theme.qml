@@ -29,6 +29,13 @@ FocusScope {
     // Last file MPD reported, so the track lookup only runs when it changes
     // rather than on every poll.
     property string musicStatusFile: ""
+
+    // When the last play/pause command was sent. Pause fades MPD's volume down
+    // over ~600ms before the state actually flips, so a status poll landing in
+    // that window still reports the old state. Honouring it would snap the
+    // button back mid-transition, so local state wins briefly.
+    property double musicCommandAt: 0
+    readonly property int musicCommandGrace: 1500
     property var hostWindow: Window.window
     readonly property real soundEffectVolume: 0.75
 
@@ -184,6 +191,7 @@ FocusScope {
         gameSound.play()
         playingIndex = index
         musicPaused = false
+        musicCommandAt = Date.now()
         musicPositionMs = -1
         musicDurationMs = -1
         sendMusicCommand("play", trackPath(index))
@@ -195,6 +203,7 @@ FocusScope {
 
         navigationSound.play()
         musicPaused = !musicPaused
+        musicCommandAt = Date.now()
         sendMusicCommand(musicPaused ? "pause" : "resume")
     }
 
@@ -210,7 +219,9 @@ FocusScope {
         if (!status)
             return
 
-        musicPaused = status.state === "pause"
+        if (Date.now() - musicCommandAt > musicCommandGrace)
+            musicPaused = status.state === "pause"
+
         musicPositionMs = typeof status.positionMs === "number" ? status.positionMs : -1
         musicDurationMs = typeof status.durationMs === "number" ? status.durationMs : -1
 

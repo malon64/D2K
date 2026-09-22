@@ -203,15 +203,47 @@ Item {
     }
 
     // The button shows the action it performs, not the current state: pause
-    // while a track is playing, play once it is paused. Each has its own
-    // selected artwork for the press.
-    ControlButton {
-        x: 716; y: 14; width: 62; height: 59
-        source: panel.paused ? "assets/control-music-play.png"
-                             : "assets/control-music-pause.png"
-        pressedSource: panel.paused ? "assets/control-music-play-pressed.png"
-                                    : "assets/control-music-pause-pressed.png"
-        active: panel.playingIndex >= 0
-        onActivated: panel.togglePlayback()
+    // while a track is playing, play once it is paused.
+    //
+    // Both artworks are stacked and cross-faded rather than swapped, so the
+    // change reads as a transition. It starts on the tap, off the theme's own
+    // optimistic state -- MPD fades its volume over ~600ms before it reports
+    // the new state, and waiting for that would make the button feel dead.
+    Item {
+        id: transport
+        x: 702; y: 2; width: 84; height: 84
+
+        opacity: panel.playingIndex >= 0 ? 1.0 : 0.38
+        Behavior on opacity { NumberAnimation { duration: 140 } }
+
+        scale: transportArea.pressed ? 0.93 : 1.0
+        Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+
+        Image {
+            anchors.fill: parent
+            source: transportArea.pressed ? "assets/control-music-pause-pressed.png"
+                                          : "assets/control-music-pause.png"
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            opacity: panel.paused ? 0.0 : 1.0
+            Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.InOutQuad } }
+        }
+
+        Image {
+            anchors.fill: parent
+            source: transportArea.pressed ? "assets/control-music-play-pressed.png"
+                                          : "assets/control-music-play.png"
+            fillMode: Image.PreserveAspectFit
+            smooth: true
+            opacity: panel.paused ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 170; easing.type: Easing.InOutQuad } }
+        }
+
+        MouseArea {
+            id: transportArea
+            anchors.fill: parent
+            enabled: panel.playingIndex >= 0
+            onClicked: panel.togglePlayback()
+        }
     }
 }
