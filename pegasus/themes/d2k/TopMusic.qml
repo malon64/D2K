@@ -74,13 +74,15 @@ Item {
         opacity: 0.28
     }
 
-    // Ornaments are exported from the Figma frame as rendered, so the rotations
-    // they carry there are already baked in and each one is simply placed at
-    // its render bounds. This one sits under the card; the rest are drawn over
-    // everything, at the end of the file, matching the Figma layer order.
+    // Ornaments are the unrotated source artwork, placed at the node's own box
+    // with any Figma rotation reapplied here. Where a node is rotated, the box
+    // is centred on its bounding box so the two agree.
+    //
+    // This one sits under the card; the rest are drawn over everything, at the
+    // end of the file, matching the Figma layer order.
     Image {
         x: 49; y: 44; width: 73; height: 73
-        source: "assets/music-orn-badge.png"
+        source: "assets/chrome-flare.png"
         fillMode: Image.Stretch
         smooth: true
     }
@@ -210,18 +212,23 @@ Item {
     // Foreground ornaments. In Figma these sit above every other layer on the
     // frame, including the footer, and the banners deliberately run off the
     // edges -- the panel clips them.
+    // Rotated -0.87 deg in Figma; box centred on its 226.2px bounding box.
     Image {
-        x: 564; y: 1; width: 227; height: 227
+        x: 565.7; y: 2.7; width: 222.8; height: 222.8
         source: "assets/music-orn-earbuds.png"
         fillMode: Image.Stretch
         smooth: true
+        rotation: -0.87
     }
 
+    // Rotated -12.83 deg. Same artwork the game screen uses, so it reuses
+    // ornament-05 rather than shipping a second copy of it.
     Image {
-        x: 545; y: 278; width: 264; height: 264
-        source: "assets/music-orn-planet.png"
+        x: 566.7; y: 299.7; width: 220; height: 220
+        source: "assets/ornament-05.png"
         fillMode: Image.Stretch
         smooth: true
+        rotation: -12.83
         opacity: 0.92
     }
 

@@ -263,7 +263,7 @@ Item {
     // the new state, and waiting for that would make the button feel dead.
     Item {
         id: transport
-        x: 702; y: 2; width: 84; height: 84
+        x: 690; y: 0; width: 104; height: 104
 
         opacity: panel.playingIndex >= 0 ? 1.0 : 0.38
         Behavior on opacity { NumberAnimation { duration: 140 } }
