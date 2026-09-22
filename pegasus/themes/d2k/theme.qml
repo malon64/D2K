@@ -25,6 +25,10 @@ FocusScope {
     property int musicSeq: 0
     property int musicPositionMs: -1
     property int musicDurationMs: -1
+
+    // Last file MPD reported, so the track lookup only runs when it changes
+    // rather than on every poll.
+    property string musicStatusFile: ""
     property var hostWindow: Window.window
     readonly property real soundEffectVolume: 0.75
 
@@ -192,6 +196,62 @@ FocusScope {
         navigationSound.play()
         musicPaused = !musicPaused
         sendMusicCommand(musicPaused ? "pause" : "resume")
+    }
+
+    function baseName(path) {
+        var text = "" + path
+        return text.substring(Math.max(text.lastIndexOf("/"), text.lastIndexOf("\\")) + 1)
+    }
+
+    // Applies what run.ps1 published. MPD is the authority here, not this
+    // theme: it shuffles and advances on its own, so the highlighted row
+    // follows the status file rather than only what was last tapped.
+    function applyMusicStatus(status) {
+        if (!status)
+            return
+
+        musicPaused = status.state === "pause"
+        musicPositionMs = typeof status.positionMs === "number" ? status.positionMs : -1
+        musicDurationMs = typeof status.durationMs === "number" ? status.durationMs : -1
+
+        if (!status.file || !games)
+            return
+
+        var name = baseName(status.file)
+        if (name === musicStatusFile)
+            return
+
+        musicStatusFile = name
+        for (var i = 0; i < gameCount; i++) {
+            if (baseName(trackPath(i)) === name) {
+                playingIndex = i
+                return
+            }
+        }
+    }
+
+    function readMusicStatus() {
+        var request = new XMLHttpRequest()
+        request.onreadystatechange = function () {
+            if (request.readyState !== XMLHttpRequest.DONE || !request.responseText)
+                return
+
+            try { root.applyMusicStatus(JSON.parse(request.responseText)) }
+            catch (error) { /* half-written file: the next poll picks it up */ }
+        }
+        request.open("GET", Qt.resolvedUrl("mpd-status.json"))
+        request.send()
+    }
+
+    // Only while the music screen is up -- nothing else binds to these values,
+    // and MPD does not need polling for the rest of the menu.
+    Timer {
+        id: musicStatusPoll
+        interval: 500
+        repeat: true
+        running: root.navState === "music"
+        triggeredOnStart: true
+        onTriggered: root.readMusicStatus()
     }
 
     function selectGame(index) {

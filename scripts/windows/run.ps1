@@ -88,6 +88,12 @@ function Get-D2KMusicCommand {
     catch { return $null }
 }
 
+# Dot-sourced for Write-D2KMpdStatus and its helpers. mpd.ps1 does nothing
+# without an -Action, and the only variable the two scripts share is
+# $ErrorActionPreference, which both set to 'Stop'. Polling MPD in-process this
+# way avoids spawning a PowerShell per status read.
+. (Join-Path $PSScriptRoot 'mpd.ps1')
+
 try {
     $musicPrepared = $false
     try {
@@ -101,6 +107,7 @@ try {
     $lastMusicSeq = if ($lastMusicCommand) { $lastMusicCommand.Seq } else { $null }
     $pegasus = Start-Process -FilePath $executable -ArgumentList '--portable' -PassThru
     $musicBooted = $false
+    $statusTick = 0
     while (-not $pegasus.HasExited) {
         if (-not $musicBooted -and (Test-D2KMusicReady)) {
             if ($musicPrepared) {
@@ -135,6 +142,17 @@ try {
                 }
                 catch { Write-Warning "D2K music command failed: $($_.Exception.Message)" }
             }
+        }
+
+        # Roughly once a second, publish what MPD is doing so the upper screen's
+        # progress rail has something to bind to. Failures are ignored on
+        # purpose: MPD may be restarting, and a stale rail must never take the
+        # menu down with it.
+        $statusTick++
+        if ($musicPrepared -and $statusTick -ge 10) {
+            $statusTick = 0
+            try { Write-D2KMpdStatus | Out-Null }
+            catch { }
         }
 
         Start-Sleep -Milliseconds 100

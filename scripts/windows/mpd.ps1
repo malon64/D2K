@@ -1,8 +1,10 @@
 param(
-    [Parameter(Mandatory = $true)]
+    # Optional, and '' is allowed, so this script can be dot-sourced for its
+    # helpers without performing an action. run.ps1 does that to poll MPD over
+    # its own socket rather than spawning a process per status read.
     [ValidateSet('Prepare', 'Boot', 'Start', 'Pause', 'Resume', 'Stop', 'SmokeTest',
-                 'Play', 'Next', 'Previous', 'Status')]
-    [string]$Action,
+                 'Play', 'Next', 'Previous', 'Status', '')]
+    [string]$Action = '',
 
     # Play only: the track to start. The theme sends an absolute path, which is
     # resolved against the queue below.
@@ -113,6 +115,46 @@ function Quote-Mpd {
     '"' + $Value.Replace('\', '\\').Replace('"', '\"') + '"'
 }
 
+# MPD omits elapsed and duration entirely while stopped, so both are reported
+# as -1 ("unknown") rather than a misleading zero.
+function ConvertTo-D2KMilliseconds {
+    param([string]$Seconds)
+
+    $value = 0.0
+    if ([double]::TryParse($Seconds, [Globalization.NumberStyles]::Float,
+                           [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
+        return [int]($value * 1000)
+    }
+    return -1
+}
+
+# Writes what MPD is doing to a file the theme reads. Pegasus' api.memory only
+# carries data the other way (QML writes, scripts read), so the upper screen's
+# progress rail needs a file of its own. run.ps1 dot-sources this script and
+# calls it on a timer; the Status action is the same thing for manual checks.
+function Write-D2KMpdStatus {
+    $status = Get-MpdStatus
+    $current = @{}
+    foreach ($line in Invoke-Mpd @('currentsong')) {
+        $separator = $line.IndexOf(': ')
+        if ($separator -ge 0) { $current[$line.Substring(0, $separator)] = $line.Substring($separator + 2) }
+    }
+
+    $payload = [ordered]@{
+        state      = $status['state']
+        file       = $current['file']
+        title      = $current['Title']
+        artist     = $current['Artist']
+        positionMs = ConvertTo-D2KMilliseconds $status['elapsed']
+        durationMs = ConvertTo-D2KMilliseconds $status['duration']
+        updatedAt  = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    }
+
+    $statusPath = Join-Path $repoRoot 'pegasus/themes/d2k/mpd-status.json'
+    [IO.File]::WriteAllText($statusPath, ($payload | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+    return $payload
+}
+
 function Start-D2KMpd {
     param([switch]$Muted)
 
@@ -172,6 +214,9 @@ function Stop-D2KMpd {
     Remove-Item -LiteralPath $pidPath -Force -ErrorAction SilentlyContinue
 }
 
+# Dot-sourced purely for the helpers above: no action, nothing to run.
+if (-not $Action) { return }
+
 switch ($Action) {
     'Prepare' { Start-D2KMpd -Muted }
     'Boot' { Invoke-Mpd @('pause 0') | Out-Null; Fade-MpdVolume 100 300 }
@@ -207,39 +252,7 @@ switch ($Action) {
     'Next' { Invoke-Mpd @('next') | Out-Null; Fade-MpdVolume 100 300 }
     'Previous' { Invoke-Mpd @('previous') | Out-Null; Fade-MpdVolume 100 300 }
 
-    # Writes what MPD is doing to a file the theme can read. Pegasus' api.memory
-    # only carries data the other way (QML writes, scripts read), so the upper
-    # screen's progress rail needs a file of its own.
-    'Status' {
-        $status = Get-MpdStatus
-        $current = @{}
-        foreach ($line in Invoke-Mpd @('currentsong')) {
-            $separator = $line.IndexOf(': ')
-            if ($separator -ge 0) { $current[$line.Substring(0, $separator)] = $line.Substring($separator + 2) }
-        }
-
-        # MPD omits elapsed and duration entirely while stopped, so both are
-        # reported as -1 ("unknown") rather than a misleading zero.
-        function ConvertTo-Milliseconds([string]$Seconds) {
-            $value = 0.0
-            if ([double]::TryParse($Seconds, [ref]$value)) { return [int]($value * 1000) }
-            return -1
-        }
-
-        $payload = [ordered]@{
-            state      = $status['state']
-            file       = $current['file']
-            title      = $current['Title']
-            artist     = $current['Artist']
-            positionMs = ConvertTo-Milliseconds $status['elapsed']
-            durationMs = ConvertTo-Milliseconds $status['duration']
-            updatedAt  = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-        }
-
-        $statusPath = Join-Path $repoRoot 'pegasus/themes/d2k/mpd-status.json'
-        [IO.File]::WriteAllText($statusPath, ($payload | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
-        Write-Output $payload
-    }
+    'Status' { Write-D2KMpdStatus }
     'SmokeTest' {
         try {
             Start-D2KMpd
