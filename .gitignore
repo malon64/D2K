@@ -35,6 +35,12 @@
 # Private D2K library: ROMs, covers, music and local Pegasus metadata.
 /library/
 
+# Local credentials: Spotify app keys for scripts/windows/build-music-metadata.ps1
+*.local.json
+
+# Runtime playback state written by scripts/*/mpd.* for the theme to read
+/pegasus/themes/d2k/mpd-status.json
+
 # Common generated files
 *.log
 *.cache

@@ -10,12 +10,31 @@ Item {
     property var collection
     property var game
     property int gameCount: 0
+    property var playingTrack
+    property int playingIndex: -1
+    property bool paused: false
+    property int positionMs: -1
+    property int durationMs: -1
 
     Loader {
         anchors.fill: parent
-        sourceComponent: panel.navState === "games" ? gameView
+        sourceComponent: panel.navState === "music" ? musicView
+                       : panel.navState === "games" ? gameView
                        : panel.navState === "consoles" ? consoleView
                        : bootView
+    }
+
+    Component {
+        id: musicView
+        TopMusic {
+            theme: panel.theme
+            game: panel.playingTrack
+            trackIndex: panel.playingIndex
+            trackCount: panel.gameCount
+            paused: panel.paused
+            positionMs: panel.positionMs
+            durationMs: panel.durationMs
+        }
     }
 
     Component {

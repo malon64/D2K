@@ -14,6 +14,17 @@ FocusScope {
     property int gameIndex: 0
     property bool launching: false
     property var orderedCollections: []
+
+    // Music state. The theme never plays audio itself: MPD owns playback (it
+    // already runs the menu music), and every control here is a command posted
+    // through api.memory for run.ps1 to hand to scripts/windows/mpd.ps1.
+    // playingIndex is what this theme last asked MPD to play, which is why it
+    // survives leaving and re-entering the music screen.
+    property int playingIndex: -1
+    property bool musicPaused: false
+    property int musicSeq: 0
+    property int musicPositionMs: -1
+    property int musicDurationMs: -1
     property var hostWindow: Window.window
     readonly property real soundEffectVolume: 0.75
 
@@ -24,6 +35,12 @@ FocusScope {
     readonly property var selectedGame: games && gameCount > gameIndex ? games.get(gameIndex) : null
     readonly property int pageCount: Math.max(1, Math.ceil(gameCount / d2k.pageSize))
     readonly property int pageIndex: Math.floor(gameIndex / d2k.pageSize)
+
+    // The music collection is a normal Pegasus collection whose "games" are
+    // tracks, so it needs its own screens rather than the game grid.
+    readonly property bool musicCollection: d2k.consoleId(currentCollection) === "music"
+    readonly property var playingTrack: games && playingIndex >= 0 && playingIndex < gameCount
+                                        ? games.get(playingIndex) : null
 
     D2KTheme { id: d2k }
 
@@ -120,10 +137,61 @@ FocusScope {
             return
 
         consoleSound.play()
+
+        if (musicCollection) {
+            navState = "music"
+            api.memory.set("d2kNav", "music")
+            return
+        }
+
         var saved = api.memory.get("d2kGame:" + d2k.consoleId(currentCollection))
         gameIndex = (typeof saved === "number" && saved >= 0 && saved < gameCount) ? saved : 0
         navState = "games"
         api.memory.set("d2kNav", "games")
+    }
+
+    // Every music control is posted the same way: run.ps1 already polls
+    // config/theme_settings/d2k.json every 100 ms, so bumping the sequence
+    // number is what makes it notice a new command. The track path is sent
+    // rather than an index because MPD's queue order is its own -- the script
+    // resolves the path against the queue.
+    function sendMusicCommand(action, track) {
+        musicSeq += 1
+        api.memory.set("d2kMusicAction", action)
+        api.memory.set("d2kMusicTrack", track === undefined ? "" : track)
+        api.memory.set("d2kMusicSeq", musicSeq)
+    }
+
+    function trackPath(index) {
+        if (!games || index < 0 || index >= gameCount)
+            return ""
+
+        var track = games.get(index)
+        if (!track || !track.files || track.files.count < 1)
+            return ""
+
+        return "" + track.files.get(0).path
+    }
+
+    function playTrack(index) {
+        if (!gameCount || index < 0 || index >= gameCount)
+            return
+
+        gameSound.play()
+        playingIndex = index
+        musicPaused = false
+        musicPositionMs = -1
+        musicDurationMs = -1
+        sendMusicCommand("play", trackPath(index))
+    }
+
+    function toggleMusic() {
+        if (playingIndex < 0)
+            return
+
+        navigationSound.play()
+        musicPaused = !musicPaused
+        sendMusicCommand(musicPaused ? "pause" : "resume")
     }
 
     function selectGame(index) {
@@ -281,11 +349,14 @@ FocusScope {
         // on an actual cold boot, which always plays the boot screen and
         // lands on the console selector as before.
         var savedNav = api.memory.get("d2kNav")
-        if (savedNav === "games" || savedNav === "consoles") {
+        if (savedNav === "games" || savedNav === "consoles" || savedNav === "music") {
             rebuildCollections()
             restoreConsole()
 
-            if (savedNav === "games" && currentCollection && gameCount) {
+            if (savedNav === "music" && currentCollection && gameCount && musicCollection) {
+                navState = "music"
+            }
+            else if (savedNav === "games" && currentCollection && gameCount) {
                 var savedGame = api.memory.get("d2kGame:" + d2k.consoleId(currentCollection))
                 gameIndex = (typeof savedGame === "number" && savedGame >= 0 && savedGame < gameCount) ? savedGame : 0
                 navState = "games"
@@ -317,6 +388,20 @@ FocusScope {
             else if (api.keys.isAccept(event)) {
                 event.accepted = true
                 openConsole()
+            }
+            return
+        }
+
+        // The track list is touch-only by design: there is no focused row to
+        // move, so the D-pad does nothing here and only Back is wired up.
+        if (navState === "music") {
+            if (api.keys.isCancel(event)) {
+                event.accepted = true
+                backToCollections()
+            }
+            else if (api.keys.isAccept(event)) {
+                event.accepted = true
+                toggleMusic()
             }
             return
         }
@@ -367,6 +452,11 @@ FocusScope {
         collection: root.currentCollection
         game: root.selectedGame
         gameCount: root.gameCount
+        playingTrack: root.playingTrack
+        playingIndex: root.playingIndex
+        paused: root.musicPaused
+        positionMs: root.musicPositionMs
+        durationMs: root.musicDurationMs
     }
 
     Window {
@@ -394,7 +484,11 @@ FocusScope {
             pageIndex: root.pageIndex
             pageCount: root.pageCount
             launching: root.launching
+            playingIndex: root.playingIndex
+            paused: root.musicPaused
 
+            onPlayTrack: root.playTrack(index)
+            onTogglePlayback: root.toggleMusic()
             onPreviousConsole: root.selectConsole(root.consoleIndex - 1)
             onNextConsole: root.selectConsole(root.consoleIndex + 1)
             onOpenConsole: root.openConsole()

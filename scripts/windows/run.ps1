@@ -33,6 +33,15 @@ if (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf) {
             $settings.PSObject.Properties.Remove('d2kMusicLaunch')
             $changed = $true
         }
+        # A stale music command must not fire on the next power-on, or the
+        # console would start playing whatever was last picked instead of the
+        # shuffled menu music.
+        foreach ($key in 'd2kMusicSeq', 'd2kMusicAction', 'd2kMusicTrack') {
+            if ($settings.PSObject.Properties.Match($key).Count -gt 0) {
+                $settings.PSObject.Properties.Remove($key)
+                $changed = $true
+            }
+        }
         if ($changed) {
             $json = $settings | ConvertTo-Json -Compress
             [System.IO.File]::WriteAllText($themeSettingsPath, $json, [System.Text.UTF8Encoding]::new($false))
@@ -62,6 +71,23 @@ function Get-D2KMusicLaunch {
     catch { return $null }
 }
 
+# The music screen posts its controls the same way: theme.qml bumps
+# d2kMusicSeq alongside an action and, for Play, the track path. Only the
+# sequence number is compared, so repeating the same action still registers.
+function Get-D2KMusicCommand {
+    try {
+        if (-not (Test-Path -LiteralPath $themeSettingsPath -PathType Leaf)) { return $null }
+        $settings = Get-Content -LiteralPath $themeSettingsPath -Raw | ConvertFrom-Json
+        if ($settings.PSObject.Properties.Match('d2kMusicSeq').Count -eq 0) { return $null }
+        return [pscustomobject]@{
+            Seq    = $settings.d2kMusicSeq
+            Action = if ($settings.PSObject.Properties.Match('d2kMusicAction').Count -gt 0) { $settings.d2kMusicAction } else { '' }
+            Track  = if ($settings.PSObject.Properties.Match('d2kMusicTrack').Count -gt 0) { $settings.d2kMusicTrack } else { '' }
+        }
+    }
+    catch { return $null }
+}
+
 try {
     $musicPrepared = $false
     try {
@@ -71,6 +97,8 @@ try {
     catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
 
     $lastMusicLaunch = Get-D2KMusicLaunch
+    $lastMusicCommand = Get-D2KMusicCommand
+    $lastMusicSeq = if ($lastMusicCommand) { $lastMusicCommand.Seq } else { $null }
     $pegasus = Start-Process -FilePath $executable -ArgumentList '--portable' -PassThru
     $musicBooted = $false
     while (-not $pegasus.HasExited) {
@@ -88,6 +116,24 @@ try {
             if ($musicPrepared) {
                 try { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Pause }
                 catch { Write-Warning "D2K music is unavailable: $($_.Exception.Message)" }
+            }
+        }
+
+        $musicCommand = Get-D2KMusicCommand
+        if ($null -ne $musicCommand -and $musicCommand.Seq -ne $lastMusicSeq) {
+            $lastMusicSeq = $musicCommand.Seq
+            if ($musicPrepared) {
+                try {
+                    switch ($musicCommand.Action) {
+                        'play'     { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Play -Track $musicCommand.Track }
+                        'pause'    { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Pause }
+                        'resume'   { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Resume }
+                        'next'     { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Next }
+                        'previous' { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Previous }
+                        default    { Write-Warning "Unknown D2K music action: $($musicCommand.Action)" }
+                    }
+                }
+                catch { Write-Warning "D2K music command failed: $($_.Exception.Message)" }
             }
         }
 

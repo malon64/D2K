@@ -15,6 +15,8 @@ Item {
     property int pageIndex: 0
     property int pageCount: 1
     property bool launching: false
+    property int playingIndex: -1
+    property bool paused: false
 
     signal previousConsole()
     signal nextConsole()
@@ -23,10 +25,13 @@ Item {
     signal stepPage(int delta)
     signal launch()
     signal back()
+    signal playTrack(int index)
+    signal togglePlayback()
 
     Loader {
         anchors.fill: parent
-        sourceComponent: panel.navState === "games" ? libraryView
+        sourceComponent: panel.navState === "music" ? musicView
+                       : panel.navState === "games" ? libraryView
                        : panel.navState === "consoles" ? selectorView
                        : bootView
     }
@@ -49,6 +54,21 @@ Item {
             onPrevious: panel.previousConsole()
             onNext: panel.nextConsole()
             onOpen: panel.openConsole()
+        }
+    }
+
+    Component {
+        id: musicView
+        TouchMusicLibrary {
+            theme: panel.theme
+            games: panel.games
+            trackCount: panel.gameCount
+            playingIndex: panel.playingIndex
+            paused: panel.paused
+
+            onPlayTrack: panel.playTrack(index)
+            onTogglePlayback: panel.togglePlayback()
+            onBack: panel.back()
         }
     }
 

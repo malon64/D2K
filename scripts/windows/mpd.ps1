@@ -1,7 +1,12 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Prepare', 'Boot', 'Start', 'Pause', 'Resume', 'Stop', 'SmokeTest')]
-    [string]$Action
+    [ValidateSet('Prepare', 'Boot', 'Start', 'Pause', 'Resume', 'Stop', 'SmokeTest',
+                 'Play', 'Next', 'Previous', 'Status')]
+    [string]$Action,
+
+    # Play only: the track to start. The theme sends an absolute path, which is
+    # resolved against the queue below.
+    [string]$Track
 )
 
 $ErrorActionPreference = 'Stop'
@@ -174,6 +179,67 @@ switch ($Action) {
     'Pause' { Fade-MpdVolume 0; Invoke-Mpd @('pause 1') | Out-Null }
     'Resume' { Invoke-Mpd @('pause 0') | Out-Null; Fade-MpdVolume 100 }
     'Stop' { Stop-D2KMpd }
+
+    # The theme's track list and MPD's queue are two different orderings (the
+    # queue is built from playlist.m3u and then shuffled), so a track is located
+    # by path rather than by index.
+    'Play' {
+        if (-not $Track) { throw 'Play requires -Track.' }
+
+        $relative = $Track -replace '\\', '/'
+        $marker = 'library/consoles/music/'
+        $cut = $relative.IndexOf($marker)
+        if ($cut -ge 0) { $relative = $relative.Substring($cut + $marker.Length) }
+        $relative = $relative.TrimStart('/')
+
+        $position = $null
+        foreach ($line in Invoke-Mpd @('playlistfind file ' + (Quote-Mpd $relative))) {
+            if ($line -like 'Pos: *') { $position = $line.Substring(5).Trim(); break }
+        }
+        if ($null -eq $position) { throw "Track is not in the D2K queue: $relative" }
+
+        Invoke-Mpd @("play $position") | Out-Null
+        # Pause fades the volume to zero, so a track chosen while paused would
+        # otherwise start silently.
+        Fade-MpdVolume 100 300
+    }
+
+    'Next' { Invoke-Mpd @('next') | Out-Null; Fade-MpdVolume 100 300 }
+    'Previous' { Invoke-Mpd @('previous') | Out-Null; Fade-MpdVolume 100 300 }
+
+    # Writes what MPD is doing to a file the theme can read. Pegasus' api.memory
+    # only carries data the other way (QML writes, scripts read), so the upper
+    # screen's progress rail needs a file of its own.
+    'Status' {
+        $status = Get-MpdStatus
+        $current = @{}
+        foreach ($line in Invoke-Mpd @('currentsong')) {
+            $separator = $line.IndexOf(': ')
+            if ($separator -ge 0) { $current[$line.Substring(0, $separator)] = $line.Substring($separator + 2) }
+        }
+
+        # MPD omits elapsed and duration entirely while stopped, so both are
+        # reported as -1 ("unknown") rather than a misleading zero.
+        function ConvertTo-Milliseconds([string]$Seconds) {
+            $value = 0.0
+            if ([double]::TryParse($Seconds, [ref]$value)) { return [int]($value * 1000) }
+            return -1
+        }
+
+        $payload = [ordered]@{
+            state      = $status['state']
+            file       = $current['file']
+            title      = $current['Title']
+            artist     = $current['Artist']
+            positionMs = ConvertTo-Milliseconds $status['elapsed']
+            durationMs = ConvertTo-Milliseconds $status['duration']
+            updatedAt  = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+        }
+
+        $statusPath = Join-Path $repoRoot 'pegasus/themes/d2k/mpd-status.json'
+        [IO.File]::WriteAllText($statusPath, ($payload | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+        Write-Output $payload
+    }
     'SmokeTest' {
         try {
             Start-D2KMpd
