@@ -100,7 +100,7 @@ Item {
     }
 
     Text {
-        x: 330; y: 142; width: 330; height: 16
+        x: 344; y: 142; width: 316; height: 16
         text: panel.game ? (panel.paused ? "PAUSED" : "NOW PLAYING") : "NOTHING PLAYING"
         color: "#7ef5ff"
         font.family: panel.theme.pixelFont
@@ -109,7 +109,7 @@ Item {
     }
 
     Text {
-        x: 330; y: 162; width: 330; height: 33
+        x: 344; y: 162; width: 316; height: 33
         text: panel.game ? panel.game.title : "—"
         color: "#f8fbff"
         font.family: panel.theme.titleFont
@@ -119,7 +119,7 @@ Item {
     }
 
     Text {
-        x: 330; y: 199; width: 330; height: 24
+        x: 344; y: 199; width: 316; height: 24
         text: panel.game ? panel.game.developer : ""
         color: "#d3e4ff"
         font.family: panel.theme.bodyBoldFont
@@ -129,7 +129,7 @@ Item {
     }
 
     Text {
-        x: 330; y: 232; width: 330; height: 18
+        x: 344; y: 232; width: 316; height: 18
         text: "MP3  •  320 KBPS  •  LOCAL STORAGE"
         color: panel.theme.skyGlass
         font.family: panel.theme.pixelFont
@@ -251,20 +251,5 @@ Item {
         source: "assets/music-banner-bottom.png"
         fillMode: Image.Stretch
         smooth: true
-    }
-
-    // Drawn after the ornaments on purpose. Figma stacks the banners over the
-    // whole frame, which used to fall on the now-removed title; left in that
-    // order this line ends up sliced in half by the diagonal banner.
-    Text {
-        x: 200; y: 46; width: 400; height: 18
-        text: panel.trackIndex >= 0
-              ? "NOW PLAYING  •  TRACK " + (panel.trackIndex + 1) + " OF " + panel.trackCount
-              : panel.trackCount + " TRACKS  •  PICK ONE BELOW"
-        color: "#b8d7ff"
-        font.family: panel.theme.bodyFont
-        font.pixelSize: 11
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
     }
 }

@@ -31,6 +31,14 @@ Item {
     readonly property real frameW: 795.06
     readonly property real frameH: 433.10
 
+    // Travel available to the scrollbar handle, and to the list behind it.
+    readonly property real scrollSpan: scrollTrack.height - scrollHandle.height
+    readonly property real scrollMax: Math.max(0, list.contentHeight - list.height)
+
+    function scrollToFraction(fraction) {
+        list.contentY = Math.max(0, Math.min(1, fraction)) * panel.scrollMax
+    }
+
     Rectangle {
         anchors.fill: parent
         color: panel.theme.touchBase
@@ -161,20 +169,64 @@ Item {
         visible: list.contentHeight > list.height
     }
 
+    // Tapping the rail jumps the list to that point, the way a desktop
+    // scrollbar does. Wider than the 20px rail so it is reachable with a
+    // finger, and declared before the handle so the handle wins the press.
+    MouseArea {
+        id: railArea
+        x: 694; y: 110; width: 38; height: 334
+        enabled: scrollTrack.visible
+        onClicked: {
+            if (panel.scrollSpan <= 0)
+                return
+
+            panel.scrollToFraction((railArea.y + mouse.y - scrollTrack.y - scrollHandle.height / 2)
+                                   / panel.scrollSpan)
+        }
+    }
+
     // A fixed-size handle rather than a proportional thumb: the artwork is a
     // drawn capsule with an orb in the middle, and scaling it to the content
     // ratio would squash that to an unreadable sliver.
     Image {
         id: scrollHandle
+        x: 699
         width: 28
         height: 116
-        x: 699
-        y: scrollTrack.y + Math.max(0, Math.min(1, list.visibleArea.yPosition))
-               * (scrollTrack.height - height)
         source: "assets/music-scroll-handle.png"
         fillMode: Image.Stretch
         smooth: true
         visible: scrollTrack.visible
+
+        scale: handleArea.pressed ? 1.07 : 1.0
+        Behavior on scale { NumberAnimation { duration: 90; easing.type: Easing.OutQuad } }
+
+        MouseArea {
+            id: handleArea
+            anchors.fill: parent
+            anchors.margins: -8
+            drag.target: scrollHandle
+            drag.axis: Drag.YAxis
+            drag.threshold: 0
+            drag.minimumY: scrollTrack.y
+            drag.maximumY: scrollTrack.y + panel.scrollSpan
+
+            onPositionChanged: {
+                if (!drag.active || panel.scrollSpan <= 0)
+                    return
+
+                panel.scrollToFraction((scrollHandle.y - scrollTrack.y) / panel.scrollSpan)
+            }
+        }
+    }
+
+    // The handle tracks the list, except while it is being dragged -- then the
+    // drag owns its position and this binding would fight it.
+    Binding {
+        target: scrollHandle
+        property: "y"
+        when: !handleArea.drag.active
+        value: scrollTrack.y + Math.max(0, Math.min(1, list.visibleArea.yPosition)) * panel.scrollSpan
     }
 
     ControlButton {
