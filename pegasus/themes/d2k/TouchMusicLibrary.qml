@@ -97,22 +97,6 @@ Item {
                 verticalAlignment: Text.AlignVCenter
             }
 
-            // The cover sits behind the frame artwork and slightly overfills its
-            // window (0.161-0.926 x 0.139-0.852 of the frame), so the chrome
-            // overlaps the edges and the art reads as set into it.
-            CoverArt {
-                x: 495; y: 28; width: 27; height: 26
-                game: panel.games ? panel.games.get(index) : null
-                fillCrop: true
-            }
-
-            Image {
-                x: 490; y: 24; width: 34; height: 34
-                source: "assets/music-cover-frame.png"
-                fillMode: Image.Stretch
-                smooth: true
-            }
-
             Text {
                 x: 84; y: 26; width: 370; height: 16
                 text: model.title
@@ -137,7 +121,7 @@ Item {
             // glyph: at this size the two strokes of U+2016 sit almost on top
             // of each other, which reads as a smudge instead of a pause icon.
             Item {
-                x: 464; y: 33; width: 16; height: 16
+                x: 510; y: 33; width: 16; height: 16
                 visible: parent.isPlaying
 
                 Text {
@@ -164,7 +148,7 @@ Item {
             // metadata.pegasus.txt carries the track length in summary:,
             // because Pegasus has no duration field of its own.
             Text {
-                x: 528; y: 32; width: 44; height: 18
+                x: 480; y: 32; width: 92; height: 18
                 text: model.summary
                 color: parent.isPlaying ? "#d8ecff" : panel.theme.skyGlass
                 font.family: panel.theme.hudFont

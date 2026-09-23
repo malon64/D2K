@@ -87,6 +87,16 @@ Item {
         smooth: true
     }
 
+    // Drawn before the card, so it shows through the card's square window. The
+    // window is cut out of the artwork itself (x 105..551, y 112..528 of the
+    // 1623x673 image) and this runs ~2px under the border on every side, so
+    // the frame's edge is always what closes the picture off.
+    CoverArt {
+        x: 111; y: 158; width: 185; height: 173
+        game: panel.game
+        fillCrop: true
+    }
+
     // The card artwork is cropped to its opaque content, so it stretches
     // straight into place without a clipping wrapper.
     Image {
@@ -94,16 +104,6 @@ Item {
         source: "assets/music-nowplaying.png"
         fillMode: Image.Stretch
         smooth: true
-    }
-
-    // Fills the card's square screen edge to edge, cropping rather than
-    // letterboxing so the art reads as the screen's content. The screen is the
-    // dark area inside the blue glow border, x 125..537 / y 112..527 of the
-    // 1623x673 card artwork, measured by scanning for the border lines.
-    CoverArt {
-        x: 121; y: 160; width: 167; height: 169
-        game: panel.game
-        fillCrop: true
     }
 
     Text {
