@@ -8,6 +8,14 @@ Item {
 
     property var theme
     property bool touchVariant: false
+    property int loadingDots: 0
+
+    Timer {
+        interval: 260
+        running: boot.touchVariant
+        repeat: true
+        onTriggered: boot.loadingDots = (boot.loadingDots + 1) % 4
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -35,7 +43,7 @@ Item {
         visible: boot.touchVariant
         anchors.horizontalCenter: parent.horizontalCenter
         y: 228
-        text: "LOADING"
+        text: "LOADING " + [".", "..", "...", "...."][boot.loadingDots]
         color: boot.theme.cyanInk
         font.family: boot.theme.pixelFont
         font.pixelSize: 26

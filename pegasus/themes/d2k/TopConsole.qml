@@ -314,7 +314,7 @@ Item {
         text: panel.gameCount
         color: panel.theme.countInk
         font.family: panel.theme.countFont
-        font.pixelSize: 48
+        font.pixelSize: 44
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
