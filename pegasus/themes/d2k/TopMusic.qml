@@ -88,16 +88,19 @@ Item {
         PauseAnimation  { duration: 270 }
     }
 
-    // Diagonal banners. The artwork is the Figma banner group exported flat
-    // (704.75 x 191.86: black banner, 12.7 px gap, glass banner), and each
-    // strip is rotated here about its Figma origin and slid along its own
-    // length -- the diagonal counterpart of the console screen's vertical
-    // banner. The period is the group plus that same 12.7 px gap, so copies
-    // chain with even spacing, and the speed matches the vertical banner's
-    // 480 px per 14 s.
-    readonly property real bannerWidth: 704.75
-    readonly property real bannerHeight: 191.86
-    readonly property real bannerPeriod: bannerWidth + 12.7
+    // Diagonal banners, the diagonal counterpart of the console screen's
+    // vertical banner. Each strip is rotated about its Figma origin and its
+    // banners slide along their own length.
+    //
+    // In the Figma group the glass banner sits 77px above the black one. As a
+    // repeating unit that staircases -- every copy drops back to the lower
+    // line -- so both pieces share one centre line here (y 95.5 in the
+    // 705x192 group box) and alternate at a constant 15px gap, which makes the
+    // chain a single straight line that keeps its angle. Speed matches the
+    // vertical banner's 480px per 14s.
+    readonly property real bannerWidth: 705
+    readonly property real bannerHeight: 192
+    readonly property real bannerPeriod: 718
     readonly property int bannerDuration: Math.round(bannerPeriod * 14000 / 480)
 
     Rectangle {
@@ -328,14 +331,23 @@ Item {
             Repeater {
                 model: 3
 
-                delegate: Image {
+                delegate: Item {
                     x: strip.scroll + (index - 1) * panel.bannerPeriod
-                    y: 0
-                    width: panel.bannerWidth
+                    width: panel.bannerPeriod
                     height: panel.bannerHeight
-                    source: "assets/music-banner.png"
-                    fillMode: Image.Stretch
-                    smooth: true
+
+                    // Both centred on y 95.5: black 111px tall, glass 113px.
+                    Image {
+                        x: 2; y: 40; width: 339; height: 111
+                        source: "assets/music-banner-black.png"
+                        smooth: true
+                    }
+
+                    Image {
+                        x: 356; y: 39; width: 349; height: 113
+                        source: "assets/music-banner-glass.png"
+                        smooth: true
+                    }
                 }
             }
         }
