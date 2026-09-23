@@ -15,8 +15,19 @@ Item {
     property string cpuText: "--"
     property string tempText: "--"
 
-    function hudLine(label, value) {
-        return label + ' <font color="' + panel.theme.cyanHex + '">' + value + '</font>'
+    function percentageColor(value, inverted) {
+        var percent = parseInt(value, 10)
+        if (isNaN(percent) || percent < 0 || percent > 100)
+            return panel.theme.cyanHex
+
+        var band = percent <= 20 ? 0 : percent <= 50 ? 1 : percent <= 80 ? 2 : 3
+        if (inverted)
+            band = 3 - band
+        return ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"][band]
+    }
+
+    function hudLine(label, value, valueColor) {
+        return label + ' <font color="' + valueColor + '">' + value + '</font>'
     }
 
     Rectangle {
@@ -251,7 +262,7 @@ Item {
 
     Text {
         x: 29; y: 212; width: 208; height: 28
-        text: panel.hudLine("BATTERY:", panel.batteryText)
+        text: panel.hudLine("BATTERY:", panel.batteryText, panel.percentageColor(panel.batteryText, true))
         textFormat: Text.StyledText
         color: panel.theme.hudInk
         font.family: panel.theme.pixelFont
@@ -261,7 +272,7 @@ Item {
 
     Text {
         x: 29; y: 242; width: 182; height: 23
-        text: panel.hudLine("CPU:", panel.cpuText)
+        text: panel.hudLine("CPU:", panel.cpuText, panel.percentageColor(panel.cpuText, false))
         textFormat: Text.StyledText
         color: panel.theme.hudInk
         font.family: panel.theme.pixelFont
@@ -271,7 +282,7 @@ Item {
 
     Text {
         x: 29; y: 265; width: 182; height: 31
-        text: panel.hudLine("TEMP:", panel.tempText)
+        text: panel.hudLine("TEMP:", panel.tempText, panel.theme.cyanHex)
         textFormat: Text.StyledText
         color: panel.theme.hudInk
         font.family: panel.theme.pixelFont
