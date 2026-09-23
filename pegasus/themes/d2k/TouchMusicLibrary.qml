@@ -101,20 +101,20 @@ Item {
             // window (0.161-0.926 x 0.139-0.852 of the frame), so the chrome
             // overlaps the edges and the art reads as set into it.
             CoverArt {
-                x: 95; y: 22; width: 38; height: 36
+                x: 495; y: 28; width: 27; height: 26
                 game: panel.games ? panel.games.get(index) : null
                 fillCrop: true
             }
 
             Image {
-                x: 88; y: 16; width: 48; height: 48
+                x: 490; y: 24; width: 34; height: 34
                 source: "assets/music-cover-frame.png"
                 fillMode: Image.Stretch
                 smooth: true
             }
 
             Text {
-                x: 140; y: 26; width: 280; height: 16
+                x: 84; y: 26; width: 370; height: 16
                 text: model.title
                 color: parent.isPlaying ? "#7ef5ff" : "#dbe7fb"
                 font.family: panel.theme.titleFont
@@ -124,7 +124,7 @@ Item {
             }
 
             Text {
-                x: 140; y: 42; width: 280; height: 14
+                x: 84; y: 42; width: 370; height: 14
                 text: model.developer
                 color: parent.isPlaying ? "#9eeaff" : "#a8c0e4"
                 font.family: panel.theme.bodyFont
@@ -137,7 +137,7 @@ Item {
             // glyph: at this size the two strokes of U+2016 sit almost on top
             // of each other, which reads as a smudge instead of a pause icon.
             Item {
-                x: 430; y: 32; width: 16; height: 16
+                x: 464; y: 33; width: 16; height: 16
                 visible: parent.isPlaying
 
                 Text {
@@ -164,7 +164,7 @@ Item {
             // metadata.pegasus.txt carries the track length in summary:,
             // because Pegasus has no duration field of its own.
             Text {
-                x: 456; y: 32; width: 116; height: 18
+                x: 528; y: 32; width: 44; height: 18
                 text: model.summary
                 color: parent.isPlaying ? "#d8ecff" : panel.theme.skyGlass
                 font.family: panel.theme.hudFont
