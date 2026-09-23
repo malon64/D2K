@@ -56,6 +56,50 @@ Item {
         return minutes + ":" + (seconds < 10 ? "0" + seconds : "" + seconds)
     }
 
+    // Heartbeat on the three ornaments, one at a time: earbuds, crystal, planet.
+    // Same lub-dub as the console screen's logo and ornament (1.07, 1.0, 1.05,
+    // 1.0 over 530 ms), and the same 800 ms between beats, so the three take
+    // turns in a 2400 ms cycle. One looping sequence drives all three so they
+    // can never drift out of order. Scale is about each image's own centre.
+    property real beatEarbuds: 1
+    property real beatCrystal: 1
+    property real beatPlanet: 1
+
+    SequentialAnimation {
+        running: true
+        loops: Animation.Infinite
+
+        NumberAnimation { target: panel; property: "beatEarbuds"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatEarbuds"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: panel; property: "beatEarbuds"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatEarbuds"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+        PauseAnimation  { duration: 270 }
+
+        NumberAnimation { target: panel; property: "beatCrystal"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatCrystal"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: panel; property: "beatCrystal"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatCrystal"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+        PauseAnimation  { duration: 270 }
+
+        NumberAnimation { target: panel; property: "beatPlanet"; to: 1.07; duration: 110; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatPlanet"; to: 1.0;  duration: 120; easing.type: Easing.InOutQuad }
+        NumberAnimation { target: panel; property: "beatPlanet"; to: 1.05; duration: 100; easing.type: Easing.OutQuad }
+        NumberAnimation { target: panel; property: "beatPlanet"; to: 1.0;  duration: 200; easing.type: Easing.InOutQuad }
+        PauseAnimation  { duration: 270 }
+    }
+
+    // Diagonal banners. The artwork is the Figma banner group exported flat
+    // (704.75 x 191.86: black banner, 12.7 px gap, glass banner), and each
+    // strip is rotated here about its Figma origin and slid along its own
+    // length -- the diagonal counterpart of the console screen's vertical
+    // banner. The period is the group plus that same 12.7 px gap, so copies
+    // chain with even spacing, and the speed matches the vertical banner's
+    // 480 px per 14 s.
+    readonly property real bannerWidth: 704.75
+    readonly property real bannerHeight: 191.86
+    readonly property real bannerPeriod: bannerWidth + 12.7
+    readonly property int bannerDuration: Math.round(bannerPeriod * 14000 / 480)
+
     Rectangle {
         anchors.fill: parent
         color: panel.theme.topBase
@@ -224,6 +268,7 @@ Item {
         fillMode: Image.Stretch
         smooth: true
         rotation: -0.87
+        scale: panel.beatEarbuds
     }
 
     // Rotated -12.83 deg. Same artwork the game screen uses, so it reuses
@@ -235,6 +280,7 @@ Item {
         smooth: true
         rotation: -12.83
         opacity: 0.92
+        scale: panel.beatPlanet
     }
 
     Image {
@@ -249,19 +295,49 @@ Item {
         source: "assets/music-orn-crystal.png"
         fillMode: Image.Stretch
         smooth: true
+        scale: panel.beatCrystal
     }
 
-    Image {
-        x: 201; y: -166; width: 683; height: 571
-        source: "assets/music-banner-top.png"
-        fillMode: Image.Stretch
-        smooth: true
-    }
+    // Figma places each banner group by its unrotated top-left corner and
+    // rotates about it (-36.15 deg and +24.92 deg there; QML turns the other
+    // way). At scroll 0 the middle copy is exactly the Figma layout; the copies
+    // either side keep the strip unbroken while it slides.
+    Repeater {
+        model: [
+            { "x": 314.17, "y": -166.0, "rotation": 36.15 },
+            { "x": -208.62, "y": 218.97, "rotation": -24.92 }
+        ]
 
-    Image {
-        x: -209; y: -78; width: 720; height: 471
-        source: "assets/music-banner-bottom.png"
-        fillMode: Image.Stretch
-        smooth: true
+        delegate: Item {
+            id: strip
+            x: modelData.x
+            y: modelData.y
+            width: panel.bannerWidth
+            height: panel.bannerHeight
+            transformOrigin: Item.TopLeft
+            rotation: modelData.rotation
+
+            property real scroll: 0
+
+            NumberAnimation on scroll {
+                from: 0; to: panel.bannerPeriod
+                duration: panel.bannerDuration
+                loops: Animation.Infinite
+            }
+
+            Repeater {
+                model: 3
+
+                delegate: Image {
+                    x: strip.scroll + (index - 1) * panel.bannerPeriod
+                    y: 0
+                    width: panel.bannerWidth
+                    height: panel.bannerHeight
+                    source: "assets/music-banner.png"
+                    fillMode: Image.Stretch
+                    smooth: true
+                }
+            }
+        }
     }
 }
