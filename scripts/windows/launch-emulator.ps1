@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('ds', 'dreamcast', 'ps1', 'n64', 'gamecube', '3ds')]
+    [ValidateSet('ds', 'dreamcast', 'ps1', 'psp', 'n64', 'gamecube', '3ds')]
     [string]$Console,
 
     [string]$RomPath,
@@ -25,6 +25,7 @@ function Get-EmulatorArguments {
         'ds' { return $quotedRom }
         'dreamcast' { return $quotedRom }
         'ps1' { return "-batch -fastboot -- $quotedRom" }
+        'psp' { return "--windowed --xres=1600 --yres=960 $quotedRom" }
         'n64' { return ('--system "Nintendo 64" --no-file-prompt {0}' -f $quotedRom) }
         'gamecube' { return "--batch --exec $quotedRom" }
         '3ds' { return $quotedRom }
@@ -32,7 +33,7 @@ function Get-EmulatorArguments {
 }
 
 if (-not $SelfTest -and (-not $Console -or -not $RomPath)) {
-    throw 'Usage: launch-emulator.ps1 -Console ds|dreamcast|ps1|n64|gamecube|3ds -RomPath <path>'
+    throw 'Usage: launch-emulator.ps1 -Console ds|dreamcast|ps1|psp|n64|gamecube|3ds -RomPath <path>'
 }
 
 $melonDSDir = 'C:\Users\alexi\Documents\NDS\melonDS-1.1-windows-x86_64'
@@ -40,6 +41,7 @@ $emulators = @{
     ds = Join-Path $melonDSDir 'melonDS.exe'
     dreamcast = 'C:\Users\alexi\Downloads\flycast-master\build\Debug\flycast.exe'
     ps1 = Join-Path $env:LOCALAPPDATA 'Programs\DuckStation\duckstation-qt-x64-ReleaseLTCG.exe'
+    psp = 'C:\Program Files\PPSSPP\PPSSPPWindows64.exe'
     n64 = 'C:\Program Files (x86)\ares-v148\ares.exe'
     gamecube = 'C:\Program Files (x86)\Dolphin-x64\Dolphin.exe'
     '3ds' = 'C:\Program Files\Azahar\azahar.exe'
@@ -91,6 +93,24 @@ function Reset-MelonDSWindowGeometry {
     }
 
     [System.IO.File]::WriteAllLines($ConfigPath, $lines, [System.Text.UTF8Encoding]::new($false))
+}
+
+function Set-PPSSPPWindowSettings {
+    $configPath = Join-Path $env:USERPROFILE 'Documents\PPSSPP\PSP\SYSTEM\ppsspp.ini'
+    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
+        throw "PPSSPP settings were not found at $configPath"
+    }
+
+    $config = [IO.File]::ReadAllText($configPath)
+    # PPSSPP is DPI-virtualized at 200% on this display, so it needs the
+    # doubled logical size to produce the 800x480 physical upper panel.
+    $config = $config -replace '(?m)^WindowWidth\s*=.*$', 'WindowWidth = 1600'
+    $config = $config -replace '(?m)^WindowHeight\s*=.*$', 'WindowHeight = 960'
+    $config = $config -replace '(?m)^WindowSizeState\s*=.*$', 'WindowSizeState = 0'
+    $config = $config -replace '(?m)^FullScreen\s*=.*$', 'FullScreen = False'
+    $config = $config -replace '(?m)^DisplayCropTo16x9\s*=.*$', 'DisplayCropTo16x9 = False'
+    $config = $config -replace '(?m)^DisplayStretch\s*=.*$', 'DisplayStretch = False'
+    [IO.File]::WriteAllText($configPath, $config, [Text.UTF8Encoding]::new($false))
 }
 
 Add-Type @'
@@ -172,7 +192,6 @@ public static class D2KEmulatorWindows
 
     private const int PanelWidth = 800;
     private const int PanelHeight = 480;
-    private const int N64PanelHeight = 441;
     private const int TitleBar = 58;
     private const int Hinge = 32;
     private const int GwlStyle = -16;
@@ -245,17 +264,16 @@ public static class D2KEmulatorWindows
         bottom = top + PanelHeight + TitleBar + Hinge;
     }
 
-    public static bool CheckSingleLayout(int processId, bool isN64)
+    public static bool CheckSingleLayout(int processId)
     {
         int left, top, bottom;
         Layout(out left, out top, out bottom);
         var window = Largest(WindowsForProcess(processId));
         if (window == null)
             return false;
-        int height = isN64 ? N64PanelHeight : PanelHeight;
-        if (!Matches(window, left, top, PanelWidth, height))
-            Frame(window, left, top, PanelWidth, height);
-        return Matches(window, left, top, PanelWidth, height);
+        if (!Matches(window, left, top, PanelWidth, PanelHeight))
+            Frame(window, left, top, PanelWidth, PanelHeight);
+        return Matches(window, left, top, PanelWidth, PanelHeight);
     }
 
     public static bool CheckMelonDSLayout(int processId)
@@ -333,6 +351,9 @@ if ($SelfTest) {
     if ((Get-EmulatorArguments -System ps1 -Rom 'C:\Games\Test Disc.cue') -ne '-batch -fastboot -- "C:\Games\Test Disc.cue"') {
         throw 'PS1 argument construction failed.'
     }
+    if ((Get-EmulatorArguments -System psp -Rom 'C:\Games\Test Game.iso') -ne '--windowed --xres=1600 --yres=960 "C:\Games\Test Game.iso"') {
+        throw 'PSP argument construction failed.'
+    }
     if ((Get-EmulatorArguments -System n64 -Rom 'C:\Games\Test.z64') -notmatch '--system "Nintendo 64"') {
         throw 'N64 argument construction failed.'
     }
@@ -374,6 +395,15 @@ try {
             Write-Log "melonDS config reset FAILED (non-fatal): $($_.Exception.Message)"
         }
     }
+    elseif ($Console -eq 'psp') {
+        try {
+            Set-PPSSPPWindowSettings
+            Write-Log 'PPSSPP window settings applied'
+        }
+        catch {
+            Write-Log "PPSSPP settings update FAILED (non-fatal): $($_.Exception.Message)"
+        }
+    }
 
     try {
         [D2KEmulatorWindows]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
@@ -405,7 +435,7 @@ try {
                     [D2KEmulatorWindows]::CheckAzaharLayout($process.Id)
                 }
                 else {
-                    [D2KEmulatorWindows]::CheckSingleLayout($process.Id, $Console -eq 'n64')
+                    [D2KEmulatorWindows]::CheckSingleLayout($process.Id)
                 }
                 if ($stable) {
                     $stableChecks += 1

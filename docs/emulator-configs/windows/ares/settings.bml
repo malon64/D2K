@@ -6,5 +6,6 @@ Video
   AspectCorrectionMode: None
   AdaptiveSizing: false
   AutoCentering: true
+  Overscan: false
 General
   ShowStatusBar: false
