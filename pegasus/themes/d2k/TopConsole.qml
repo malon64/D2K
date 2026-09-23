@@ -9,6 +9,7 @@ Item {
     property var theme
     property var collection
     property int gameCount: 0
+    readonly property string countLabel: theme.consoleId(collection) === "music" ? "TRACKS" : "GAMES"
 
     // Telemetry has no source yet: the ESP32 controller link is not built.
     // Never render a fabricated reading as if it had been measured.
@@ -289,7 +290,7 @@ Item {
 
     Text {
         x: 571; y: 101; width: 135; height: 25
-        text: "GAMES"
+        text: panel.countLabel
         color: panel.theme.hudInk
         font.family: panel.theme.arcadeFont
         font.pixelSize: 20

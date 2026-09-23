@@ -189,7 +189,7 @@ Item {
     }
 
     Text {
-        x: 344; y: 142; width: 316; height: 16
+        x: 334; y: 142; width: 316; height: 16
         text: panel.game ? (panel.paused ? "PAUSED" : "NOW PLAYING") : "NOTHING PLAYING"
         color: "#7ef5ff"
         font.family: panel.theme.pixelFont
@@ -208,7 +208,7 @@ Item {
     }
 
     Text {
-        x: 344; y: 207; width: 316; height: 24
+        x: 344; y: 203; width: 316; height: 24
         text: panel.game ? panel.game.developer : ""
         color: "#d3e4ff"
         font.family: panel.theme.bodyBoldFont
