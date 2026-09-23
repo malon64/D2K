@@ -97,10 +97,20 @@ Item {
                 verticalAlignment: Text.AlignVCenter
             }
 
+            // The cover sits behind the frame artwork and slightly overfills its
+            // window (0.161-0.926 x 0.139-0.852 of the frame), so the chrome
+            // overlaps the edges and the art reads as set into it.
             CoverArt {
-                x: 92; y: 24; width: 36; height: 36
+                x: 95; y: 22; width: 38; height: 36
                 game: panel.games ? panel.games.get(index) : null
                 fillCrop: true
+            }
+
+            Image {
+                x: 88; y: 16; width: 48; height: 48
+                source: "assets/music-cover-frame.png"
+                fillMode: Image.Stretch
+                smooth: true
             }
 
             Text {

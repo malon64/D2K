@@ -96,9 +96,13 @@ Item {
         smooth: true
     }
 
+    // Fills the card's square screen edge to edge (0.067-0.328 x 0.171-0.777
+    // of the card artwork), cropping rather than letterboxing so the art reads
+    // as the screen's content instead of a picture floating on it.
     CoverArt {
-        x: 122; y: 165; width: 158; height: 158
+        x: 115; y: 161; width: 172; height: 166
         game: panel.game
+        fillCrop: true
     }
 
     Text {
@@ -111,7 +115,7 @@ Item {
     }
 
     Text {
-        x: 344; y: 162; width: 316; height: 33
+        x: 344; y: 170; width: 316; height: 33
         text: panel.game ? panel.game.title : "—"
         color: "#f8fbff"
         font.family: panel.theme.titleFont
@@ -121,7 +125,7 @@ Item {
     }
 
     Text {
-        x: 344; y: 199; width: 316; height: 24
+        x: 344; y: 207; width: 316; height: 24
         text: panel.game ? panel.game.developer : ""
         color: "#d3e4ff"
         font.family: panel.theme.bodyBoldFont
@@ -131,7 +135,7 @@ Item {
     }
 
     Text {
-        x: 344; y: 232; width: 316; height: 18
+        x: 344; y: 240; width: 316; height: 18
         text: "MP3  •  320 KBPS  •  LOCAL STORAGE"
         color: panel.theme.skyGlass
         font.family: panel.theme.pixelFont
