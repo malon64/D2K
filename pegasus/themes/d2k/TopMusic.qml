@@ -302,6 +302,7 @@ Item {
     // Rotated -0.87 deg in Figma; box centred on its 226.2px bounding box.
     Image {
         x: 565.7; y: 2.7; width: 222.8; height: 222.8
+        z: 1
         source: "assets/music-orn-earbuds.png"
         sourceSize.width: 478
         sourceSize.height: 478
