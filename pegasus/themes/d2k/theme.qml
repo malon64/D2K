@@ -25,6 +25,9 @@ FocusScope {
     property int musicSeq: 0
     property int musicPositionMs: -1
     property int musicDurationMs: -1
+    property string batteryText: "--"
+    property string cpuText: "--"
+    property string tempText: "--"
 
     // Last file MPD reported, so the track lookup only runs when it changes
     // rather than on every poll.
@@ -272,6 +275,37 @@ FocusScope {
         running: root.navState === "music"
         triggeredOnStart: true
         onTriggered: root.readMusicStatus()
+    }
+
+    function applySystemStatus(status) {
+        if (!status)
+            return
+
+        if (typeof status.battery === "string") batteryText = status.battery
+        if (typeof status.cpu === "string") cpuText = status.cpu
+        if (typeof status.temperature === "string") tempText = status.temperature
+    }
+
+    function readSystemStatus() {
+        var request = new XMLHttpRequest()
+        request.onreadystatechange = function () {
+            if (request.readyState !== XMLHttpRequest.DONE || !request.responseText)
+                return
+
+            try { root.applySystemStatus(JSON.parse(request.responseText)) }
+            catch (error) { /* half-written file: the next poll picks it up */ }
+        }
+        request.open("GET", Qt.resolvedUrl("system-status.json"))
+        request.send()
+    }
+
+    Timer {
+        id: systemStatusPoll
+        interval: 1000
+        repeat: true
+        running: root.navState === "consoles"
+        triggeredOnStart: true
+        onTriggered: root.readSystemStatus()
     }
 
     function selectGame(index) {
@@ -532,6 +566,9 @@ FocusScope {
         collection: root.currentCollection
         game: root.selectedGame
         gameCount: root.gameCount
+        batteryText: root.batteryText
+        cpuText: root.cpuText
+        tempText: root.tempText
         playingTrack: root.playingTrack
         playingIndex: root.playingIndex
         paused: root.musicPaused

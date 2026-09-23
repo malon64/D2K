@@ -15,6 +15,9 @@ Item {
     property bool paused: false
     property int positionMs: -1
     property int durationMs: -1
+    property string batteryText: "--"
+    property string cpuText: "--"
+    property string tempText: "--"
 
     Loader {
         anchors.fill: parent
@@ -48,6 +51,9 @@ Item {
             theme: panel.theme
             collection: panel.collection
             gameCount: panel.gameCount
+            batteryText: panel.batteryText
+            cpuText: panel.cpuText
+            tempText: panel.tempText
         }
     }
 

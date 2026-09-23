@@ -1,6 +1,9 @@
+param([switch]$SelfTest)
+
 $ErrorActionPreference = 'Stop'
 
 $executable = Join-Path $env:USERPROFILE 'scoop/apps/pegasus/current/pegasus-fe.exe'
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 
 if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
     throw 'Pegasus is not installed with Scoop. Run: scoop install pegasus'
@@ -88,6 +91,32 @@ function Get-D2KMusicCommand {
     catch { return $null }
 }
 
+function Write-D2KSystemStatus {
+    $battery = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1
+    $cpu = Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -ErrorAction SilentlyContinue |
+        Where-Object Name -eq '_Total' | Select-Object -First 1
+
+    $payload = [ordered]@{
+        battery     = if ($battery -and $null -ne $battery.EstimatedChargeRemaining) { "$([int]$battery.EstimatedChargeRemaining)%" } else { '--' }
+        cpu         = if ($cpu -and $null -ne $cpu.PercentProcessorTime) { "$([int]$cpu.PercentProcessorTime)%" } else { '--' }
+        temperature = '--'
+        updatedAt   = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    }
+
+    $statusPath = Join-Path $repoRoot 'pegasus/themes/d2k/system-status.json'
+    [IO.File]::WriteAllText($statusPath, ($payload | ConvertTo-Json -Compress), [Text.UTF8Encoding]::new($false))
+    return $payload
+}
+
+if ($SelfTest) {
+    $status = Write-D2KSystemStatus
+    if ($status.battery -notmatch '^(\d+%|--)$' -or $status.cpu -notmatch '^(\d+%|--)$' -or $status.temperature -ne '--') {
+        throw 'System telemetry format check failed.'
+    }
+    $status | ConvertTo-Json -Compress
+    return
+}
+
 # Dot-sourced for Write-D2KMpdStatus and its helpers. mpd.ps1 does nothing
 # without an -Action, and the only variable the two scripts share is
 # $ErrorActionPreference, which both set to 'Stop'. Polling MPD in-process this
@@ -108,6 +137,7 @@ try {
     $pegasus = Start-Process -FilePath $executable -ArgumentList '--portable' -PassThru
     $musicBooted = $false
     $statusTick = 0
+    $telemetryTick = 0
     while (-not $pegasus.HasExited) {
         if (-not $musicBooted -and (Test-D2KMusicReady)) {
             if ($musicPrepared) {
@@ -150,6 +180,13 @@ try {
         if ($musicPrepared -and $statusTick -ge 10) {
             $statusTick = 0
             try { Write-D2KMpdStatus | Out-Null }
+            catch { }
+        }
+
+        $telemetryTick++
+        if ($telemetryTick -ge 10) {
+            $telemetryTick = 0
+            try { Write-D2KSystemStatus | Out-Null }
             catch { }
         }
 

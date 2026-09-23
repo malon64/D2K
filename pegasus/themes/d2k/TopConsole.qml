@@ -11,8 +11,6 @@ Item {
     property int gameCount: 0
     readonly property string countLabel: theme.consoleId(collection) === "music" ? "TRACKS" : "GAMES"
 
-    // Telemetry has no source yet: the ESP32 controller link is not built.
-    // Never render a fabricated reading as if it had been measured.
     property string batteryText: "--"
     property string cpuText: "--"
     property string tempText: "--"

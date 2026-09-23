@@ -38,8 +38,9 @@
 # Local credentials: Spotify app keys for scripts/windows/build-music-metadata.ps1
 *.local.json
 
-# Runtime playback state written by scripts/*/mpd.* for the theme to read
+# Runtime status written by D2K scripts for the theme to read
 /pegasus/themes/d2k/mpd-status.json
+/pegasus/themes/d2k/system-status.json
 
 # Common generated files
 *.log
