@@ -27,7 +27,7 @@ Item {
     readonly property int pageSize: 12
     readonly property int gridColumns: 4
 
-    readonly property var consoleOrder: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
+    readonly property var consoleOrder: ["ds", "dreamcast", "psp", "ps1", "n64", "gamecube", "3ds", "music"]
 
     readonly property var consoleAliases: ({
         "nds": "ds",
@@ -40,8 +40,8 @@ Item {
 
     // Which consoles have artwork in the Figma file. Listing them avoids asking
     // Qt to load images that do not exist, which would log a warning per frame.
-    readonly property var carouselArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
-    readonly property var consoleArtwork: ["ds", "dreamcast", "ps1", "n64", "gamecube", "3ds", "music"]
+    readonly property var carouselArtwork: ["ds", "dreamcast", "psp", "ps1", "n64", "gamecube", "3ds", "music"]
+    readonly property var consoleArtwork: ["ds", "dreamcast", "psp", "ps1", "n64", "gamecube", "3ds", "music"]
 
     // Vertical nudge for carousel art, in the 189px art space. The renders are
     // not all balanced the same way: music's alpha box is centred, but its
@@ -164,7 +164,10 @@ Item {
         if (!id || available.indexOf(id) < 0)
             return ""
 
-        return "assets/consoles/" + id + "-" + suffix + ".png"
+        var filename = id + "-" + suffix + ".png"
+        if (id === "psp" && suffix === "carousel")
+            filename = "psp-pixel.png"
+        return "assets/consoles/" + filename
     }
 
     function carouselSource(collection) { return consoleAsset(collection, "carousel", carouselArtwork) }

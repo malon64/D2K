@@ -193,6 +193,17 @@ function Start-D2KMpd {
     } while ([DateTime]::UtcNow -lt $deadline)
     if ([DateTime]::UtcNow -ge $deadline) { throw 'MPD did not become ready within 5 seconds.' }
 
+    # MPD keeps its own file index. Refresh it before adding playlist entries so
+    # tracks imported since the previous run are immediately addressable.
+    Invoke-Mpd @('update') | Out-Null
+    $deadline = [DateTime]::UtcNow.AddSeconds(30)
+    do {
+        $status = Get-MpdStatus
+        if (-not $status.ContainsKey('updating_db')) { break }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $deadline)
+    if ($status.ContainsKey('updating_db')) { throw 'MPD did not finish updating its music database within 30 seconds.' }
+
     $commands = @('clear')
     foreach ($track in $tracks) { $commands += 'add ' + (Quote-Mpd $track.Replace('\', '/')) }
     $commands += 'random 1', 'repeat 1', 'single 0', 'crossfade 5', 'setvol 0', 'play'
