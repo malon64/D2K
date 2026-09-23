@@ -88,20 +88,55 @@ Item {
         PauseAnimation  { duration: 270 }
     }
 
-    // Diagonal banners, the diagonal counterpart of the console screen's
-    // vertical banner. Each strip is rotated about its Figma origin and its
-    // banners slide along their own length.
-    //
-    // In the Figma group the glass banner sits 77px above the black one. As a
-    // repeating unit that staircases -- every copy drops back to the lower
-    // line -- so both pieces share one centre line here (y 95.5 in the
-    // 705x192 group box) and alternate at a constant 15px gap, which makes the
-    // chain a single straight line that keeps its angle. Speed matches the
-    // vertical banner's 480px per 14s.
-    readonly property real bannerWidth: 705
-    readonly property real bannerHeight: 192
-    readonly property real bannerPeriod: 718
+    // Each image is already tilted about 13 degrees. Straighten it first, then
+    // rotate and move the complete black/glass chain. That keeps the visible
+    // artwork, its gaps, and its movement on the same diagonal.
+    readonly property real bannerBlackWidth: 339
+    readonly property real bannerBlackHeight: 111
+    readonly property real bannerGlassWidth: 349
+    readonly property real bannerGlassHeight: 113
+    readonly property real bannerBlackCorrection: 12.47
+    readonly property real bannerGlassCorrection: 13.02
+    readonly property real bannerBlackAxisX: 169.28
+    readonly property real bannerBlackAxisY: 56.51
+    readonly property real bannerGlassAxisX: 173.93
+    readonly property real bannerGlassAxisY: 58.97
+    readonly property real bannerGap: 15
+    readonly property real bannerGlassCenter: bannerBlackWidth / 2 + bannerGap
+                                             + bannerGlassWidth / 2
+    readonly property real bannerPeriod: bannerBlackWidth + bannerGlassWidth
+                                         + 2 * bannerGap
     readonly property int bannerDuration: Math.round(bannerPeriod * 14000 / 480)
+    property real bannerPhase: 0
+    readonly property var bannerStreams: [
+        { "anchorX": 373.11, "anchorY": 44.06, "rotation": 23.65, "direction": 1 },
+        { "anchorX": 3.74, "anchorY": 269.00, "rotation": -37.42, "direction": -1 }
+    ]
+
+    function bannerCopyX(copyIndex, direction) {
+        return (copyIndex - 2 + direction * bannerPhase) * bannerPeriod
+    }
+
+    // Kept here so the regression harness checks the same positions used by
+    // the delegates below.
+    function bannerSegmentCentre(streamIndex, copyIndex, glass) {
+        var stream = bannerStreams[streamIndex]
+        var localX = bannerCopyX(copyIndex, stream.direction)
+                   + (glass ? bannerGlassCenter : 0)
+        var radians = stream.rotation * Math.PI / 180
+        return {
+            "x": stream.anchorX + localX * Math.cos(radians),
+            "y": stream.anchorY + localX * Math.sin(radians)
+        }
+    }
+
+    NumberAnimation on bannerPhase {
+        from: 0; to: 1
+        duration: panel.bannerDuration
+        loops: Animation.Infinite
+        running: panel.visible
+        easing.type: Easing.Linear
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -301,51 +336,47 @@ Item {
         scale: panel.beatCrystal
     }
 
-    // Figma places each banner group by its unrotated top-left corner and
-    // rotates about it (-36.15 deg and +24.92 deg there; QML turns the other
-    // way). At scroll 0 the middle copy is exactly the Figma layout; the copies
-    // either side keep the strip unbroken while it slides.
+    // The anchor of copy 2 is the Figma centre of its black segment. Five copies
+    // cover both sides of the screen while opposite streams wrap in opposite
+    // directions.
     Repeater {
-        model: [
-            { "x": 314.17, "y": -166.0, "rotation": 36.15 },
-            { "x": -208.62, "y": 218.97, "rotation": -24.92 }
-        ]
+        model: panel.bannerStreams
 
         delegate: Item {
             id: strip
-            x: modelData.x
-            y: modelData.y
-            width: panel.bannerWidth
-            height: panel.bannerHeight
+            property var stream: modelData
+            x: stream.anchorX
+            y: stream.anchorY
+            width: 1
+            height: 1
             transformOrigin: Item.TopLeft
-            rotation: modelData.rotation
-
-            property real scroll: 0
-
-            NumberAnimation on scroll {
-                from: 0; to: panel.bannerPeriod
-                duration: panel.bannerDuration
-                loops: Animation.Infinite
-            }
+            rotation: stream.rotation
 
             Repeater {
-                model: 3
+                model: 5
 
                 delegate: Item {
-                    x: strip.scroll + (index - 1) * panel.bannerPeriod
-                    width: panel.bannerPeriod
-                    height: panel.bannerHeight
+                    property real copyX: panel.bannerCopyX(index, strip.stream.direction)
 
-                    // Both centred on y 95.5: black 111px tall, glass 113px.
                     Image {
-                        x: 2; y: 40; width: 339; height: 111
+                        x: parent.copyX - panel.bannerBlackAxisX
+                        y: -panel.bannerBlackAxisY
+                        width: panel.bannerBlackWidth
+                        height: panel.bannerBlackHeight
                         source: "assets/music-banner-black.png"
+                        transformOrigin: Item.Center
+                        rotation: panel.bannerBlackCorrection
                         smooth: true
                     }
 
                     Image {
-                        x: 356; y: 39; width: 349; height: 113
+                        x: parent.copyX + panel.bannerGlassCenter - panel.bannerGlassAxisX
+                        y: -panel.bannerGlassAxisY
+                        width: panel.bannerGlassWidth
+                        height: panel.bannerGlassHeight
                         source: "assets/music-banner-glass.png"
+                        transformOrigin: Item.Center
+                        rotation: panel.bannerGlassCorrection
                         smooth: true
                     }
                 }
