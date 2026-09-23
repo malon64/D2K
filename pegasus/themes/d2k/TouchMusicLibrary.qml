@@ -78,6 +78,12 @@ Item {
 
             readonly property bool isPlaying: index === panel.playingIndex
 
+            // The selected panel's hollow window starts further in than the
+            // default panel's field, so its text slides right to keep the same
+            // breathing room from the glow.
+            property real inset: isPlaying ? 8 : 0
+            Behavior on inset { NumberAnimation { duration: 160; easing.type: Easing.OutQuad } }
+
             Image {
                 anchors.fill: parent
                 source: parent.isPlaying ? "assets/music-row-selected.png" : "assets/music-row.png"
@@ -88,7 +94,7 @@ Item {
             // Sits just inside the selected panel's hollow window, whose left
             // edge is at 0.0621 of the row width (38.5px here).
             Text {
-                x: 40; y: 25; width: 30; height: 32
+                x: 40 + parent.inset; y: 25; width: 30; height: 32
                 text: (index + 1) < 10 ? "0" + (index + 1) : "" + (index + 1)
                 color: parent.isPlaying ? panel.theme.cyanInk : "#91a4d2"
                 font.family: panel.theme.titleFont
@@ -98,7 +104,7 @@ Item {
             }
 
             Text {
-                x: 100; y: 26; width: 350; height: 16
+                x: 100 + parent.inset; y: 26; width: 350 - parent.inset; height: 16
                 text: model.title
                 color: parent.isPlaying ? "#7ef5ff" : "#dbe7fb"
                 font.family: panel.theme.titleFont
@@ -108,7 +114,7 @@ Item {
             }
 
             Text {
-                x: 100; y: 42; width: 350; height: 14
+                x: 100 + parent.inset; y: 42; width: 350 - parent.inset; height: 14
                 text: model.developer
                 color: parent.isPlaying ? "#9eeaff" : "#a8c0e4"
                 font.family: panel.theme.bodyFont
@@ -124,15 +130,23 @@ Item {
                 x: 470; y: 33; width: 16; height: 16
                 visible: parent.isPlaying
 
-                Text {
-                    anchors.fill: parent
+                // Drawn in the same 10x12 box as the pause bars. As a font
+                // glyph it rendered visibly smaller than them.
+                Canvas {
+                    anchors.centerIn: parent
+                    width: 10; height: 12
                     visible: !panel.paused
-                    text: "▶"
-                    color: panel.theme.cyanInk
-                    font.family: panel.theme.bodyBoldFont
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.fillStyle = panel.theme.cyanInk
+                        ctx.beginPath()
+                        ctx.moveTo(0, 0)
+                        ctx.lineTo(width, height / 2)
+                        ctx.lineTo(0, height)
+                        ctx.closePath()
+                        ctx.fill()
+                    }
                 }
 
                 Row {
