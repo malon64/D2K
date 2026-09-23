@@ -5,7 +5,7 @@
 
 .DESCRIPTION
     Pegasus only indexes a console directory that contains a metadata.pegasus.txt
-    (see setup.ps1 and scripts/linux/install.sh), so without this file there is no
+    (see README.md and scripts/linux/install.sh), so without this file there is no
     "music" collection for the theme to bind to.
 
     For every readable .mp3 the script reads TIT2 (title), TPE1 (artist),

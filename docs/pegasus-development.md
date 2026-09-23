@@ -1,7 +1,7 @@
 # Pegasus development
 
-The D2K theme source is `pegasus/themes/d2k/`. On Windows, `setup.ps1` creates
-a directory junction at Scoop's `pegasus/current/config/themes/d2k`, so source
+The D2K theme source is `pegasus/themes/d2k/`. On Windows, manually create a
+directory junction at Scoop's `pegasus/current/config/themes/d2k`, so source
 edits are visible to Pegasus without copying files. Pegasus runs in portable
 mode and stores generated configuration under Scoop's ignored installation.
 
@@ -44,10 +44,8 @@ double tap cannot start a ROM twice. Pagination is derived from the selection
 (`pageSize` is 12, in a 4×3 grid), so the selected tile is always on the visible
 page.
 
-Imports are limited to `QtQuick 2.0` and `QtQuick.Window 2.15`, both already
-covered by the packages `scripts/linux/install.sh` installs. Keep it that way —
-anything else (notably `QtGraphicalEffects`) needs a matching apt package added
-there, and will otherwise fail only once it reaches the device.
+Imports use QtQuick, QtQuick.Window, QtMultimedia, and QtGraphicalEffects; the
+Linux installer supplies their matching QML modules.
 
 ## Assets
 
@@ -58,8 +56,8 @@ the full-bleed background is JPEG because it is opaque and photographic. Covers
 are bound from Pegasus metadata instead, and every `Image` that shows box art
 sets `sourceSize` so a 512×460 scan is not decoded at full resolution.
 
-Fonts are the seven Google families the Figma file uses (Chakra Petch, Orbitron,
-Rubik Glitch, Pixelify Sans, Press Start 2P, Bungee Shade, Danfo), bundled as
+Fonts are the six Google families the Figma file uses (Chakra Petch, Orbitron,
+Rubik Glitch, Pixelify Sans, Press Start 2P, Danfo), bundled as
 static TTF instances with their OFL licences. Qt 5 does not apply variable-font
 axes, so static instances are required — a variable TTF renders at its default
 weight instead of the designed one.
@@ -80,11 +78,9 @@ The portable game library is under `library/consoles/`. Each console owns a
 `metadata.pegasus.txt` file and `games/<game-id>/` folders holding the ROM plus
 `cover.png`, `title.png` and `description.txt`. ROMs remain Git-ignored.
 
-Collection-based navigation now exists, so that switch has been made:
-`setup.ps1` writes `config/game_dirs.txt` listing every console directory that
-has a metadata file, and removes the old `config/metafiles` junction. Indexing
-both would list the same Nintendo DS games twice. `pegasus/metadata/nds/` is
-kept only as the Linux handoff template and is no longer read on Windows.
+Collection-based navigation indexes every console directory with a metadata
+file through `config/game_dirs.txt`; configure those paths manually on Windows
+or let the Pi installer generate them locally.
 
 Each game carries `assets.boxFront` and `assets.logo` lines pointing at its
 local `cover.png` and `title.png`. Without them the art on disk is invisible to
@@ -96,9 +92,9 @@ The launch file is detected per game, so both the `rom.<extension>` convention
 and original multi-track `.cue` disc sets resolve. Only the DS collection has a
 working emulator on Windows; the others carry a header comment saying so.
 
-That metadata file holds a Windows `launch:` line, so the Linux install path
-still uses the `.in` template under `pegasus/metadata/nds/`. One metadata file
-cannot serve both platforms; reconcile this during the device handoff.
+Windows metadata holds a PowerShell `launch:` line. The Pi installer rewrites
+the copied private library to use its Linux launcher without changing the
+Windows source copy.
 
 Game artwork keeps its original box-art proportion. The lower display uses
 fixed square cells and must show it with `Image.PreserveAspectFit`; never crop
@@ -110,7 +106,7 @@ top-only (`ScreenSizing = 4`) and Window 1 is bottom-only
 (`ScreenSizing = 5`). The tracked reference is
 `pegasus/melonds/melonDS.dual-screen.toml`. Apply those sections to the active
 Windows configuration at
-`C:\Users\alexi\Documents\NDS\melonDS-1.1-windows-x86_64\melonDS.toml`, then
+the local melonDS configuration, then
 arrange the two windows and close melonDS normally to save machine-local
 geometry. Do not close Window 1 by itself: melonDS records that as disabled
 for the next launch. `scripts/windows/launch-emulator.ps1 -Console ds` restores its enabled
@@ -121,10 +117,9 @@ emulator lands where the menu was. At 800×480 melonDS letterboxes the DS's 4:3
 output to 640×480 with 80px side bands, which is the target rendering on the
 lower panel. Close a game with Alt+F4. Do not commit that geometry.
 
-On Linux ARM64, install a compatible Pegasus build separately, copy the
-`pegasus/themes/d2k/` directory to its Pegasus themes directory, choose D2K in
-Settings, and map the upper and lower windows to their physical outputs. Keep
-the logical layout at 800×480 while validating the lower display's rotation.
+On Raspberry Pi OS Trixie, `scripts/linux/install.sh` builds the pinned Pegasus
+revision and installs the theme. Pegasus and managed emulators use XWayland for
+stable placement; Raspberry Pi OS owns output order, rotation, and calibration.
 
 With D2K selected, press `F5` in Pegasus after editing QML to reload the theme.
 Check Pegasus' `lastrun.log` if a QML change does not load.
@@ -153,11 +148,9 @@ Practical consequences:
   and restores from it in `Component.onCompleted`, skipping the boot screen
   when it finds one — that is what makes the menu come back on the same game
   instead of replaying boot → consoles.
-- **`d2kNav` must not survive an actual power cycle.** `scripts/windows/run.ps1`
-  clears it once per launch, before starting Pegasus, so "shut down and
-  restart the console" always plays the boot screen. A future Linux startup
-  script needs the same clear (or an equivalent full-state reset) — it is
-  presently Windows-only.
+- **`d2kNav` must not survive an actual power cycle.** Both `scripts/windows/run.ps1`
+  and `scripts/linux/run.sh` clear it once per launch, before starting Pegasus,
+  so "shut down and restart the console" always plays the boot screen.
 - **A failure inside `launch-emulator.ps1 -Console ds` must never end the session early.**
   Its own lifetime is what Pegasus is timing the game against: if it exits
   before melonDS does, Pegasus treats the game as over and rebuilds the menu

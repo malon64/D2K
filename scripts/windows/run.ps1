@@ -135,8 +135,6 @@ try {
                         'play'     { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Play -Track $musicCommand.Track }
                         'pause'    { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Pause }
                         'resume'   { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Resume }
-                        'next'     { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Next }
-                        'previous' { & (Join-Path $PSScriptRoot 'mpd.ps1') -Action Previous }
                         default    { Write-Warning "Unknown D2K music action: $($musicCommand.Action)" }
                     }
                 }

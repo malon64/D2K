@@ -29,8 +29,6 @@ Item {
         TopMusic {
             theme: panel.theme
             game: panel.playingTrack
-            trackIndex: panel.playingIndex
-            trackCount: panel.gameCount
             paused: panel.paused
             positionMs: panel.positionMs
             durationMs: panel.durationMs

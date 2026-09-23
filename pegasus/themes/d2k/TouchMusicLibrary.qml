@@ -189,6 +189,8 @@ Item {
         id: scrollTrack
         x: 703; y: 114; width: 20; height: 326
         source: "assets/music-scroll-track.png"
+        sourceSize.width: 40
+        sourceSize.height: 652
         fillMode: Image.Stretch
         smooth: true
         visible: list.contentHeight > list.height
@@ -219,6 +221,8 @@ Item {
         width: 28
         height: 116
         source: "assets/music-scroll-handle.png"
+        sourceSize.width: 56
+        sourceSize.height: 232
         fillMode: Image.Stretch
         smooth: true
         visible: scrollTrack.visible

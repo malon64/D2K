@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ ${1:-} == --self-test ]]; then
+    test_home=$(mktemp -d)
+    trap 'rm -rf "$test_home"' EXIT
+    HOME="$test_home" XDG_CONFIG_HOME="$test_home/.config" "$0"
+    HOME="$test_home" XDG_CONFIG_HOME="$test_home/.config" "$0" --check
+    echo 'Emulator configuration self-test passed.'
+    exit 0
+fi
+
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 
@@ -15,7 +24,8 @@ import pathlib
 import re
 import sys
 
-repo, config_home, home, mode = map(pathlib.Path, sys.argv[1:4]) + (sys.argv[4],)
+repo, config_home, home = map(pathlib.Path, sys.argv[1:4])
+mode = sys.argv[4]
 templates = repo / "docs/emulator-configs/windows"
 
 def ini(path):
@@ -94,6 +104,7 @@ targets = {
     "flycast": home / ".var/app/org.flycast.Flycast/config/flycast/emu.cfg",
     "azahar": home / ".var/app/org.azahar_emu.Azahar/config/azahar-emu/qt-config.ini",
     "ares": home / ".local/share/ares/settings.bml",
+    "ppsspp": home / ".var/app/org.ppsspp.PPSSPP/config/ppsspp/PSP/SYSTEM/ppsspp.ini",
 }
 
 if mode == "--check":
@@ -108,6 +119,10 @@ if mode == "--check":
         for section in expected.sections():
             for key, value in expected.items(section):
                 assert actual.get(section, key) == value, f"{name}: {section}.{key}"
+    actual, expected = ini(targets["ppsspp"]), ini(repo / "docs/emulator-configs/ppsspp/ppsspp.ini")
+    for section in expected.sections():
+        for key, value in expected.items(section):
+            assert actual.get(section, key) == value, f"ppsspp: {section}.{key}"
     ares = targets["ares"].read_text(encoding="utf-8")
     for line in ("  Exclusive: false", "  AspectCorrection: false", "  AdaptiveSizing: false", "  AutoCentering: true", "  ShowStatusBar: false"):
         assert line in ares, f"ares: {line}"
@@ -119,6 +134,7 @@ set_ini_values(targets["duckstation"], "UI", {"DisplayWindowWidth": "800", "Disp
 merge_ini(templates / "dolphin/Dolphin.ini", targets["dolphin"])
 merge_ini(templates / "flycast/emu.cfg", targets["flycast"])
 merge_ini(templates / "azahar/qt-config.ini", targets["azahar"])
+merge_ini(repo / "docs/emulator-configs/ppsspp/ppsspp.ini", targets["ppsspp"])
 
 # ares 143+ renamed the Windows template's display keys; these are the direct
 # semantic equivalents. Window placement is handled by launch-emulator.sh.

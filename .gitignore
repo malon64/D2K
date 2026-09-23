@@ -1,4 +1,4 @@
-# Pegasus runtime installed by scripts/windows/setup.ps1
+# Pegasus runtime created by the local launcher
 /pegasus/*.exe
 /pegasus/*.dll
 /pegasus/*.txt

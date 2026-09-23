@@ -108,6 +108,8 @@ Item {
             x: 65.5 + carousel.slot * panel.consoleStep * (carousel.phase - 1)
             y: 63.5 + panel.theme.carouselOffsetFor(departingArt.source)
             width: carousel.artSize; height: carousel.artSize
+            sourceSize.width: 378
+            sourceSize.height: 378
             fillMode: Image.PreserveAspectFit
             smooth: true
         }
@@ -118,6 +120,8 @@ Item {
             y: 63.5 + panel.theme.carouselOffsetFor(panel.carouselSource)
             width: carousel.artSize; height: carousel.artSize
             source: panel.carouselSource
+            sourceSize.width: 378
+            sourceSize.height: 378
             fillMode: Image.PreserveAspectFit
             smooth: true
         }

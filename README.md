@@ -1,33 +1,31 @@
 # D2K
 
-Pegasus Frontend theme development for an eventual ROCK 4D ARM64 Linux device
-with an 800×480 Waveshare display.
+Pegasus Frontend theme for a Raspberry Pi 5 running Raspberry Pi OS 64-bit,
+with two 800×480 displays.
 
 ## Windows setup
 
-1. Install Pegasus with Scoop:
+Install Pegasus and MPD at the existing Scoop locations, then manually create
+the configuration used by the launcher:
 
    ```powershell
    scoop bucket add games
    scoop install pegasus mpd
    ```
 
-2. From the repository root, link the tracked D2K theme into Scoop's Pegasus
-   configuration directory:
+```powershell
+New-Item -ItemType Junction -Path "$env:USERPROFILE\scoop\apps\pegasus\current\config\themes\d2k" -Target "$PWD\pegasus\themes\d2k"
+Get-ChildItem "$PWD\library\consoles" -Directory | Where-Object { Test-Path "$($_.FullName)\metadata.pegasus.txt" } | Select-Object -Expand FullName | Set-Content "$env:USERPROFILE\scoop\apps\pegasus\current\config\game_dirs.txt"
+```
 
-   ```powershell
-   .\scripts\windows\setup.ps1
-   ```
-
-3. Launch Pegasus in documented portable mode:
+Then launch the portable preview:
 
    ```powershell
    .\scripts\windows\run.ps1
    ```
 
-The setup creates a directory junction from Scoop's Pegasus theme directory to
-this repository, then writes its `settings.txt` on first run with D2K selected
-and fullscreen off.
+Set the D2K theme and library directory in Pegasus if they are not already
+selected. `run.ps1` keeps using the installed Scoop executable paths.
 
 `run.ps1` starts MPD for the menu music from `library/consoles/music/playlist.m3u`
 and stops it when Pegasus closes. Check the integration without opening Pegasus:
@@ -38,32 +36,29 @@ and stops it when Pegasus closes. Check the integration without opening Pegasus:
 
 ## Raspberry Pi 5 setup
 
-The Pi target is Debian ARM64 (including Raspberry Pi OS 64-bit) and runs all
-six D2K collections: melonDS (DS), Flycast (Dreamcast), DuckStation (PS1),
-ares (N64), Dolphin (GameCube), and Azahar (3DS).
+The Pi target is current Raspberry Pi OS 64-bit (Trixie/labwc) and runs all
+eight D2K collections: DS, Dreamcast, PSP, PS1, N64, GameCube, 3DS, and Music.
 
-Clone this repository on the Pi as `alex` at `/home/alex/D2K`, then copy the
-private library one way from the Windows workspace before installing. The
-library is ignored by Git, so it must be copied separately:
+Copy the ignored private library one way before installing:
 
 ```bash
-rsync -a --delete /mnt/c/Users/alexi/Repos/D2K/library/ alex@192.168.1.66:/home/alex/D2K/library/
-ssh alex@192.168.1.66 'cd /home/alex/D2K && ./scripts/linux/install.sh'
+rsync -a --delete /path/to/D2K/library/ <pi-user>@<pi-host>:~/D2K/library/
+ssh <pi-user>@<pi-host> 'cd ~/D2K && ./scripts/linux/install.sh'
 ```
 
 The installer builds the pinned Pegasus revision, installs native ARM64
 emulators and the required AppImages/Flatpaks, generates Pi-local launch
-metadata, and adds D2K to Alex's graphical-session autostart. Check the
+metadata, and adds D2K to the graphical-session autostart. Check the
 launcher and music paths without opening Pegasus with:
 
 ```bash
 ./scripts/linux/smoke-test.sh
 ```
 
-With one TV connected, D2K and melonDS place their upper and touch windows in
-a vertically stacked layout scaled to fit. With two physical 800×480 panels,
-the theme maps one window to each output; finish output order, rotation, and
-touch calibration after those panels are attached.
+Pegasus and managed emulators use XWayland for stable X11 placement while the
+desktop remains on Wayland. With one TV connected, dual-screen emulators stack
+vertically; with two panels, D2K follows their top-to-bottom logical geometry.
+Set output order, rotation, and touch calibration in Raspberry Pi OS.
 
 ## Theme development
 
@@ -86,13 +81,12 @@ consoles, and the side arrows page through the 4×3 grid.
 
 Keyboard: arrows move the selection, `PageUp`/`PageDown` change page, `Enter`
 accepts and `Escape` goes back. Edit any `.qml` file, then press `F5` to reload
-the theme. Details and the future Linux ARM64 handoff are in
+the theme. Details and the Raspberry Pi runtime are in
 [docs/pegasus-development.md](docs/pegasus-development.md).
 
 ## Nintendo DS smoke test
 
-`setup.ps1` points Pegasus at `library/consoles/ds` through
-`config/game_dirs.txt`, which indexes the full 19-game DS library with its
+`game_dirs.txt` points Pegasus at `library/consoles`, which indexes the full DS library with its
 cover art. The collection's metadata uses the configured melonDS build and the
 ROMs stored beside each game in the library.
 
@@ -113,8 +107,7 @@ hardware exists.
 
 ```text
 pegasus/themes/d2k/  D2K theme source, with Figma assets and fonts
-pegasus/metadata/nds/ Linux handoff metadata template
-scripts/windows/     Windows setup and run scripts
-scripts/linux/       Reserved for Linux ARM64 scripts
+scripts/windows/     Windows run and music scripts
+scripts/linux/       Raspberry Pi installation and runtime scripts
 docs/                Development notes
 ```

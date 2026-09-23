@@ -6,5 +6,5 @@ for script in "$repo_root"/scripts/linux/*.sh; do
     bash -n "$script"
 done
 "$repo_root/scripts/linux/launch-emulator.sh" --self-test
+"$repo_root/scripts/linux/configure-emulators.sh" --self-test
 "$repo_root/scripts/linux/mpd.sh" SmokeTest
-"$repo_root/scripts/linux/configure-emulators.sh" --check

@@ -17,7 +17,7 @@ log() { printf '%(%FT%T%z)T  %s\n' -1 "$*" >> "$log_path"; }
 
 emulator_args() {
     case $1 in
-        ds|dreamcast|3ds) args=("$2") ;;
+        ds|dreamcast|3ds|psp) args=("$2") ;;
         ps1) args=(-batch -fastboot -- "$2") ;;
         n64) args=(--system "Nintendo 64" --no-file-prompt "$2") ;;
         gamecube) args=(--batch --exec "$2") ;;
@@ -58,7 +58,12 @@ PY
 }
 
 panel_geometry() {
-    local width height
+    local monitors width height
+    monitors=$(xrandr --listmonitors 2>/dev/null | sed -nE 's/.* ([0-9]+)\/[0-9]+x([0-9]+)\/[0-9]+\+(-?[0-9]+)\+(-?[0-9]+).*/\1 \2 \3 \4/p' | sort -k4,4n -k3,3n)
+    if [[ $(printf '%s\n' "$monitors" | sed '/^$/d' | wc -l) -ge 2 ]]; then
+        printf '%s\n' "$monitors" | head -n 2
+        return
+    fi
     read -r width height < <(xdotool getdisplaygeometry)
     awk -v width="$width" -v height="$height" 'BEGIN {
         gap = 20
@@ -68,18 +73,21 @@ panel_geometry() {
         panel_height = int(480 * scale + .5)
         left = int((width - panel_width) / 2)
         top = int((height - (panel_height * 2 + gap)) / 2)
-        print panel_width, panel_height, left, top, top + panel_height + gap
+        print panel_width, panel_height, left, top
+        print panel_width, panel_height, left, top + panel_height + gap
     }'
 }
 
 layout_single() {
-    local panel_width panel_height left top bottom window
-    read -r panel_width panel_height left top bottom < <(panel_geometry)
+    local panel_width panel_height left top window
+    read -r panel_width panel_height left top < <(panel_geometry | head -n 1)
     window=$(xdotool search --onlyvisible --pid "$emulator_pid" 2>/dev/null | head -n 1 || true)
     if [[ -z $window && $console == dreamcast ]]; then
         window=$(xdotool search --onlyvisible --name '[Ff]lycast' 2>/dev/null | head -n 1 || true)
     elif [[ -z $window && $console == 3ds ]]; then
         window=$(xdotool search --onlyvisible --name '[Aa]zahar' 2>/dev/null | head -n 1 || true)
+    elif [[ -z $window && $console == psp ]]; then
+        window=$(xdotool search --onlyvisible --name '[Pp][Pp][Ss][Ss][Pp]' 2>/dev/null | head -n 1 || true)
     fi
     [[ -n $window ]] || return 1
     xdotool windowsize --sync "$window" "$panel_width" "$panel_height"
@@ -88,16 +96,33 @@ layout_single() {
 }
 
 layout_melonds() {
-    local panel_width panel_height left top bottom upper lower
-    read -r panel_width panel_height left top bottom < <(panel_geometry)
+    local panel_width panel_height left top upper lower lower_panel
+    read -r panel_width panel_height left top < <(panel_geometry | head -n 1)
     upper=$(xdotool search --onlyvisible --pid "$emulator_pid" --name '\[w1\]' 2>/dev/null | head -n 1 || true)
     lower=$(xdotool search --onlyvisible --pid "$emulator_pid" --name '\[w2\]' 2>/dev/null | head -n 1 || true)
     [[ -n $upper && -n $lower ]] || return 1
     xdotool windowsize --sync "$upper" "$panel_width" "$panel_height"
     xdotool windowmove "$upper" "$left" "$top"
+    lower_panel=$(panel_geometry | sed -n '2p')
+    read -r panel_width panel_height left top <<<"$lower_panel"
     xdotool windowsize --sync "$lower" "$panel_width" "$panel_height"
-    xdotool windowmove "$lower" "$left" "$bottom"
+    xdotool windowmove "$lower" "$left" "$top"
     log "layout upper=$upper lower=$lower ${panel_width}x${panel_height}"
+}
+
+layout_azahar() {
+    local panel_width panel_height left top primary secondary lower_panel
+    primary=$(xdotool search --onlyvisible --pid "$emulator_pid" --name '[Pp]rimary|[Pp]rincip' 2>/dev/null | head -n 1 || true)
+    secondary=$(xdotool search --onlyvisible --pid "$emulator_pid" --name '[Ss]econdary|[Ss]econd|[Bb]ottom' 2>/dev/null | head -n 1 || true)
+    [[ -n $primary && -n $secondary ]] || return 1
+    read -r panel_width panel_height left top < <(panel_geometry | head -n 1)
+    xdotool windowsize --sync "$primary" "$panel_width" "$panel_height"
+    xdotool windowmove "$primary" "$left" "$top"
+    lower_panel=$(panel_geometry | sed -n '2p')
+    read -r panel_width panel_height left top <<<"$lower_panel"
+    xdotool windowsize --sync "$secondary" "$panel_width" "$panel_height"
+    xdotool windowmove "$secondary" "$left" "$top"
+    log "layout primary=$primary secondary=$secondary ${panel_width}x${panel_height}"
 }
 
 emulator_command() {
@@ -108,6 +133,7 @@ emulator_command() {
         n64) command -v ares ;;
         gamecube) command -v dolphin-emu ;;
         3ds) printf '%s\n' flatpak ;;
+        psp) printf '%s\n' flatpak ;;
         *) return 1 ;;
     esac
 }
@@ -116,6 +142,7 @@ stop_emulator() {
     case $console in
         dreamcast) flatpak kill --user org.flycast.Flycast >/dev/null 2>&1 || true ;;
         3ds) flatpak kill --user org.azahar_emu.Azahar >/dev/null 2>&1 || true ;;
+        psp) flatpak kill --user org.ppsspp.PPSSPP >/dev/null 2>&1 || true ;;
         *) kill -TERM "$emulator_pid" 2>/dev/null || true ;;
     esac
     for _ in {1..20}; do
@@ -126,16 +153,26 @@ stop_emulator() {
 }
 
 if [[ $console == --self-test ]]; then
+    emulator_args ds '/tmp/Test DS.nds'
+    [[ ${args[0]} == '/tmp/Test DS.nds' ]]
+    emulator_args dreamcast '/tmp/Test Dreamcast.cdi'
+    [[ ${args[0]} == '/tmp/Test Dreamcast.cdi' ]]
     emulator_args ps1 '/tmp/Test Disc.cue'
     [[ ${args[*]} == '-batch -fastboot -- /tmp/Test Disc.cue' ]]
     emulator_args n64 /tmp/Test.z64
     [[ ${args[0]} == --system && ${args[1]} == 'Nintendo 64' ]]
+    emulator_args gamecube '/tmp/Test Game.iso'
+    [[ ${args[*]} == '--batch --exec /tmp/Test Game.iso' ]]
+    emulator_args 3ds '/tmp/Test 3DS.3ds'
+    [[ ${args[0]} == '/tmp/Test 3DS.3ds' ]]
+    emulator_args psp '/tmp/Test Game.iso'
+    [[ ${args[0]} == '/tmp/Test Game.iso' ]]
     echo 'launch-emulator self-test passed.'
     exit 0
 fi
 
-if [[ $# -ne 2 || ! $console =~ ^(ds|dreamcast|ps1|n64|gamecube|3ds)$ ]]; then
-    echo "Usage: $0 {ds|dreamcast|ps1|n64|gamecube|3ds} /absolute/path/to/rom" >&2
+if [[ $# -ne 2 || ! $console =~ ^(ds|dreamcast|ps1|n64|gamecube|3ds|psp)$ ]]; then
+    echo "Usage: $0 {ds|dreamcast|ps1|n64|gamecube|3ds|psp} /absolute/path/to/rom" >&2
     exit 2
 fi
 
@@ -148,7 +185,7 @@ if [[ ! -f $rom ]]; then
 fi
 
 emulator=$(emulator_command 2>/dev/null || true)
-if [[ -z $emulator || ( $console != dreamcast && $console != 3ds && ! -x $emulator ) ]]; then
+if [[ -z $emulator || ( $console != dreamcast && $console != 3ds && $console != psp && ! -x $emulator ) ]]; then
     log "$console emulator is not installed; returning to Pegasus."
     "$mpd_script" Resume >/dev/null 2>&1 || true
     exit 0
@@ -158,30 +195,41 @@ if [[ $console == ds ]]; then
 fi
 
 emulator_args "$console" "$rom"
+rm -f "$home_request"
 export DISPLAY="${DISPLAY:-:0}"
 case $console in
-    dreamcast) flatpak run org.flycast.Flycast "${args[@]}" & ;;
-    3ds) flatpak run org.azahar_emu.Azahar "${args[@]}" & ;;
+    dreamcast) flatpak run --socket=x11 --nosocket=wayland --env=QT_QPA_PLATFORM=xcb org.flycast.Flycast "${args[@]}" & ;;
+    3ds) flatpak run --socket=x11 --nosocket=wayland --env=QT_QPA_PLATFORM=xcb org.azahar_emu.Azahar "${args[@]}" & ;;
+    psp) flatpak run --socket=x11 --nosocket=wayland --env=SDL_VIDEODRIVER=x11 org.ppsspp.PPSSPP "${args[@]}" & ;;
     *) QT_QPA_PLATFORM=xcb "$emulator" "${args[@]}" & ;;
 esac
 emulator_pid=$!
 log "$console started: pid=$emulator_pid"
 
 settled=false
+stable_layouts=0
+layout_deadline=$((SECONDS + 30))
+layout_warning=false
 while kill -0 "$emulator_pid" 2>/dev/null; do
-    if [[ $settled == false ]]; then
+    if [[ $settled == false && $SECONDS -le $layout_deadline ]]; then
         if [[ $console == ds ]]; then
-            layout_melonds && settled=true
+            layout_melonds && ((stable_layouts += 1))
+        elif [[ $console == 3ds ]]; then
+            layout_azahar && ((stable_layouts += 1))
         else
-            layout_single && settled=true
+            layout_single && ((stable_layouts += 1))
         fi
+        [[ $stable_layouts -ge 3 ]] && settled=true
+    elif [[ $settled == false && $layout_warning == false ]]; then
+        log 'Window placement timed out after 30 seconds; emulator remains usable.'
+        layout_warning=true
     fi
     if [[ -e $home_request ]]; then
         rm -f "$home_request"
         log 'Home request detected; stopping emulator'
         stop_emulator
     fi
-    sleep 0.15
+    sleep 0.2
 done
 wait "$emulator_pid" || true
 log "$console exited"

@@ -175,7 +175,8 @@ FocusScope {
     // rather than an index because MPD's queue order is its own -- the script
     // resolves the path against the queue.
     function sendMusicCommand(action, track) {
-        musicSeq += 1
+        var previousSeq = api.memory.get("d2kMusicSeq")
+        musicSeq = typeof previousSeq === "number" && isFinite(previousSeq) ? previousSeq + 1 : musicSeq + 1
         api.memory.set("d2kMusicAction", action)
         api.memory.set("d2kMusicTrack", track === undefined ? "" : track)
         api.memory.set("d2kMusicSeq", musicSeq)

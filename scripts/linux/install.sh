@@ -38,11 +38,11 @@ sudo apt-get install -y \
     qttools5-dev qttools5-dev-tools qtmultimedia5-dev libqt5svg5-dev \
     libqt5sql5-sqlite libsdl2-dev \
     qml-module-qtquick2 qml-module-qtquick-window2 qml-module-qtmultimedia qml-module-qtgraphicaleffects \
-    libgstreamer1.0-0 libfontconfig1 libssl3 libzstd1 \
-    mpd mpc xdotool xwayland flatpak ares dolphin-emu \
+    libgstreamer1.0-0 libfontconfig1 libssl3t64 libzstd1 \
+    mpd mpc xdotool xwayland x11-xserver-utils flatpak ares dolphin-emu \
     pipewire-pulse pipewire-alsa wireplumber pulseaudio-utils
 
-mkdir -p "$software_dir" "$pegasus_config/themes" "$pegasus_config/metafiles" \
+mkdir -p "$software_dir" "$pegasus_config/themes" \
     "$(dirname "$melonds_config")" "$config_home/autostart" "$HOME/.cache/d2k"
 
 if [[ ! -x $software_dir/pegasus/bin/pegasus-fe ]]; then
@@ -86,7 +86,7 @@ if [[ ! -x $software_dir/duckstation/AppRun ]]; then
 fi
 
 flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user -y flathub org.flycast.Flycast org.azahar_emu.Azahar
+flatpak install --user -y flathub org.flycast.Flycast org.azahar_emu.Azahar org.ppsspp.PPSSPP
 
 theme_link="$pegasus_config/themes/d2k"
 if [[ -e $theme_link || -L $theme_link ]]; then
@@ -114,7 +114,7 @@ import sys
 library = pathlib.Path(sys.argv[1])
 launcher = sys.argv[2]
 consoles = {"nds": "ds", "dreamcast": "dreamcast", "psx": "ps1",
-            "n64": "n64", "gc": "gamecube", "n3ds": "3ds"}
+            "n64": "n64", "gc": "gamecube", "n3ds": "3ds", "psp": "psp"}
 
 for path in library.glob("*/metadata.pegasus.txt"):
     lines = path.read_text(encoding="utf-8").splitlines()
@@ -132,10 +132,11 @@ for path in library.glob("*/metadata.pegasus.txt"):
             ]
             break
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-PY
 
-# The old three-game template is superseded by the synced, full library.
-rm -f "$pegasus_config/metafiles/d2k-nds.metadata.pegasus.txt"
+for path in library.glob("*/metadata.pegasus.txt"):
+    if any(line.lstrip().startswith("launch: powershell.exe") for line in path.read_text(encoding="utf-8").splitlines()):
+        raise SystemExit(f"Windows launch command remains in {path}")
+PY
 
 if [[ ! -e $pegasus_config/settings.txt ]]; then
     printf 'general.theme: themes/d2k\ngeneral.fullscreen: false\n' > "$pegasus_config/settings.txt"

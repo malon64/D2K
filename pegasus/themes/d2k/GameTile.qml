@@ -5,7 +5,6 @@ Item {
     width: 108
     height: 108
 
-    property var theme
     property var game
     property bool selected: false
 

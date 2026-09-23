@@ -124,6 +124,8 @@ Item {
         id: artImage
         x: 298; y: 120; width: 203; height: 203
         source: panel.shownArt
+        sourceSize.width: 406
+        sourceSize.height: 406
         visible: source != ""
         fillMode: Image.PreserveAspectFit
         smooth: true
@@ -379,6 +381,8 @@ Item {
                 Image {
                     x: 711; y: 266; width: 74; height: 179
                     source: "assets/vertical-ticket.png"
+                    sourceSize.width: 148
+                    sourceSize.height: 358
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                 }

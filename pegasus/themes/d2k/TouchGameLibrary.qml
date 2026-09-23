@@ -71,7 +71,6 @@ Item {
             x: 165 + (slot % panel.theme.gridColumns) * 118
             y: 64 + Math.floor(slot / panel.theme.gridColumns) * 110
 
-            theme: panel.theme
             visible: gameSlot < panel.gameCount
             game: visible && panel.games ? panel.games.get(gameSlot) : null
             selected: gameSlot === panel.gameIndex

@@ -26,8 +26,8 @@ try:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("settings root is not an object")
-    changed = any(key in data for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch"))
-    for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch"):
+    changed = any(key in data for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"))
+    for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"):
         data.pop(key, None)
     if changed:
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as output:
@@ -37,20 +37,6 @@ try:
         os.replace(temporary, path)
 except Exception as error:
     print(f"D2K: could not clear saved boot state: {error}", file=sys.stderr)
-PY
-}
-
-theme_value() {
-    [[ -f $theme_settings ]] || return 0
-    python3 - "$theme_settings" "$1" <<'PY'
-import json
-import pathlib
-import sys
-try:
-    value = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")).get(sys.argv[2])
-    print("true" if value is True else "" if value is None else value)
-except Exception:
-    pass
 PY
 }
 
@@ -71,21 +57,61 @@ trap 'cleanup; exit 0' INT TERM
 
 clear_boot_state
 music_ready=false
-last_launch=$(theme_value d2kMusicLaunch)
-"$mpd_script" Prepare >/dev/null 2>&1 || echo 'D2K: menu music is unavailable.' >&2
+music_prepared=false
+last_launch=""
+last_music_seq=""
+last_settings=""
+last_status_second=0
+if "$mpd_script" Prepare >/dev/null 2>&1; then
+    music_prepared=true
+else
+    echo 'D2K: menu music is unavailable.' >&2
+fi
 
-"$pegasus" &
+QT_QPA_PLATFORM=xcb "$pegasus" &
 pegasus_pid=$!
 while kill -0 "$pegasus_pid" 2>/dev/null; do
-    if [[ $music_ready == false && $(theme_value d2kMusicReady) == true ]]; then
-        "$mpd_script" Boot >/dev/null 2>&1 || true
-        music_ready=true
+    [[ -f $theme_settings ]] || { sleep 0.2; continue; }
+    settings=$(<"$theme_settings")
+    if [[ $settings != "$last_settings" ]]; then
+        last_settings=$settings
+        mapfile -t theme_values < <(python3 - "$theme_settings" <<'PY'
+import json, pathlib, sys
+try:
+    values = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
+except Exception:
+    values = {}
+for key in ("d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"):
+    value = values.get(key, "")
+    print("true" if value is True else "" if value is None else value)
+PY
+)
+        ready=${theme_values[0]:-}
+        music_launch=${theme_values[1]:-}
+        music_seq=${theme_values[2]:-}
+        music_action=${theme_values[3]:-}
+        music_track=${theme_values[4]:-}
+        if [[ $music_prepared == true && $music_ready == false && $ready == true ]]; then
+            "$mpd_script" Boot >/dev/null 2>&1 || true
+            music_ready=true
+        fi
+        if [[ $music_prepared == true && -n $music_launch && $music_launch != "$last_launch" ]]; then
+            last_launch=$music_launch
+            "$mpd_script" Pause >/dev/null 2>&1 || true
+        fi
+        if [[ $music_prepared == true && -n $music_seq && $music_seq != "$last_music_seq" ]]; then
+            last_music_seq=$music_seq
+            case $music_action in
+                play) "$mpd_script" Play "$music_track" >/dev/null 2>&1 || true ;;
+                pause) "$mpd_script" Pause >/dev/null 2>&1 || true ;;
+                resume) "$mpd_script" Resume >/dev/null 2>&1 || true ;;
+            esac
+        fi
     fi
-    music_launch=$(theme_value d2kMusicLaunch)
-    if [[ -n $music_launch && $music_launch != "$last_launch" ]]; then
-        last_launch=$music_launch
-        "$mpd_script" Pause >/dev/null 2>&1 || true
+    if [[ $music_prepared == true && $music_ready == true && $SECONDS -ne $last_status_second ]]; then
+        "$mpd_script" Status >/dev/null 2>&1 || true
+        last_status_second=$SECONDS
     fi
-    sleep 0.1
+    sleep 0.2
 done
 wait "$pegasus_pid"

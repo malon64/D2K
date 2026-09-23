@@ -3,7 +3,7 @@ param(
     # helpers without performing an action. run.ps1 does that to poll MPD over
     # its own socket rather than spawning a process per status read.
     [ValidateSet('Prepare', 'Boot', 'Start', 'Pause', 'Resume', 'Stop', 'SmokeTest',
-                 'Play', 'Next', 'Previous', 'Status', '')]
+                 'Play', 'Status', '')]
     [string]$Action = '',
 
     # Play only: the track to start. The theme sends an absolute path, which is
@@ -260,8 +260,6 @@ switch ($Action) {
         Fade-MpdVolume 100 300
     }
 
-    'Next' { Invoke-Mpd @('next') | Out-Null; Fade-MpdVolume 100 300 }
-    'Previous' { Invoke-Mpd @('previous') | Out-Null; Fade-MpdVolume 100 300 }
 
     'Status' { Write-D2KMpdStatus }
     'SmokeTest' {

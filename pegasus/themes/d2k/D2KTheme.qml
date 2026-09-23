@@ -4,17 +4,12 @@ Item {
     id: theme
     visible: false
 
-    readonly property color iceBlue: "#298cc8"
     readonly property color skyGlass: "#91bde2"
     readonly property color pearlMist: "#e0e7f5"
-    readonly property color candyPink: "#dabfdb"
-    readonly property color pinkGlass: "#f1dcf1"
-    readonly property color deepBlue: "#1d5da7"
     readonly property color chromeInk: "#6674ac"
 
     readonly property color cyanInk: "#00edff"
     readonly property string cyanHex: "#00edff"
-    readonly property color limeInk: "#29ef54"
     readonly property color titleInk: "#f5faff"
     readonly property color metaInk: "#d1e5ff"
     readonly property color bodyInk: "#ebf2ff"
@@ -23,7 +18,6 @@ Item {
     readonly property color topBase: "#dde0ed"
     readonly property color touchBase: "#e0e7f5"
 
-    readonly property int panelRadius: 24
     readonly property int pageSize: 12
     readonly property int gridColumns: 4
 
@@ -75,7 +69,6 @@ Item {
     readonly property string pixelFont: fontPixelify.status === FontLoader.Ready ? fontPixelify.name : "Monospace"
     readonly property string arcadeFont: fontPressStart.status === FontLoader.Ready ? fontPressStart.name : "Monospace"
     readonly property string consoleFont: fontRubikGlitch.status === FontLoader.Ready ? fontRubikGlitch.name : "Sans"
-    readonly property string badgeFont: fontBungeeShade.status === FontLoader.Ready ? fontBungeeShade.name : "Sans"
     readonly property string countFont: fontDanfo.status === FontLoader.Ready ? fontDanfo.name : "Sans"
 
     // Figma fills the console name with a left-to-right rainbow. QML Text
@@ -180,6 +173,5 @@ Item {
     FontLoader { id: fontPixelify; source: "assets/fonts/PixelifySans-SemiBold.ttf" }
     FontLoader { id: fontPressStart; source: "assets/fonts/PressStart2P-Regular.ttf" }
     FontLoader { id: fontRubikGlitch; source: "assets/fonts/RubikGlitch-Regular.ttf" }
-    FontLoader { id: fontBungeeShade; source: "assets/fonts/BungeeShade-Regular.ttf" }
     FontLoader { id: fontDanfo; source: "assets/fonts/Danfo-Regular.ttf" }
 }

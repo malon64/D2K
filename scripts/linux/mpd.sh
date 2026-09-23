@@ -2,6 +2,7 @@
 set -euo pipefail
 
 action=${1:-}
+track_path=${2:-}
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 music_dir="$repo_root/library/consoles/music"
 playlist="$music_dir/playlist.m3u"
@@ -9,6 +10,7 @@ state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/d2k/mpd"
 config="$state_dir/mpd.conf"
 pid_file="$state_dir/mpd.pid"
 port=6600
+status_file="$repo_root/pegasus/themes/d2k/mpd-status.json"
 
 mpc_cmd() { mpc --host 127.0.0.1 --port "$port" "$@"; }
 
@@ -121,12 +123,53 @@ stop() {
     rm -f "$pid_file"
 }
 
+play() {
+    local selected relative position
+    selected=$(realpath -e -- "$track_path") || { echo "Track not found: $track_path" >&2; return 1; }
+    music_dir=$(realpath -e -- "$music_dir")
+    [[ $selected == "$music_dir/"* ]] || { echo 'Track must be inside the D2K music library.' >&2; return 1; }
+    relative=${selected#"$music_dir/"}
+    position=$(mpc_cmd playlist -f '%file%' | awk -v track="$relative" '$0 == track { print NR - 1; exit }')
+    [[ -n $position ]] || { echo 'Track is not in the D2K queue.' >&2; return 1; }
+    mpc_cmd play "$position" >/dev/null
+    fade 100
+}
+
+status() {
+    local current state timing position duration title artist file
+    current=$(mpc_cmd current -f '%file%\t%title%\t%artist%' 2>/dev/null || true)
+    IFS=$'\t' read -r file title artist <<<"$current"
+    timing=$(mpc_cmd status 2>/dev/null || true)
+    case $timing in *'[playing]'*) state=play ;; *'[paused]'*) state=pause ;; *) state=stop ;; esac
+    position=0 duration=0
+    if [[ $timing =~ ([0-9]+):([0-9]+)\/([0-9]+):([0-9]+) ]]; then
+        position=$((10#${BASH_REMATCH[1]} * 60 + 10#${BASH_REMATCH[2]}))
+        duration=$((10#${BASH_REMATCH[3]} * 60 + 10#${BASH_REMATCH[4]}))
+    fi
+    mkdir -p "$(dirname "$status_file")"
+    python3 - "$status_file" "$state" "$file" "$title" "$artist" "$position" "$duration" <<'PY'
+import json, os, pathlib, sys, tempfile, time
+path = pathlib.Path(sys.argv[1])
+data = dict(zip(("state", "file", "title", "artist", "positionMs", "durationMs"), sys.argv[2:]))
+data["positionMs"] = int(data["positionMs"]) * 1000
+data["durationMs"] = int(data["durationMs"]) * 1000
+data["updatedAt"] = int(time.time() * 1000)
+with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as output:
+    json.dump(data, output, separators=(",", ":"))
+    output.write("\n")
+    temporary = output.name
+os.replace(temporary, path)
+PY
+}
+
 case $action in
-    Prepare) start && queue && mpc_cmd pause >/dev/null ;;
-    Boot) mpc_cmd pause >/dev/null && fade 100 ;;
+    Prepare) start && queue && mpc_cmd pause 1 >/dev/null ;;
+    Boot) mpc_cmd pause 0 >/dev/null && fade 100 ;;
     Start) start && queue && fade 100 ;;
-    Pause) fade 0 && mpc_cmd pause >/dev/null ;;
-    Resume) mpc_cmd pause >/dev/null && fade 100 ;;
+    Pause) fade 0 && mpc_cmd pause 1 >/dev/null ;;
+    Resume) mpc_cmd pause 0 >/dev/null && fade 100 ;;
+    Play) play ;;
+    Status) status ;;
     Stop) stop ;;
     SmokeTest)
         trap stop EXIT
@@ -137,5 +180,5 @@ case $action in
         mpc_cmd status | grep -q '\[playing\]'
         echo 'MPD smoke test passed.'
         ;;
-    *) echo "Usage: $0 {Prepare|Boot|Start|Pause|Resume|Stop|SmokeTest}" >&2; exit 2 ;;
+    *) echo "Usage: $0 {Prepare|Boot|Start|Pause|Resume|Stop|Play|Status|SmokeTest}" >&2; exit 2 ;;
 esac

@@ -11,8 +11,6 @@ Item {
 
     property var theme
     property var game
-    property int trackIndex: -1
-    property int trackCount: 0
     property bool paused: false
 
     // Playback position, fed from MPD's status. Both are milliseconds; -1 means
@@ -184,6 +182,8 @@ Item {
     Image {
         x: 70; y: 114; width: 660; height: 274
         source: "assets/music-nowplaying.png"
+        sourceSize.width: 1320
+        sourceSize.height: 548
         fillMode: Image.Stretch
         smooth: true
     }
@@ -303,6 +303,8 @@ Item {
     Image {
         x: 565.7; y: 2.7; width: 222.8; height: 222.8
         source: "assets/music-orn-earbuds.png"
+        sourceSize.width: 478
+        sourceSize.height: 478
         fillMode: Image.Stretch
         smooth: true
         rotation: -0.87
@@ -324,6 +326,8 @@ Item {
     Image {
         x: 11; y: 3; width: 222; height: 222
         source: "assets/music-orn-butterfly.png"
+        sourceSize.width: 444
+        sourceSize.height: 444
         fillMode: Image.Stretch
         smooth: true
     }
@@ -331,6 +335,8 @@ Item {
     Image {
         x: -6; y: 361; width: 120; height: 119
         source: "assets/music-orn-crystal.png"
+        sourceSize.width: 258
+        sourceSize.height: 258
         fillMode: Image.Stretch
         smooth: true
         scale: panel.beatCrystal
