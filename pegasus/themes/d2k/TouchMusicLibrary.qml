@@ -98,7 +98,7 @@ Item {
             }
 
             Text {
-                x: 84; y: 26; width: 370; height: 16
+                x: 100; y: 26; width: 350; height: 16
                 text: model.title
                 color: parent.isPlaying ? "#7ef5ff" : "#dbe7fb"
                 font.family: panel.theme.titleFont
@@ -108,7 +108,7 @@ Item {
             }
 
             Text {
-                x: 84; y: 42; width: 370; height: 14
+                x: 100; y: 42; width: 350; height: 14
                 text: model.developer
                 color: parent.isPlaying ? "#9eeaff" : "#a8c0e4"
                 font.family: panel.theme.bodyFont
@@ -121,7 +121,7 @@ Item {
             // glyph: at this size the two strokes of U+2016 sit almost on top
             // of each other, which reads as a smudge instead of a pause icon.
             Item {
-                x: 510; y: 33; width: 16; height: 16
+                x: 470; y: 33; width: 16; height: 16
                 visible: parent.isPlaying
 
                 Text {
