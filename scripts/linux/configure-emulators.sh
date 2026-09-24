@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Merges the D2K overlays in docs/emulator-configs/linux/ into each emulator's
+# own Linux configuration. Only the overlay's keys change, so BIOS paths,
+# controllers, saves and user preferences survive. --check verifies them.
 set -euo pipefail
 
 if [[ ${1:-} == --self-test ]]; then
@@ -9,138 +12,135 @@ if [[ ${1:-} == --self-test ]]; then
     echo 'Emulator configuration self-test passed.'
     exit 0
 fi
-
-repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
-
-if [[ $# -gt 1 || ${1:-} == --help ]]; then
-    echo "Usage: $0 [--check]" >&2
+if [[ $# -gt 1 || ( $# -eq 1 && $1 != --check ) ]]; then
+    echo "Usage: $0 [--check|--self-test]" >&2
     exit 2
 fi
 
-python3 - "$repo_root" "$config_home" "$HOME" "${1:-}" <<'PY'
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+python3 - "$repo_root" "$config_home" "$HOME" "$software_dir" "${1:-}" <<'PY'
 import configparser
+import json
 import pathlib
 import re
 import sys
 
-repo, config_home, home = map(pathlib.Path, sys.argv[1:4])
-mode = sys.argv[4]
-templates = repo / "docs/emulator-configs/windows"
+repo, config_home, home, software = map(pathlib.Path, sys.argv[1:5])
+check = sys.argv[5] == "--check"
+templates = repo / "docs/emulator-configs/linux"
 
-def ini(path):
-    config = configparser.RawConfigParser(interpolation=None)
+
+def read_ini(path):
+    config = configparser.RawConfigParser(interpolation=None, strict=False)
     config.optionxform = str
     if path.exists():
-        config.read(path, encoding="utf-8")
+        config.read(path, encoding="utf-8-sig")
     return config
 
-def merge_ini(template, destination):
-    config, overlay = ini(destination), ini(template)
-    for section in overlay.sections():
-        if not config.has_section(section):
-            config.add_section(section)
-        for key, value in overlay.items(section):
-            config.set(section, key, value)
+
+def overlay_ini(template, destination):
+    """Set each template key in place, keeping the file's comments and order."""
+    lines = destination.read_text(encoding="utf-8").splitlines(keepends=True) if destination.exists() else []
+    for section in (overlay := read_ini(template)).sections():
+        values = dict(overlay.items(section))
+        out, current, seen = [], None, set()
+
+        def flush():
+            out.extend(f"{key} = {value}\n" for key, value in values.items() if key not in seen)
+
+        for line in lines:
+            header = re.match(r"^\[([^]]+)\]", line)
+            if header:
+                if current == section:
+                    flush()
+                current = header.group(1)
+            key = next((k for k in values if current == section
+                        and re.match(rf"^{re.escape(k)}\s*=", line)), None)
+            if key:
+                out.append(f"{key} = {values[key]}\n")
+                seen.add(key)
+            else:
+                out.append(line)
+        if current == section:
+            flush()
+        elif not any(re.match(rf"^\[{re.escape(section)}\]", line) for line in lines):
+            if out and out[-1].strip():
+                out.append("\n")
+            out.append(f"[{section}]\n")
+            flush()
+        lines = out
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("w", encoding="utf-8") as file:
-        config.write(file, space_around_delimiters=True)
+    destination.write_text("".join(lines), encoding="utf-8")
 
-def set_ini_values(path, section, values):
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True) if path.exists() else []
-    out, current, seen = [], None, set()
-    for line in lines:
-        match = re.match(r"^\[([^]]+)\]", line)
-        if match:
-            if current == section:
-                for key, value in values.items():
-                    if key not in seen:
-                        out.append(f"{key} = {value}\n")
-            current, seen = match.group(1), set()
-        key = next((key for key in values if current == section and re.match(rf"^{re.escape(key)}\s*=", line)), None)
-        if key:
-            out.append(f"{key} = {values[key]}\n")
-            seen.add(key)
-        else:
-            out.append(line)
-    if current == section:
-        for key, value in values.items():
-            if key not in seen:
-                out.append(f"{key} = {value}\n")
-    elif not any(re.match(rf"^\[{re.escape(section)}\]", line) for line in lines):
-        out += [f"[{section}]\n"] + [f"{key} = {value}\n" for key, value in values.items()]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(out), encoding="utf-8")
 
-def set_bml_values(path, section, values):
-    lines = path.read_text(encoding="utf-8").splitlines(keepends=True) if path.exists() else []
-    out, current, seen = [], None, set()
-    for line in lines:
-        header = re.match(r"^([^\s][^:]*)$", line.rstrip())
-        if header:
-            if current == section:
-                for key, value in values.items():
-                    if key not in seen:
-                        out.append(f"  {key}: {value}\n")
-            current, seen = header.group(1), set()
-        key = next((key for key in values if current == section and re.match(rf"^  {re.escape(key)}:", line)), None)
-        if key:
-            out.append(f"  {key}: {values[key]}\n")
-            seen.add(key)
-        else:
-            out.append(line)
-    if current == section:
-        for key, value in values.items():
-            if key not in seen:
-                out.append(f"  {key}: {value}\n")
-    elif not any(line.rstrip() == section for line in lines):
-        out += [f"{section}\n"] + [f"  {key}: {value}\n" for key, value in values.items()]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("".join(out), encoding="utf-8")
-
-targets = {
-    "dolphin": config_home / "dolphin-emu/Dolphin.ini",
-    "duckstation": home / ".local/share/duckstation/settings.ini",
-    "flycast": home / ".var/app/org.flycast.Flycast/config/flycast/emu.cfg",
-    "azahar": home / ".var/app/org.azahar_emu.Azahar/config/azahar-emu/qt-config.ini",
-    "ares": home / ".local/share/ares/settings.bml",
-    "ppsspp": home / ".var/app/org.ppsspp.PPSSPP/config/ppsspp/PSP/SYSTEM/ppsspp.ini",
-}
-
-if mode == "--check":
-    for name, path in targets.items():
-        if not path.is_file():
-            raise SystemExit(f"Missing {name} configuration: {path}")
-    duckstation = ini(targets["duckstation"])
-    assert duckstation.get("UI", "DisplayWindowWidth") == "800"
-    assert duckstation.get("UI", "DisplayWindowHeight") == "480"
-    for name, template in (("dolphin", "dolphin/Dolphin.ini"), ("flycast", "flycast/emu.cfg"), ("azahar", "azahar/qt-config.ini")):
-        actual, expected = ini(targets[name]), ini(templates / template)
-        for section in expected.sections():
-            for key, value in expected.items(section):
-                assert actual.get(section, key) == value, f"{name}: {section}.{key}"
-    actual, expected = ini(targets["ppsspp"]), ini(repo / "docs/emulator-configs/ppsspp/ppsspp.ini")
-    for section in expected.sections():
+def ini_mismatches(template, destination):
+    actual = read_ini(destination)
+    for section in (expected := read_ini(template)).sections():
         for key, value in expected.items(section):
-            assert actual.get(section, key) == value, f"ppsspp: {section}.{key}"
-    ares = targets["ares"].read_text(encoding="utf-8")
-    for line in ("  Exclusive: false", "  AspectCorrection: false", "  AdaptiveSizing: false", "  AutoCentering: true", "  ShowStatusBar: false"):
-        assert line in ares, f"ares: {line}"
+            # Qt apps (Azahar) rewrite "key\default" flags whenever a value
+            # equals their built-in default; only the real values matter.
+            if key.endswith("\\default"):
+                continue
+            if actual.get(section, key, fallback=None) != value:
+                yield f"[{section}] {key}"
+
+
+def overlay_json(template, destination):
+    def merge(base, extra):
+        for key, value in extra.items():
+            if isinstance(value, dict) and isinstance(base.get(key), dict):
+                merge(base[key], value)
+            else:
+                base[key] = value
+        return base
+
+    data = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(merge(data, json.loads(template.read_text(encoding="utf-8"))), indent=4) + "\n",
+                           encoding="utf-8")
+
+
+def json_mismatches(template, destination):
+    def walk(expected, actual, path):
+        for key, value in expected.items():
+            here = f"{path}/{key}"
+            if isinstance(value, dict):
+                yield from walk(value, actual.get(key, {}) if isinstance(actual, dict) else {}, here)
+            elif not isinstance(actual, dict) or actual.get(key) != value:
+                yield here
+
+    actual = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
+    yield from walk(json.loads(template.read_text(encoding="utf-8")), actual, "")
+
+
+# (template under docs/emulator-configs/linux, emulator's own config file)
+targets = [
+    ("dolphin/Dolphin.ini", config_home / "dolphin-emu/Dolphin.ini"),
+    ("duckstation/settings.ini", home / ".local/share/duckstation/settings.ini"),
+    ("flycast/emu.cfg", config_home / "flycast/emu.cfg"),
+    ("azahar/qt-config.ini", home / ".var/app/org.azahar_emu.Azahar/config/azahar-emu/qt-config.ini"),
+    ("ppsspp/ppsspp.ini", home / ".var/app/org.ppsspp.PPSSPP/config/ppsspp/PSP/SYSTEM/ppsspp.ini"),
+    ("mupen64plus/mupen64plus.cfg", config_home / "mupen64plus/mupen64plus.cfg"),
+    ("shipwright/shipofharkinian.json", software / "shipwright/shipofharkinian.json"),
+]
+# melonDS is copied whole by install.sh and patched before each launch by
+# launch-emulator.sh, because melonDS rewrites its TOML on exit.
+
+problems = []
+for name, destination in targets:
+    template = templates / name
+    is_json = template.suffix == ".json"
+    if check:
+        found = list((json_mismatches if is_json else ini_mismatches)(template, destination))
+        problems += [f"{name}: {item}" for item in found]
+    else:
+        (overlay_json if is_json else overlay_ini)(template, destination)
+
+if check:
+    if problems:
+        raise SystemExit("Emulator configuration differs from the D2K overlays:\n  " + "\n  ".join(problems))
     print("Emulator configuration check passed.")
-    raise SystemExit(0)
-
-# DuckStation is user-configured on the Pi: D2K owns only its launch-window size.
-set_ini_values(targets["duckstation"], "UI", {"DisplayWindowWidth": "800", "DisplayWindowHeight": "480"})
-merge_ini(templates / "dolphin/Dolphin.ini", targets["dolphin"])
-merge_ini(templates / "flycast/emu.cfg", targets["flycast"])
-merge_ini(templates / "azahar/qt-config.ini", targets["azahar"])
-merge_ini(repo / "docs/emulator-configs/ppsspp/ppsspp.ini", targets["ppsspp"])
-
-# ares 143+ renamed the Windows template's display keys; these are the direct
-# semantic equivalents. Window placement is handled by launch-emulator.sh.
-set_bml_values(targets["ares"], "Video", {
-    "Exclusive": "false", "AspectCorrection": "false", "AdaptiveSizing": "false", "AutoCentering": "true",
-})
-set_bml_values(targets["ares"], "General", {"ShowStatusBar": "false"})
-print("Emulator display configuration applied.")
+else:
+    print("Emulator configuration applied.")
 PY

@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
+# Checks the Linux deployment without opening Pegasus.
 set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-for script in "$repo_root"/scripts/linux/*.sh; do
+for script in "$linux_dir"/*.sh; do
     bash -n "$script"
 done
-"$repo_root/scripts/linux/launch-emulator.sh" --self-test
-"$repo_root/scripts/linux/configure-emulators.sh" --self-test
-"$repo_root/scripts/linux/mpd.sh" SmokeTest
+"$linux_dir/launch-emulator.sh" --self-test
+"$linux_dir/configure-emulators.sh" --self-test
+"$linux_dir/configure-emulators.sh" --check
+"$linux_dir/configure-desktop.sh" --check
+# The MPD smoke test stops MPD when it finishes, which would silence a running
+# D2K menu.
+if pgrep -u "$(id -u)" -x pegasus-fe >/dev/null; then
+    echo 'MPD smoke test skipped: D2K is running.'
+else
+    "$linux_dir/mpd.sh" SmokeTest
+fi

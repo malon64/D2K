@@ -1,0 +1,5 @@
+# Files that run or are read on the Raspberry Pi keep LF endings even in a
+# Windows checkout (core.autocrlf), so they can be copied to the Pi as-is.
+*.sh text eol=lf
+scripts/linux/** text eol=lf
+docs/emulator-configs/linux/** text eol=lf

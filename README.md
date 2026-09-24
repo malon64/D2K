@@ -46,19 +46,36 @@ rsync -a --delete /path/to/D2K/library/ <pi-user>@<pi-host>:~/D2K/library/
 ssh <pi-user>@<pi-host> 'cd ~/D2K && ./scripts/linux/install.sh'
 ```
 
-The installer builds the pinned Pegasus revision, installs native ARM64
-emulators and the required AppImages/Flatpaks, generates Pi-local launch
-metadata, and adds D2K to the graphical-session autostart. Check the
-launcher and music paths without opening Pegasus with:
+The installer is safe to re-run. It builds the pinned Pegasus, Flycast and
+Mupen64Plus revisions, installs the melonDS/DuckStation AppImages and the
+Azahar/PPSSPP Flatpaks, merges the emulator overlays, configures the desktop
+(screen layout, touch, TV audio, Super+Esc Home key), generates Pi-local launch
+metadata, and adds D2K to the graphical-session autostart. Ocarina of Time runs
+in Ship of Harkinian when its Pi build is supplied as
+`~/.cache/d2k/downloads/soh-raspberry-pi-0.0.2.zip` (or `--soh-zip PATH`);
+otherwise it uses Mupen64Plus like the other N64 games.
+
+| Script (`scripts/linux/`) | Purpose |
+| --- | --- |
+| `install.sh` | Full, idempotent install |
+| `configure-desktop.sh` | Screen layout, touch mapping, TV audio, Labwc rules; re-run after rewiring screens |
+| `configure-emulators.sh` | Merge `docs/emulator-configs/linux/` overlays (`--check` to verify) |
+| `run.sh` | Start Pegasus and the menu music (autostart) |
+| `launch-emulator.sh` | Start, place and stop one game (called by Pegasus) |
+| `smoke-test.sh` | Check everything without opening Pegasus |
 
 ```bash
 ./scripts/linux/smoke-test.sh
 ```
 
-Pegasus and managed emulators use XWayland for stable X11 placement while the
-desktop remains on Wayland. With one TV connected, dual-screen emulators stack
-vertically; with two panels, D2K follows their top-to-bottom logical geometry.
-Set output order, rotation, and touch calibration in Raspberry Pi OS.
+Pegasus and the emulators use Xwayland for absolute window placement while the
+desktop stays on Wayland. With one TV connected, both panels are stacked on it;
+with two outputs, D2K follows their top-to-bottom desktop position. Press
+**Super+Esc** to leave a game.
+
+Deployment troubleshooting is split into [general Linux notes](docs/linux-struggles.md)
+and [Raspberry Pi 5 notes](docs/raspberry-pi-struggles.md). Agents working on
+the Pi should start with [AGENTS.md](AGENTS.md).
 
 ## Theme development
 

@@ -1,14 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-pegasus="$HOME/.local/opt/d2k/pegasus/bin/pegasus-fe"
-config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+pegasus="$software_dir/pegasus/bin/pegasus-fe"
 theme_settings="$config_home/pegasus-frontend/theme_settings/d2k.json"
-mpd_script="$repo_root/scripts/linux/mpd.sh"
+mpd_script="$linux_dir/mpd.sh"
 
 if [[ ! -x $pegasus ]]; then
     echo 'Pegasus is missing. Run scripts/linux/install.sh first.' >&2
+    exit 1
+fi
+
+# Prefer Labwc's Xwayland display: the theme places its two panel windows by
+# absolute position, which native Wayland clients cannot do.
+use_desktop_session
+if [[ -n ${DISPLAY:-} ]]; then
+    qt_platform=xcb
+elif [[ -n ${WAYLAND_DISPLAY:-} && -S "${XDG_RUNTIME_DIR:-}/$WAYLAND_DISPLAY" ]]; then
+    qt_platform=wayland
+else
+    echo 'D2K: no active graphical display was found for this user.' >&2
     exit 1
 fi
 
@@ -68,7 +79,7 @@ else
     echo 'D2K: menu music is unavailable.' >&2
 fi
 
-QT_QPA_PLATFORM=xcb "$pegasus" &
+QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM="$qt_platform" "$pegasus" &
 pegasus_pid=$!
 while kill -0 "$pegasus_pid" 2>/dev/null; do
     [[ -f $theme_settings ]] || { sleep 0.2; continue; }

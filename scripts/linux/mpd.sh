@@ -129,7 +129,7 @@ play() {
     music_dir=$(realpath -e -- "$music_dir")
     [[ $selected == "$music_dir/"* ]] || { echo 'Track must be inside the D2K music library.' >&2; return 1; }
     relative=${selected#"$music_dir/"}
-    position=$(mpc_cmd playlist -f '%file%' | awk -v track="$relative" '$0 == track { print NR - 1; exit }')
+    position=$(mpc_cmd playlist -f '%file%' | awk -v track="$relative" '$0 == track { print NR; exit }')
     [[ -n $position ]] || { echo 'Track is not in the D2K queue.' >&2; return 1; }
     mpc_cmd play "$position" >/dev/null
     fade 100
@@ -163,11 +163,11 @@ PY
 }
 
 case $action in
-    Prepare) start && queue && mpc_cmd pause 1 >/dev/null ;;
-    Boot) mpc_cmd pause 0 >/dev/null && fade 100 ;;
+    Prepare) start && queue && mpc_cmd pause >/dev/null ;;
+    Boot) mpc_cmd play >/dev/null && fade 100 ;;
     Start) start && queue && fade 100 ;;
-    Pause) fade 0 && mpc_cmd pause 1 >/dev/null ;;
-    Resume) mpc_cmd pause 0 >/dev/null && fade 100 ;;
+    Pause) fade 0 && mpc_cmd pause >/dev/null ;;
+    Resume) mpc_cmd play >/dev/null && fade 100 ;;
     Play) play ;;
     Status) status ;;
     Stop) stop ;;

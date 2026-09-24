@@ -420,8 +420,14 @@ FocusScope {
             }
             else if (Qt.application.screens.length >= 2) {
                 hostWindow.flags = Qt.FramelessWindowHint
-                var upper = Qt.application.screens[0]
-                var lower = Qt.application.screens[1]
+                // Qt lists the primary output first; the clamshell follows the
+                // desktop's top-to-bottom geometry instead.
+                var panels = []
+                for (var i = 0; i < Qt.application.screens.length; i++)
+                    panels.push(Qt.application.screens[i])
+                panels.sort(function(a, b) { return a.virtualY - b.virtualY || a.virtualX - b.virtualX })
+                var upper = panels[0]
+                var lower = panels[1]
                 hostWindow.screen = upper
                 hostWindow.x = upper.virtualX
                 hostWindow.y = upper.virtualY
@@ -432,6 +438,11 @@ FocusScope {
                 touchWindow.y = lower.virtualY
                 touchWindow.width = lower.width
                 touchWindow.height = lower.height
+                // Fullscreen keeps each panel pinned to its output: labwc
+                // re-places ordinary windows around the desktop panel whenever
+                // an output mode changes.
+                hostWindow.visibility = Window.FullScreen
+                touchWindow.visibility = Window.FullScreen
             }
             else {
                 hostWindow.flags = Qt.FramelessWindowHint
@@ -560,7 +571,10 @@ FocusScope {
 
     TopPanel {
         theme: d2k
-        scale: root.width / 800
+        // Letterbox when an output is not 5:3, such as a 16:9 TV.
+        scale: Math.min(root.width / 800, root.height / 480)
+        x: Math.round((root.width - 800 * scale) / 2)
+        y: Math.round((root.height - 480 * scale) / 2)
         transformOrigin: Item.TopLeft
         navState: root.navState
         collection: root.currentCollection
@@ -590,7 +604,9 @@ FocusScope {
 
         TouchPanel {
             theme: d2k
-            scale: touchWindow.width / 800
+            scale: Math.min(touchWindow.width / 800, touchWindow.height / 480)
+            x: Math.round((touchWindow.width - 800 * scale) / 2)
+            y: Math.round((touchWindow.height - 480 * scale) / 2)
             transformOrigin: Item.TopLeft
             navState: root.navState
             collection: root.currentCollection

@@ -1,0 +1,8 @@
+{
+    "Window": {
+        "AudioBackend": "sdl",
+        "Fullscreen": {
+            "Enabled": true
+        }
+    }
+}

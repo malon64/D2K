@@ -1,0 +1,3 @@
+/* D2K: the device has no use for melonDS's menu bar, and melonDS itself only
+   hides it in its own fullscreen mode, which covers just the first window. */
+QMenuBar { max-height: 0px; min-height: 0px; }
