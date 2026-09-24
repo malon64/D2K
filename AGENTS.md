@@ -16,6 +16,54 @@ Collections: DS, Dreamcast, PS1, PSP, N64, GameCube, 3DS, and Music (MPD).
 The theme and the Windows scripts are developed on a Windows PC; the Pi is the
 real device.
 
+## Project context (from Notion)
+
+The source of truth for goals, BOM and roadmap is the Notion workspace
+**Projet Hardware** (French):
+<https://app.notion.com/p/Projet-Hardware-3ddfe42f978d80ae9757dfcd926d5619>,
+with sub-pages *Architecture & décisions*, *Hardware BOM*, *Software & UI*,
+*Mécanique & boîtier*, *Music & MPD*, *Direction artistique* and a
+*Roadmap & Tasks* database. Read it when a task touches hardware or priorities.
+Summary as of 24 September 2026:
+
+- **Product:** handheld clamshell console (DS/3DS and AYN Thor inspired),
+  3D-printed shell, Y2K cybercore art direction shared by UI and shell. The
+  user should never see a Linux desktop, a terminal or emulator menus.
+- **Emulation priority:** DS (absolute) → PSP / Dreamcast / N64 / PS1 → 3DS
+  (secondary) → older consoles via RetroArch later (optional; Pegasus launches
+  standalone emulators, RetroArch is not a core dependency).
+- **Compute:** Raspberry Pi 5 is the V1 baseline. A **Radxa ROCK 4D 6 GB
+  (RK3576)** is on order and will be tested with all emulators as a possible
+  replacement; Notion's condition for switching is that the HDMI + DSI screens,
+  touch and dual-screen melonDS work without custom driver work and that
+  performance is measurably better.
+- **Screens (final):** upper Waveshare 5" HDMI 800×480; lower Waveshare
+  4-DSI-TOUCH-A 4" capacitive touch over DSI (480×800 rotated to landscape,
+  overlay `vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a`). DS is drawn 640×480 on
+  the lower screen (×2.5, 80 px bands). The 4" DSI is not received yet; today's
+  bench uses a desk monitor (upper) and the 5" HDMI as the touch lower screen.
+- **Controls:** an ESP32-S3 exposes a USB HID gamepad (D-pad, ABXY,
+  L1/R1/L2/R2, Start/Select, Home, two New 3DS XL circle pads: left = movement,
+  right = C-stick / N64 C-buttons / PS1 right stick; no L3/R3) and also handles
+  battery, lid Hall sensor, vibration and clean shutdown. Until it exists, the
+  keyboard scheme in `docs/controls.md` stands in.
+- **Audio:** Waveshare WM8960 I²S board + two 8 Ω / 2 W speakers + headphone jack.
+- **Cooling:** official Raspberry Pi 5 Active Cooler (SC1148), on order.
+- **Roadmap:** software on Pi (mostly done) → two physical screens on Pi (now)
+  → ROCK 4D test → ESP32 controls → audio → power → full bench "electronics
+  gate" → mechanical prototype → V1 integration. No detailed shell before the
+  electronics gate.
+
+## Moving to other hardware (ROCK 4D)
+
+The Linux scripts target Raspberry Pi OS; these parts are Pi-specific and need
+checking on another board: `vcgencmd` (heat/clock, HUD telemetry), HDMI output
+names and ALSA card names in `configure-desktop.sh`, the Labwc/kanshi desktop,
+the 16 KiB page-size Flycast build, Mesa V3D limits (OpenGL 3.1, ares black on
+V3DV), and the Ship of Harkinian `soh-raspberry-pi` build. Keep the generic
+parts (launcher, overlays, controls) board-independent and record what differs
+in a new `docs/<board>-struggles.md`.
+
 ## Repository map
 
 | Path | Contents |

@@ -121,6 +121,28 @@ To tell an emulator's speed problem from a stall, compare its CPU use with its
 main thread's wait channel (`cat /proc/<pid>/wchan`): `hrtimer_nanosleep`
 means its own speed limiter is sleeping, i.e. it is not CPU bound.
 
+### Measured: DS without a cooler (24 September 2026)
+
+Mario Kart DS, desk monitor 1920×1080 upper + Waveshare 800×480 lower, JIT on,
+CPU governor `ondemand`, no fan: 54 °C idle → 76 °C after 60 s, still at
+2.4 GHz (no throttling yet). CPU: melonDS ≈ 0.8 core, **Xwayland ≈ 0.5 core**,
+Labwc 0.07, PipeWire small. The Xwayland share is the cost of presenting two
+X11 windows at 60 fps through the Wayland compositor — the price of placing
+windows via X11.
+
+Tried and rejected: melonDS `[Screen] UseGL = true`. Without help it fails
+(`Failed to create OpenGL context, falling back to Software Renderer`: V3D
+exposes OpenGL 3.1, melonDS wants 3.2) and costs more CPU; with
+`MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330` it renders, but
+melonDS (~1.0 core) and Xwayland (~0.55) use no less CPU. Kept `UseGL = false`.
+
+What should help: the Active Cooler (the main fix: a bare Pi 5 reaches 80 °C
+within minutes under any emulator); the final 800×480 upper screen instead of
+the 1080p desk monitor (fewer pixels to scale and present); and, if still
+needed, running melonDS as a native Wayland client with Labwc window rules
+(`MoveToOutput`, fullscreen) instead of Xwayland + xdotool, which would remove
+the Xwayland copy (untested).
+
 ## Per-emulator notes
 
 ### DS (melonDS)

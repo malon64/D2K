@@ -1,7 +1,39 @@
 # D2K
 
-Pegasus Frontend theme for a Raspberry Pi 5 running Raspberry Pi OS 64-bit,
-with two 800×480 displays.
+D2K is a handheld clamshell retro console inspired by the Nintendo DS/3DS and
+the AYN Thor: two asymmetric screens, a 3D-printed shell, and a fully custom
+Y2K-cybercore interface built as a [Pegasus Frontend](https://pegasus-frontend.org)
+theme that launches standalone emulators. This repository holds the theme, the
+launch/music scripts for Windows (design preview) and Linux (the device), and
+the emulator configurations.
+
+**Emulation priority:** Nintendo DS first, then PSP / Dreamcast / N64 / PS1,
+then Nintendo 3DS (desired, not sized for), older consoles later through
+RetroArch (optional, not a core dependency).
+
+## Hardware
+
+| Part | V1 target | Status |
+| --- | --- | --- |
+| Compute | Raspberry Pi 5, Raspberry Pi OS 64-bit (baseline) | In use |
+| Compute (alternative) | Radxa ROCK 4D 6 GB (RK3576) | On order; to be tested for all emulators as a possible replacement |
+| Upper screen | Waveshare 5" HDMI, 800×480 | Received |
+| Lower screen | Waveshare 4-DSI-TOUCH-A, 4" touch, 480×800 used landscape | On order |
+| Controls | ESP32-S3 as USB HID: D-pad, ABXY, L1/R1/L2/R2, Start/Select/Home, two New 3DS XL circle pads | On order |
+| Audio | Waveshare WM8960 board (I²S) + two 8 Ω / 2 W speakers, headphone jack | On order |
+| Cooling | Raspberry Pi 5 Active Cooler (SC1148) | On order |
+| Power | Battery, protection, USB-C charging with power-path | To choose |
+
+The DS image is shown at 640×480 on the lower screen (×2.5, 80 px side bands).
+The ESP32-S3 also handles battery telemetry, the lid sensor, vibration and a
+clean shutdown. No detailed shell design starts before the complete
+electronics (screens, touch, controls, audio, power) run together on a bench.
+
+Current bench setup (September 2026): a desk monitor stands in for the upper
+screen, and the Waveshare 5" HDMI serves as the touch lower screen with its
+headphone jack as audio output; controls are a USB keyboard and mouse
+([docs/controls.md](docs/controls.md)). Project management, BOM and roadmap
+live in the Notion workspace "Projet Hardware" (see [AGENTS.md](AGENTS.md)).
 
 ## Windows setup
 
