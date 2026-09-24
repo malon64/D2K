@@ -199,9 +199,9 @@ one selected. The Windows script talks to MPD directly and is 0-based.
 
 ## Console HUD telemetry
 
-`run.sh` writes `pegasus/themes/d2k/system-status.json` every second, like the
-Windows `run.ps1`: CPU use from `/proc/stat` deltas and temperature from the
-`cpu-thermal` zone. The Pi on mains power has no battery, but the wireless
+`run.sh` writes `pegasus/themes/d2k/system-status.json` every second through
+`telemetry.sh`, like the Windows `run.ps1`: CPU use from `/proc/stat` deltas
+and temperature from the `cpu-thermal` zone. The Pi on mains power has no battery, but the wireless
 Logitech receiver shows up as `/sys/class/power_supply/hidpp_battery_0`
 (type `Battery`); it has `scope` `Device`, and the HUD must not show a
 mouse's charge as the console's, so such supplies are skipped. With no

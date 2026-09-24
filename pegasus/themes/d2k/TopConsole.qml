@@ -15,25 +15,28 @@ Item {
     property string cpuText: "--"
     property string tempText: "--"
 
-    function percentageColor(value, inverted) {
-        var percent = parseInt(value, 10)
-        if (isNaN(percent) || percent < 0 || percent > 100)
+    readonly property var statusColors: ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"]
+
+    // Colors a reading from cool to hot by the upper bounds of the first three
+    // bands; readings that are not numbers ("--") stay cyan.
+    function statusColor(value, limits, inverted) {
+        var reading = parseInt(value, 10)
+        if (isNaN(reading))
             return panel.theme.cyanHex
 
-        var band = percent <= 20 ? 0 : percent <= 50 ? 1 : percent <= 80 ? 2 : 3
-        if (inverted)
-            band = 3 - band
-        return ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"][band]
+        var band = 0
+        while (band < limits.length && reading > limits[band])
+            band++
+        return statusColors[inverted ? 3 - band : band]
+    }
+
+    function percentageColor(value, inverted) {
+        return statusColor(value, [20, 50, 80], inverted)
     }
 
     // Degrees Celsius; the Pi 5 starts throttling at 80.
     function temperatureColor(value) {
-        var degrees = parseInt(value, 10)
-        if (isNaN(degrees))
-            return panel.theme.cyanHex
-
-        var band = degrees <= 40 ? 0 : degrees <= 60 ? 1 : degrees <= 75 ? 2 : 3
-        return ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"][band]
+        return statusColor(value, [40, 60, 75], false)
     }
 
     function hudLine(label, value, valueColor) {

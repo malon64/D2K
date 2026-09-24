@@ -22,7 +22,7 @@ real device.
 | --- | --- |
 | `pegasus/themes/d2k/` | The QML theme. `theme.qml` owns the two windows and screen placement. |
 | `scripts/windows/` | Windows preview: `run.ps1`, `launch-emulator.ps1`, `mpd.ps1`. |
-| `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `smoke-test.sh`, shared `lib.sh`. |
+| `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. |
 | `docs/emulator-configs/{windows,linux}/` | Per-emulator config overlays (only the keys D2K needs). |
 | `docs/raspberry-pi-struggles.md` | Every Pi problem met so far and its fix. **Read before changing Pi behaviour.** |
 | `docs/linux-struggles.md` | Linux-generic porting notes. |
@@ -103,7 +103,8 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
 
 - `pkill -f PATTERN` / `pgrep -f` over SSH also match the SSH command line that
   contains PATTERN, killing your own shell. Use `pgrep -x NAME`, or a pattern
-  like `[p]egasus` that does not match its own text.
+  like `[p]egasus` that does not match its own text, and keep the plain text
+  (e.g. `./scripts/linux/run.sh`) out of that same SSH command.
 - Overwriting a running bash script in place corrupts the running copy (bash
   reads scripts while executing). `run.sh` and `launch-emulator.sh` are usually
   running: write a new file and `mv` it into place.
