@@ -49,7 +49,7 @@ ssh <pi-user>@<pi-host> 'cd ~/D2K && ./scripts/linux/install.sh'
 The installer is safe to re-run. It builds the pinned Pegasus, Flycast and
 Mupen64Plus revisions, installs the melonDS/DuckStation AppImages and the
 Azahar/PPSSPP Flatpaks, merges the emulator overlays, configures the desktop
-(screen layout, touch, TV audio, Super+Esc Home key), generates Pi-local launch
+(screen layout, touch, HDMI audio port, Super+Esc Home key), generates Pi-local launch
 metadata, and adds D2K to the graphical-session autostart. Ocarina of Time runs
 in Ship of Harkinian when its Pi build is supplied as
 `~/.cache/d2k/downloads/soh-raspberry-pi-0.0.2.zip` (or `--soh-zip PATH`);
@@ -58,7 +58,7 @@ otherwise it uses Mupen64Plus like the other N64 games.
 | Script (`scripts/linux/`) | Purpose |
 | --- | --- |
 | `install.sh` | Full, idempotent install |
-| `configure-desktop.sh` | Screen layout, touch mapping, TV audio, Labwc rules; re-run after rewiring screens |
+| `configure-desktop.sh` | Screen layout, touch mapping, HDMI audio port, Labwc rules; re-run after rewiring screens |
 | `configure-emulators.sh` | Merge `docs/emulator-configs/linux/` overlays (`--check` to verify) |
 | `run.sh` | Start Pegasus and the menu music (autostart) |
 | `launch-emulator.sh` | Start, place and stop one game (called by Pegasus) |

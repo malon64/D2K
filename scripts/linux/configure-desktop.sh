@@ -2,25 +2,29 @@
 # Configures the Raspberry Pi OS (Labwc) desktop for the D2K panels:
 #   - screen layout: upper panel above, lower touch panel centred below (kanshi)
 #   - touch input mapped to the lower panel only (Labwc)
-#   - sound pinned to the upper panel's HDMI port (WirePlumber)
+#   - sound pinned to one HDMI port (WirePlumber)
 #   - melonDS without title bars, and Super+Esc as the keyboard Home button
 # Safe to re-run; re-run it after rewiring the screens. --check verifies it.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# Current wiring (see AGENTS.md): Samsung TV on HDMI0 is the upper panel,
-# Waveshare 5" HDMI touch LCD on HDMI1 is the lower panel. The Waveshare
-# scaler needs CVT timing (Waveshare's hdmi_cvt 800 480 60 6); its EDID
-# timing leaves the picture offset.
-upper_output=${D2K_UPPER_OUTPUT:-HDMI-A-1}
+# Current wiring (see AGENTS.md): Waveshare 5" HDMI touch LCD on HDMI0
+# (HDMI-A-1) is the lower panel, the Samsung LS27R75 desk monitor on HDMI1
+# (HDMI-A-2) is the upper panel. The Waveshare scaler needs CVT timing
+# (Waveshare's hdmi_cvt 800 480 60 6); its EDID timing leaves the picture
+# offset. The desk monitor runs at 1080p rather than its native 1440p to keep
+# the GPU load of scaling emulator output down.
+upper_output=${D2K_UPPER_OUTPUT:-HDMI-A-2}
 upper_mode=${D2K_UPPER_MODE:-1920x1080}
-lower_output=${D2K_LOWER_OUTPUT:-HDMI-A-2}
+lower_output=${D2K_LOWER_OUTPUT:-HDMI-A-1}
 lower_mode=${D2K_LOWER_MODE:---custom 800x480@60Hz}
 touch_output=${D2K_TOUCH_OUTPUT:-$lower_output}
 # libinput has reported this panel under both names.
 touch_devices=("WaveShare WS170120" "WaveShare WS170120 (USB 1-1)")
-# Pi 5 HDMI1 audio device. The Waveshare has no speakers; disabling it keeps
-# PipeWire from ever moving sound off the TV.
+# Audio device to disable so PipeWire keeps sound on the other HDMI port. The
+# desk monitor has no speakers (its ELD lists no audio formats); the Waveshare
+# accepts HDMI audio and plays it on its 3.5 mm jack. HDMI1 is
+# 107c706400, HDMI0 is 107c701400.
 muted_audio_card=${D2K_MUTED_AUDIO_CARD:-alsa_card.platform-107c706400.hdmi}
 
 kanshi_config="$config_home/kanshi/config"
@@ -56,11 +60,20 @@ labwc_edit() {  # apply|check
     fi
     python3 - "$1" "$labwc_config" "$home_request" "$touch_output" "${touch_devices[@]}" <<'PY'
 import pathlib
+import re
 import sys
 
 mode, path, home_request, touch_output, *devices = sys.argv[1:]
 path = pathlib.Path(path)
 text = original = path.read_text(encoding="utf-8")
+# A panel's touch mapping must point at its current output: drop any mapping
+# of these devices to another output (left over from earlier wiring).
+stale = re.compile(r'^\s*<touch deviceName="(%s)" mapToOutput="(?!%s")[^"]*"[^>]*/>\n'
+                   % ("|".join(map(re.escape, devices)), re.escape(touch_output)), re.M)
+if stale.search(text):
+    if mode == "check":
+        sys.exit(1)
+    text = stale.sub("", text)
 entries = [
     ("  </windowRules>", '    <windowRule title="*melonDS*" serverDecoration="no" />\n'),
     ("  </keyboard>", '    <keybind key="W-Escape">\n'
@@ -116,4 +129,4 @@ fi
 if write_managed "$wireplumber_rule" "$wireplumber_text"; then
     systemctl --user restart wireplumber 2>/dev/null || true
 fi
-echo "Desktop configured: $upper_output above $lower_output, touch on $touch_output, sound on $upper_output."
+echo "Desktop configured: $upper_output above $lower_output, touch on $touch_output, audio device $muted_audio_card disabled."

@@ -31,8 +31,12 @@ real device.
 
 ## Raspberry Pi access
 
-- SSH: `ssh alex@192.168.1.66` (key authentication from the Windows PC; user
-  `alex` has passwordless `sudo`).
+- SSH: `ssh alex@192.168.1.16` (key authentication from the Windows PC; user
+  `alex` has passwordless `sudo`). The Pi (hostname `raspberry`) is on Wi-Fi
+  with a DHCP address that has changed before (it was `192.168.1.66` on
+  Ethernet). If SSH times out, scan the LAN for port 22 and confirm with
+  `hostname`. Its Wi-Fi signal is weak: connections can hang or drop, so keep
+  SSH commands short and use `-o ConnectTimeout=30`.
 - Repository on the Pi: `~/D2K` (git clone of `origin`; `library/` is synced
   one way from Windows with `rsync`, see README).
 - Installed software: `~/.local/opt/d2k/` (pegasus, melonds, duckstation,
@@ -44,15 +48,18 @@ real device.
   `mpd/`).
 - Pi-local config written by the scripts: `~/.config/kanshi/config` (screen
   layout), `~/.config/labwc/rc.xml` (touch mapping, melonDS rule, Super+Esc),
-  `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (TV audio),
+  `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (sound on one HDMI port),
   `~/.config/autostart/d2k.desktop`.
 
 ## Current hardware wiring
 
 | Role | Device | Connection | Desktop output |
 | --- | --- | --- | --- |
-| Upper panel + sound | Samsung TV, 1920x1080 | HDMI0 | `HDMI-A-1`, position `0,0` |
-| Lower touch panel | Waveshare 5" HDMI LCD, 800x480 | HDMI1 for video, micro-USB **Touch** port to a Pi USB port for power + touch | `HDMI-A-2`, position `560,1080`, CVT mode |
+| Upper panel | Samsung LS27R75 desk monitor (native 2560x1440, run at 1920x1080), no speakers | HDMI1 | `HDMI-A-2`, position `0,0` |
+| Lower touch panel + sound | Waveshare 5" HDMI LCD, 800x480; HDMI audio comes out of its 3.5 mm jack (headset) | HDMI0 for video and audio, micro-USB **Touch** port to a Pi USB port for power + touch | `HDMI-A-1`, position `560,1080`, CVT mode |
+
+Earlier the upper panel was a Samsung TV on HDMI0 with sound; the wiring and the
+screens change, so check `wlr-randr` before assuming these names.
 
 The Pi has no fan yet and throttles under load; an Active Cooler is recommended.
 Screen roles are set in `configure-desktop.sh` (`D2K_UPPER_OUTPUT`,
@@ -68,7 +75,7 @@ SSH is not the desktop session. Export the session variables first (or source
 ```bash
 export XDG_RUNTIME_DIR=/run/user/$(id -u) WAYLAND_DISPLAY=wayland-0 DISPLAY=:0
 wlr-randr                                            # outputs and positions
-grim -o HDMI-A-1 /tmp/upper.png; grim -o HDMI-A-2 /tmp/lower.png   # screenshots (scp them back to look)
+grim -o HDMI-A-2 /tmp/upper.png; grim -o HDMI-A-1 /tmp/lower.png   # screenshots (scp them back to look)
 xdotool search --onlyvisible --name . getwindowname %@
 pactl list short sinks; pactl get-default-sink       # audio
 vcgencmd measure_temp; vcgencmd get_throttled        # heat

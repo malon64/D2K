@@ -9,8 +9,13 @@ details are in [`AGENTS.md`](../AGENTS.md).
 
 ### Two HDMI panels: order comes from the desktop layout
 
-The Pi drives two outputs: the Samsung TV on HDMI0 (DRM `HDMI-A-1`) and the
-Waveshare 5-inch HDMI touch LCD on HDMI1 (`HDMI-A-2`). D2K has an upper panel
+The Pi drives two outputs. Current wiring: the Waveshare 5-inch HDMI touch LCD
+on HDMI0 (DRM `HDMI-A-1`, lower panel) and a Samsung LS27R75 desk monitor on
+HDMI1 (`HDMI-A-2`, upper panel); earlier a Samsung TV was the upper panel on
+HDMI0. HDMI0 is always `HDMI-A-1`, HDMI1 `HDMI-A-2`. After rewiring, the old
+kanshi profile no longer matches, so the monitors come up with swapped modes
+(the Waveshare at 1080p, the monitor at 800x480) until `configure-desktop.sh`
+is updated and re-run. D2K has an upper panel
 and a lower touch panel; both the theme and `launch-emulator.sh` order the
 outputs **top to bottom by their desktop position**, never by connector or by
 Qt's screen list (Qt lists the primary output first, which is arbitrary).
@@ -28,7 +33,7 @@ the picture shifted. Waveshare's own setup uses `hdmi_cvt 800 480 60 6`; on the
 Pi 5 (KMS) the equivalent is a CVT custom mode, which kanshi applies:
 
 ```text
-output HDMI-A-2 mode --custom 800x480@60Hz position 560,1080
+output HDMI-A-1 mode --custom 800x480@60Hz position 560,1080
 ```
 
 `hdmi_cvt`/`hdmi_group` lines in `config.txt` are ignored under KMS.
@@ -64,7 +69,7 @@ Without a mapping, libinput spreads touches over the whole combined desktop.
 `configure-desktop.sh` adds Labwc entries mapping it to the lower panel:
 
 ```xml
-<touch deviceName="WaveShare WS170120" mapToOutput="HDMI-A-2" mouseEmulation="yes" />
+<touch deviceName="WaveShare WS170120" mapToOutput="HDMI-A-1" mouseEmulation="yes" />
 ```
 
 Both `WaveShare WS170120` and `WaveShare WS170120 (USB 1-1)` are listed because
@@ -73,16 +78,21 @@ Pegasus theme and melonDS expect.
 
 ## Audio
 
-### Keep sound on the TV
+### Keep sound on one HDMI port
 
-The Pi 5 has one ALSA card per HDMI port (`vc4-hdmi-0`, `vc4-hdmi-1`). The
-Waveshare has no speakers, so `configure-desktop.sh` installs a WirePlumber rule
-disabling the HDMI1 card (`alsa_card.platform-107c706400.hdmi`); the only sink
-left is the TV. Check with `pactl list short sinks` and `pactl get-default-sink`.
+The Pi 5 has one ALSA card per HDMI port: `vc4-hdmi-0` is
+`alsa_card.platform-107c701400.hdmi` (HDMI0), `vc4-hdmi-1` is
+`...107c706400.hdmi` (HDMI1). `configure-desktop.sh` installs a WirePlumber rule
+disabling the card of the port that must stay silent, so PipeWire has a single
+sink. Check with `pactl list short sinks` and `pactl get-default-sink`.
 
-Seeing a picture on HDMI does not select its audio sink. Inspect nodes with
-`wpctl status` and confirm the active connector with
-`cat /proc/asound/card*/eld#0` before changing the rule.
+Whether a screen takes audio is in its ELD (`cat /proc/asound/card*/eld#0`):
+`sad_count 0` means no audio formats. The LS27R75 desk monitor has none, so
+with it the sound goes to HDMI0 instead. **The Waveshare accepts HDMI audio
+and plays it on its 3.5 mm jack**, so a headset plugged into the Waveshare is
+the audio output. (With the TV earlier, the Waveshare card was the one
+disabled.) PipeWire only offers an `hdmi-stereo` profile for a port whose
+screen advertises audio.
 
 ### Emulators that bypass PipeWire
 
