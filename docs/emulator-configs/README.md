@@ -33,6 +33,8 @@ rewrites its TOML on exit.
   failure SoH writes `null` there and stays silent.
 - **Dolphin** sets `[Core] SyncGPU = True`: Dual Core without GPU sync desyncs
   on the Pi (`GFX FIFO: Unknown Opcode`).
+- **Flycast** leaves window size to the launcher: it saves the size the
+  launcher gave its window on exit, so a fixed size would always drift.
 - **PPSSPP and Azahar** select Vulkan, the working Pi V3D backend on Xwayland.
 - **Azahar** rewrites `key\default` flags whenever a value equals its default;
   the check ignores them.
