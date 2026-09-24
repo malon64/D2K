@@ -3,7 +3,8 @@
 #   - screen layout: upper panel above, lower touch panel centred below (kanshi)
 #   - touch input mapped to the lower panel only (Labwc)
 #   - sound pinned to one HDMI port (WirePlumber)
-#   - melonDS without title bars, and Super+Esc as the keyboard Home button
+#   - melonDS without title bars, Super+Esc as the keyboard Home button, and
+#     Num Lock on (the numpad is the face-button diamond, docs/controls.md)
 # Safe to re-run; re-run it after rewiring the screens. --check verifies it.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -74,6 +75,15 @@ if stale.search(text):
     if mode == "check":
         sys.exit(1)
     text = stale.sub("", text)
+# The numpad is the controller's face-button diamond (docs/controls.md). With
+# Num Lock off, numpad 8/4/6/2 arrive as KP_Up/Left/Right/Down and Qt emulators
+# read them as the arrow keys, which are the D-pad.
+if "<numlock>on</numlock>" not in text:
+    if mode == "check":
+        sys.exit(1)
+    text, count = re.subn(r"<numlock>\s*\w*\s*</numlock>", "<numlock>on</numlock>", text)
+    if not count:
+        text = text.replace("<keyboard>", "<keyboard>\n    <numlock>on</numlock>", 1)
 entries = [
     ("  </windowRules>", '    <windowRule title="*melonDS*" serverDecoration="no" />\n'),
     ("  </keyboard>", '    <keybind key="W-Escape">\n'

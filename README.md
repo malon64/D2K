@@ -71,7 +71,8 @@ otherwise it uses Mupen64Plus like the other N64 games.
 Pegasus and the emulators use Xwayland for absolute window placement while the
 desktop stays on Wayland. With one TV connected, both panels are stacked on it;
 with two outputs, D2K follows their top-to-bottom desktop position. Press
-**Super+Esc** to leave a game.
+**Super+Esc** to leave a game. Keyboard controls (AZERTY: arrows + numpad
+diamond, Enter = Start) are in [docs/controls.md](docs/controls.md).
 
 Deployment troubleshooting is split into [general Linux notes](docs/linux-struggles.md)
 and [Raspberry Pi 5 notes](docs/raspberry-pi-struggles.md). Agents working on

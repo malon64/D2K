@@ -25,6 +25,7 @@ real device.
 | `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. |
 | `docs/emulator-configs/{windows,linux}/` | Per-emulator config overlays (only the keys D2K needs). |
 | `docs/raspberry-pi-struggles.md` | Every Pi problem met so far and its fix. **Read before changing Pi behaviour.** |
+| `docs/controls.md` | The keyboard/mouse/touch control scheme and where each emulator stores it. |
 | `docs/linux-struggles.md` | Linux-generic porting notes. |
 | `docs/pegasus-development.md` | Theme development notes. |
 | `library/` | **Private, git-ignored** ROMs, art and metadata. Never commit it. |
@@ -64,7 +65,8 @@ screens change, so check `wlr-randr` before assuming these names.
 The Pi has no fan yet and throttles under load; an Active Cooler is recommended.
 Screen roles are set in `configure-desktop.sh` (`D2K_UPPER_OUTPUT`,
 `D2K_LOWER_OUTPUT`, modes, touch device); the theme and launcher follow the
-top-to-bottom desktop layout automatically. Emulator choice per console is in
+top-to-bottom desktop layout automatically. Controls (numpad diamond, arrows,
+Num Lock on) are in `docs/controls.md`. Emulator choice per console is in
 `docs/emulator-configs/README.md`.
 
 ## Working on the Pi remotely

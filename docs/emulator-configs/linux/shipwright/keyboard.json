@@ -1,0 +1,25 @@
+{
+    "_comment": "D2K keyboard scheme (docs/controls.md). Values are libultraship PC scancodes: numpad 7/8/9 = 71/72/73, 4/6 = 75/77, 1/2/3 = 79/80/81; arrows = 0x100 + code (328 up, 331 left, 333 right, 336 down); Enter 28; I/J/K/L 23/36/37/38; T/F/G/H 20/33/34/35.",
+    "buttons": {
+        "A": 80,
+        "B": 75,
+        "Z": 79,
+        "L": 71,
+        "R": 73,
+        "Start": 28,
+        "CUp": 23,
+        "CLeft": 36,
+        "CDown": 37,
+        "CRight": 38,
+        "DUp": 20,
+        "DLeft": 33,
+        "DDown": 34,
+        "DRight": 35
+    },
+    "stick": {
+        "Up": 328,
+        "Down": 336,
+        "Left": 331,
+        "Right": 333
+    }
+}

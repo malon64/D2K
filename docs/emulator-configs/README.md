@@ -23,6 +23,10 @@ rewrites its TOML on exit.
 
 ## Linux notes
 
+- **Controls.** The Linux overlays also carry the D2K keyboard scheme; the
+  extra files are `melonds/keyboard.toml`, `dolphin/GCPadNew.ini`,
+  `ppsspp/controls.ini`, `flycast/mappings/SDL_Keyboard.cfg` and
+  `shipwright/keyboard.json`. See [`../controls.md`](../controls.md).
 - **ares is not used on Linux.** On the Pi's V3DV driver it renders N64 black.
   Mupen64Plus plays the N64 library and Ship of Harkinian runs Ocarina of Time
   natively. See [`../raspberry-pi-struggles.md`](../raspberry-pi-struggles.md).

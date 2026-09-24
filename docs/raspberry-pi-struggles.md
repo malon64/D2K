@@ -192,6 +192,42 @@ The Flathub ARM64 Flycast aborts on the Pi 5's 16 KiB-page kernel. The
 installer builds the pinned Flycast source natively in
 `~/.local/opt/d2k/flycast` and it runs with `SDL_VIDEODRIVER=x11`.
 
+## Controls
+
+The keyboard scheme is in [`controls.md`](controls.md). Problems met setting it up:
+
+- **melonDS had no keys at all.** Every `[Instance0.Keyboard]` entry was `-1`,
+  so DS games only reacted to the touch screen. The keys now come from the
+  `melonds/keyboard.toml` overlay.
+- **Num Lock.** The numpad is the face-button diamond, but the Pi's Labwc config
+  had `<numlock>off</numlock>`; numpad 8/4/6/2 then arrive as `KP_Up/…` and
+  Qt emulators treat them as arrows (Azahar collides with the D-pad).
+  `configure-desktop.sh` sets it `on`; Labwc applies it at login, not on
+  `labwc --reconfigure`. Check the real state with
+  `cat /sys/class/leds/*numlock*/brightness` (Labwc drives the keyboard LED).
+  `xset q` on Xwayland can say `off` while it is on, and `xdotool` key presses
+  go through X's own lock state, so they cannot test numpad bindings in the
+  letter-based emulators; test those on the real keyboard.
+- **Emulators name keys two ways.** melonDS, Azahar, PPSSPP and Mupen64Plus
+  store the character a key produces (AZERTY-aware, Num Lock-dependent);
+  DuckStation, Flycast and Ship of Harkinian store the physical position, named
+  after the QWERTY keycap (`Keyboard/Q` is the AZERTY `A` key); Dolphin stores
+  the base X keysym (`KP_Up` for numpad 8, whatever Num Lock says).
+- **Hidden conflicts in defaults.** PPSSPP binds Rewind to Backspace (cleared,
+  Backspace is Select); DuckStation and Mupen64Plus default to WASD/IJKL; Ship
+  of Harkinian's default puts the C-buttons on the arrows and the stick on WASD.
+- **Azahar ignores a value while its `\default` flag is `true`**, so every
+  control key in the overlay sets `key\default=false`.
+- **Ship of Harkinian mapping IDs contain the key** (`P0-B32768-KB80`), so a
+  merge would leave the old key bound too. `configure-emulators.sh` removes all
+  port-1 keyboard mappings and writes the D2K ones.
+- **PPSSPP's `controls.ini` starts with a UTF-8 BOM**, which hid its first
+  section header from the line-based overlay (it would have appended a second
+  `[ControlMapping]`). The overlay now keeps the BOM out of the parse.
+- **melonDS's TOML is not INI** (top-level keys, multi-line arrays), so
+  `configure-emulators.sh` reads configs with its own line-based reader
+  instead of `configparser`.
+
 ## Leaving a game
 
 The keyboard Home button is **Super+Esc**: a Labwc keybind that touches
