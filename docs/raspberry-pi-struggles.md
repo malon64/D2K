@@ -225,3 +225,9 @@ Two traps when scripting over SSH: `pkill -f PATTERN` also matches the SSH
 command line that contains PATTERN (kill your own shell), and overwriting a
 running bash script in place corrupts it, because bash reads scripts while
 executing them. Deploy by writing a new file and `mv` it over the old one.
+
+Pegasus catches SIGTERM and does not exit, so `pkill -x pegasus-fe` leaves it
+running, and starting `run.sh` again then gives two menus (and the old
+`run.sh` stops MPD under the new one when it finally exits). Stop D2K through
+`run.sh` instead: `pkill -TERM -f '[s]cripts/linux/run.sh'`; its cleanup sends
+SIGKILL to Pegasus after two seconds.

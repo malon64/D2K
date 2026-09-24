@@ -77,7 +77,10 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
 - **Start D2K from SSH** fully detached, or it dies with the SSH session:
   `cd ~/D2K && setsid nohup ./scripts/linux/run.sh > /tmp/d2k-run.log 2>&1 < /dev/null &`
   (normally it starts from the Labwc autostart entry).
-- **Stop D2K**: `pkill -x pegasus-fe` (its `run.sh` then stops MPD).
+- **Stop D2K**: `pkill -TERM -f '[s]cripts/linux/run.sh'` (its cleanup kills
+  Pegasus and stops MPD). Pegasus catches SIGTERM and keeps running, so
+  `pkill -x pegasus-fe` alone does nothing; check `pgrep -x pegasus-fe` before
+  starting a new copy.
 - **Launch a game for testing**:
   `./scripts/linux/launch-emulator.sh <ds|dreamcast|ps1|psp|n64|gamecube|3ds> "$PWD/library/consoles/<console>/games/<game>/rom.<ext>"`
 - **Leave a game**: `touch ~/.local/state/d2k/home-request` (what Super+Esc does).
