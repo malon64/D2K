@@ -199,15 +199,17 @@ The keyboard scheme is in [`controls.md`](controls.md). Problems met setting it 
 - **melonDS had no keys at all.** Every `[Instance0.Keyboard]` entry was `-1`,
   so DS games only reacted to the touch screen. The keys now come from the
   `melonds/keyboard.toml` overlay.
-- **Num Lock.** The numpad is the face-button diamond, but the Pi's Labwc config
-  had `<numlock>off</numlock>`; numpad 8/4/6/2 then arrive as `KP_Up/…` and
-  Qt emulators treat them as arrows (Azahar collides with the D-pad).
-  `configure-desktop.sh` sets it `on`; Labwc applies it at login, not on
-  `labwc --reconfigure`. Check the real state with
-  `cat /sys/class/leds/*numlock*/brightness` (Labwc drives the keyboard LED).
-  `xset q` on Xwayland can say `off` while it is on, and `xdotool` key presses
-  go through X's own lock state, so they cannot test numpad bindings in the
-  letter-based emulators; test those on the real keyboard.
+- **Num Lock broke the numpad diamond.** The Pi's Labwc config had
+  `<numlock>off</numlock>`; numpad 8/4/6/2 then arrive as `KP_Up/…` and Qt
+  emulators treat them as arrows (DS face buttons dead, arrows fine). Setting
+  it `on` was not enough: Labwc (keyboard LED, `/sys/class/leds/*numlock*`)
+  and Xwayland (`xset q`) were seen reporting opposite states, and one press
+  of Num Lock breaks it again. The fix is the XKB option `numpad:mac` in
+  `~/.config/labwc/environment` (`XKB_DEFAULT_OPTIONS`), which makes the numpad
+  send digits whatever Num Lock says. Labwc reads that file at login, not on
+  `labwc --reconfigure`; after a reboot, `xmodmap -pke | grep "keycode  80 "`
+  on `:0` should no longer list `KP_Up`. `xdotool` key presses go through X's
+  own lock state, so test numpad bindings on the real keyboard.
 - **Emulators name keys two ways.** melonDS, Azahar, PPSSPP and Mupen64Plus
   store the character a key produces (AZERTY-aware, Num Lock-dependent);
   DuckStation, Flycast and Ship of Harkinian store the physical position, named

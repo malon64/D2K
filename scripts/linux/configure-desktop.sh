@@ -4,7 +4,7 @@
 #   - touch input mapped to the lower panel only (Labwc)
 #   - sound pinned to one HDMI port (WirePlumber)
 #   - melonDS without title bars, Super+Esc as the keyboard Home button, and
-#     Num Lock on (the numpad is the face-button diamond, docs/controls.md)
+#     the numpad always sending digits (the face-button diamond, docs/controls.md)
 # Safe to re-run; re-run it after rewiring the screens. --check verifies it.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
@@ -116,8 +116,27 @@ write_managed() {  # path text -> returns 0 when the file changed
     printf '%s\n' "$text" > "$path"
 }
 
+# The numpad is the face-button diamond, so it must always send digits. Num Lock
+# alone is not reliable: Labwc and Xwayland have disagreed about its state, and
+# with it off Qt emulators read numpad 8/4/6/2 as arrows. The XKB option
+# numpad:mac makes the numpad send digits regardless of Num Lock. Labwc reads
+# this file at login, so the option applies after the next login or reboot.
+labwc_environment="$config_home/labwc/environment"
+numpad_option=numpad:mac
+xkb_options_edit() {  # apply|check
+    local current
+    current=$(sed -n 's/^XKB_DEFAULT_OPTIONS=//p' "$labwc_environment" 2>/dev/null | tail -n 1)
+    [[ ,$current, == *,$numpad_option,* ]] && return 0
+    [[ $1 == check ]] && return 1
+    mkdir -p "$(dirname "$labwc_environment")"
+    touch "$labwc_environment"
+    sed -i '/^XKB_DEFAULT_OPTIONS=/d' "$labwc_environment"
+    echo "XKB_DEFAULT_OPTIONS=${current:+$current,}$numpad_option" >> "$labwc_environment"
+}
+
 if [[ ${1:-} == --check ]]; then
     status=0
+    xkb_options_edit check || { echo "XKB option $numpad_option missing: $labwc_environment" >&2; status=1; }
     [[ -f $kanshi_config && $(<"$kanshi_config") == "$kanshi_text" ]] || { echo "Screen layout differs: $kanshi_config" >&2; status=1; }
     [[ -f $wireplumber_rule && $(<"$wireplumber_rule") == "$wireplumber_text" ]] || { echo "Audio rule differs: $wireplumber_rule" >&2; status=1; }
     labwc_edit check || { echo "Labwc entries missing: $labwc_config" >&2; status=1; }
@@ -136,6 +155,7 @@ if labwc_edit apply; then
     labwc_pid=$(pgrep -u "$(id -u)" -x labwc | head -n 1 || true)
     [[ -n $labwc_pid ]] && LABWC_PID="$labwc_pid" labwc --reconfigure 2>/dev/null || true
 fi
+xkb_options_edit apply
 if write_managed "$wireplumber_rule" "$wireplumber_text"; then
     systemctl --user restart wireplumber 2>/dev/null || true
 fi

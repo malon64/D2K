@@ -33,10 +33,11 @@ Menus: arrows, Enter and the touch screen drive the Pegasus menu.
 Emulator extras kept from their defaults: Flycast Tab (menu), Space
 (fast-forward), F12 (screenshot).
 
-**Num Lock must be on.** With it off, the numpad sends arrow codes and several
-emulators read numpad 8/4/6/2 as the D-pad. `configure-desktop.sh` sets
-`<numlock>on</numlock>` in Labwc, which applies at login; if the numpad ever
-behaves like arrows, press Num Lock.
+**The numpad always sends digits.** Otherwise, with Num Lock off, it sends arrow
+codes and several emulators read numpad 8/4/6/2 as the D-pad.
+`configure-desktop.sh` adds the XKB option `numpad:mac` to
+`~/.config/labwc/environment` (numpad = digits whatever Num Lock says) and also
+sets Num Lock on. Both apply at the next login or reboot.
 
 ## Where each binding lives
 
