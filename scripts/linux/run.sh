@@ -28,11 +28,11 @@ sample_cpu() {
 
 # A wireless mouse or keyboard also shows up as a power_supply Battery (the Pi
 # lists a Logitech hidpp_battery_0); only a supply with System scope powers the
-# machine. A Pi on mains power has none and shows "--".
-battery_text=--
+# machine. A Pi on mains power has none and reads as a full battery.
+battery_text=100%
 sample_battery() {
     local supply
-    battery_text=--
+    battery_text=100%
     for supply in /sys/class/power_supply/*; do
         [[ -r $supply/type && -r $supply/capacity && $(<"$supply/type") == Battery ]] || continue
         [[ $(cat "$supply/scope" 2>/dev/null || true) == Device ]] && continue

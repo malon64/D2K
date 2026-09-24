@@ -204,8 +204,8 @@ Windows `run.ps1`: CPU use from `/proc/stat` deltas and temperature from the
 `cpu-thermal` zone. The Pi on mains power has no battery, but the wireless
 Logitech receiver shows up as `/sys/class/power_supply/hidpp_battery_0`
 (type `Battery`); it has `scope` `Device`, and the HUD must not show a
-mouse's charge as the console's, so such supplies are skipped and BATTERY
-reads `--`.
+mouse's charge as the console's, so such supplies are skipped. With no
+System battery, the Pi is on mains power and BATTERY reads `100%`.
 
 ## Remote diagnosis
 
