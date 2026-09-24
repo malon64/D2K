@@ -26,6 +26,16 @@ Item {
         return ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"][band]
     }
 
+    // Degrees Celsius; the Pi 5 starts throttling at 80.
+    function temperatureColor(value) {
+        var degrees = parseInt(value, 10)
+        if (isNaN(degrees))
+            return panel.theme.cyanHex
+
+        var band = degrees <= 40 ? 0 : degrees <= 60 ? 1 : degrees <= 75 ? 2 : 3
+        return ["#298cc8", "#29ef54", "#ffd331", "#ff4f5e"][band]
+    }
+
     function hudLine(label, value, valueColor) {
         return label + ' <font color="' + valueColor + '">' + value + '</font>'
     }
@@ -282,7 +292,7 @@ Item {
 
     Text {
         x: 29; y: 265; width: 182; height: 31
-        text: panel.hudLine("TEMP:", panel.tempText, panel.theme.cyanHex)
+        text: panel.hudLine("TEMP:", panel.tempText, panel.temperatureColor(panel.tempText))
         textFormat: Text.StyledText
         color: panel.theme.hudInk
         font.family: panel.theme.pixelFont

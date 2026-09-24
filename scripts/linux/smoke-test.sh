@@ -6,6 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 for script in "$linux_dir"/*.sh; do
     bash -n "$script"
 done
+"$linux_dir/run.sh" --self-test
 "$linux_dir/launch-emulator.sh" --self-test
 "$linux_dir/configure-emulators.sh" --self-test
 "$linux_dir/configure-emulators.sh" --check

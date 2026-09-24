@@ -5,6 +5,80 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 pegasus="$software_dir/pegasus/bin/pegasus-fe"
 theme_settings="$config_home/pegasus-frontend/theme_settings/d2k.json"
 mpd_script="$linux_dir/mpd.sh"
+system_status_file="$repo_root/pegasus/themes/d2k/system-status.json"
+
+# CPU use is the busy share of the jiffies since the previous sample, so the
+# first call only primes the counters.
+cpu_total=0
+cpu_idle=0
+cpu_text=--
+sample_cpu() {
+    local user nice system idle iowait irq softirq steal total idle_all
+    read -r _ user nice system idle iowait irq softirq steal _ </proc/stat
+    total=$((user + nice + system + idle + iowait + irq + softirq + steal))
+    idle_all=$((idle + iowait))
+    if ((cpu_total > 0 && total > cpu_total)); then
+        # iowait can step backwards, so keep the result inside 0-100.
+        local busy=$((100 * (total - cpu_total - (idle_all - cpu_idle)) / (total - cpu_total)))
+        cpu_text="$((busy < 0 ? 0 : busy > 100 ? 100 : busy))%"
+    fi
+    cpu_total=$total
+    cpu_idle=$idle_all
+}
+
+# A wireless mouse or keyboard also shows up as a power_supply Battery (the Pi
+# lists a Logitech hidpp_battery_0); only a supply with System scope powers the
+# machine. A Pi on mains power has none and shows "--".
+battery_text=--
+sample_battery() {
+    local supply
+    battery_text=--
+    for supply in /sys/class/power_supply/*; do
+        [[ -r $supply/type && -r $supply/capacity && $(<"$supply/type") == Battery ]] || continue
+        [[ $(cat "$supply/scope" 2>/dev/null || true) == Device ]] && continue
+        battery_text="$(<"$supply/capacity")%"
+        return 0
+    done
+}
+
+temp_text=--
+sample_temperature() {
+    local zone millidegrees
+    temp_text=--
+    for zone in /sys/class/thermal/thermal_zone*; do
+        [[ -r $zone/type && -r $zone/temp ]] || continue
+        case $(<"$zone/type") in
+            cpu-thermal | x86_pkg_temp)
+                millidegrees=$(<"$zone/temp")
+                temp_text="$(((millidegrees + 500) / 1000))\\u00b0C"
+                return 0
+                ;;
+        esac
+    done
+}
+
+# Same file and fields as scripts/windows/run.ps1; the theme polls it while the
+# console menu is up.
+write_system_status() {
+    local temporary="$system_status_file.$$.tmp"
+    sample_cpu
+    sample_battery
+    sample_temperature
+    printf '{"battery":"%s","cpu":"%s","temperature":"%s","updatedAt":%s}\n' \
+        "$battery_text" "$cpu_text" "$temp_text" "$(date +%s%3N)" >"$temporary"
+    mv -f "$temporary" "$system_status_file"
+}
+
+if [[ ${1:-} == --self-test ]]; then
+    sample_cpu
+    sleep 0.5
+    write_system_status
+    status=$(<"$system_status_file")
+    pattern='^\{"battery":"([0-9]+%|--)","cpu":"([0-9]+%|--)","temperature":"([0-9]+\\u00b0C|--)","updatedAt":[0-9]+\}$'
+    [[ $status =~ $pattern && $cpu_text != -- ]] || { echo "System telemetry format check failed: $status" >&2; exit 1; }
+    echo "$status"
+    exit 0
+fi
 
 if [[ ! -x $pegasus ]]; then
     echo 'Pegasus is missing. Run scripts/linux/install.sh first.' >&2
@@ -73,6 +147,8 @@ last_launch=""
 last_music_seq=""
 last_settings=""
 last_status_second=0
+last_system_second=0
+sample_cpu
 if "$mpd_script" Prepare >/dev/null 2>&1; then
     music_prepared=true
 else
@@ -82,6 +158,10 @@ fi
 QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM="$qt_platform" "$pegasus" &
 pegasus_pid=$!
 while kill -0 "$pegasus_pid" 2>/dev/null; do
+    if ((SECONDS != last_system_second)); then
+        write_system_status || true
+        last_system_second=$SECONDS
+    fi
     [[ -f $theme_settings ]] || { sleep 0.2; continue; }
     settings=$(<"$theme_settings")
     if [[ $settings != "$last_settings" ]]; then
