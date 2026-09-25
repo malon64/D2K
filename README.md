@@ -16,7 +16,7 @@ RetroArch (optional, not a core dependency).
 | Part | V1 target | Status |
 | --- | --- | --- |
 | Compute | Raspberry Pi 5, Raspberry Pi OS 64-bit (baseline) | In use |
-| Compute (alternative) | Radxa ROCK 4D 6 GB (RK3576) | On order; to be tested for all emulators as a possible replacement |
+| Compute (alternative) | Radxa ROCK 4D 6 GB (RK3576) | On order; to be benchmarked on all emulators. Likely faster, but the Pi stays the baseline unless the ROCK 4D also drives the 4" DSI touch screen (untested on it) |
 | Upper screen | Waveshare 5" HDMI, 800×480 | Received |
 | Lower screen | Waveshare 4-DSI-TOUCH-A, 4" touch, 480×800 used landscape | On order |
 | Controls | ESP32-S3 as USB HID: D-pad, ABXY, L1/R1/L2/R2, Start/Select/Home, two New 3DS XL circle pads | On order |

@@ -32,10 +32,12 @@ Summary as of 24 September 2026:
 - **Emulation priority:** DS (absolute) → PSP / Dreamcast / N64 / PS1 → 3DS
   (secondary) → older consoles via RetroArch later (optional; Pegasus launches
   standalone emulators, RetroArch is not a core dependency).
-- **Compute:** Raspberry Pi 5 is the V1 baseline. A **Radxa ROCK 4D 6 GB
-  (RK3576)** is on order and will be tested with all emulators as a possible
-  replacement; Notion's condition for switching is that the HDMI + DSI screens,
-  touch and dual-screen melonDS work without custom driver work and that
+- **Compute:** Raspberry Pi 5 is the V1 baseline: it has the better hardware
+  support, including documented support for the Waveshare 4" DSI touch screen.
+  A **Radxa ROCK 4D 6 GB (RK3576)** is on order and will be benchmarked on all
+  emulators; it should be faster, but it is **not a certain replacement**: the
+  4" DSI screen is untested on it. It replaces the Pi only if the HDMI + DSI
+  screens, touch and dual-screen melonDS work without custom driver work and
   performance is measurably better.
 - **Screens (final):** upper Waveshare 5" HDMI 800×480; lower Waveshare
   4-DSI-TOUCH-A 4" capacitive touch over DSI (480×800 rotated to landscape,
