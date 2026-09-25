@@ -9,7 +9,7 @@ model, doc), then move it to **Resolved** at the bottom.
 | --- | --- | --- | --- | --- |
 | M1 | 5in (H) total thickness and layer stack | Upper shell height | Calipers: glass to the tallest rear part (HDMI A socket) | ~13.6 mm est. |
 | M2 | 5in (H) mounting hole diameter and tab thickness | Screw size and bosses in the upper shell | Calipers | ø3.2, 1.6 mm est. |
-| M3 | 5in (H) port positions and heights | Plug clearance in the upper shell | Calipers from the glass edge | Scaled from the drawing |
+| M3 | 5in (H) port positions and heights, **especially the HDMI ↔ Touch micro-USB centre distance** | Plug clearance; the straight HDMI (17.3 mm) and micro B (17 mm) flat adapters collide if the pitch is < 17.2 mm | Calipers from the glass edge, centre to centre | Scaled from the drawing: ~17 mm |
 | M4 | 4in DSI boss heights (corner / inner) and adapter board height | Stack height, Pi standoff length | Calipers once received | 2.1 / 5.0 / 3.0 mm est. |
 | M5 | 4in DSI power connector type and lead length | Power harness | Inspect when received | 2-pin, length unknown |
 | M6 | Active Cooler height above the Pi PCB | Lower stack and airflow | Calipers once fitted | 13.3 fins / 15.3 pins est. |
@@ -33,6 +33,8 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q11 | Does the 5in (H) run reliably from the Touch port alone (no DC), with the backlight at full brightness? | Bench powers it that way today; confirm there is no brownout. |
 | Q12 | Console width and thickness? | Not fixed (user): an output of the electronics optimisation and placement. Notion pages disagree (~140–160 vs ~180–190 mm). With the 108.3 mm 4in plus D-pad/Circle Pad (~26 mm) and walls on each side, the controls need ≳ 170 mm if they sit beside the screen. Check with the 1:1 mock-up. |
 | Q13 | Keep the Pi 5 USB-A/RJ45 connectors in the console, remove them, or move to a Compute Module 5 later? | They set the lower stack height (15.6 / 13.5 mm). See roadmap step 4. |
+| Q14 | Which right-angle micro HDMI bend (Adafruit 3557 R or 3558 L) sends the ribbon towards the Pi's component side? | Depends on the Pi 5 receptacle keying; buy both or check with the board in hand. |
+| Q15 | Ribbons behind the boards (+2–3 mm thickness) or beside them (+width)? | Decide in the layout study with the shell width. |
 
 ## Resolved
 

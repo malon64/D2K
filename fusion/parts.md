@@ -75,6 +75,26 @@ estimated (to be measured on the real part). Coordinates are those of the
 - Sources: <https://www.waveshare.com/wiki/5inch_HDMI_LCD_(H)>,
   <https://www.waveshare.com/5inch-hdmi-lcd-h.htm>
 
+## Flat cables — proposed order (Adafruit DIY USB/HDMI cable parts)
+
+One system for both cables: small plug adapters with a flex-cable clip, joined
+by a 20-pin FPC ribbon (10 mm wide). Adafruit tested it with a Raspberry Pi at
+1080p; it is not shielded and less durable than a moulded cable (fine for
+800 × 480 and USB 2.0 touch inside a case). Sold by Adafruit and resellers
+(The Pi Hut, Kubii, Mouser, Digi-Key).
+
+| Qty | Part | Adafruit ID | Size **[spec]** | Where |
+| --- | --- | --- | --- | --- |
+| 1 (+1) | Right Angle micro HDMI plug, R bend / L bend | 3557 / 3558 | 17.5 × 15 × 14.5 mm | Pi HDMI0. The ribbon must leave towards the Pi component side (back); which bend does that depends on the port keying: buy both, or check with the Pi in hand. |
+| 1 | Straight HDMI plug adapter | 3548 | 27.5 × 17.3 × 5 mm | 5in HDMI "Display" port |
+| 1 | Straight USB Type A plug | 4109 | 30 × 17 × 5 mm | Pi USB 2.0 port (no right-angle USB A in the range) |
+| 1 | Straight micro B plug | 4106 | 23 × 17 × 3 mm | 5in Touch port. **Collides with the HDMI adapter if the ports are < 17.2 mm apart (M3).** Fallback: Right Angle micro B Up/Down 4104/4105 (PCB 17 × 13.3 × 3.6 + 11 mm plug; adds depth behind the 5in). |
+| 2 | 20-pin FPC ribbon, 10 mm wide | 3560 (10 cm), 3561 (20 cm), 3562 (30 cm), 3563 (50 cm) | 10 mm wide | Bench route needs ~24 cm (HDMI) and ~30 cm (USB) including the clips: 30 cm or 50 cm. The final console route will be shorter; lengths are cheap to re-buy. |
+
+Pre-made alternative for W3: one-piece "FPV flat FPC" cables, micro USB 90°
+to USB A male (15/20/50 cm, sold as *Permanent* / fpv-solution); thinner at the
+micro B end but the angle orientation must match the port.
+
 ## Raspberry Pi 27 W USB-C PSU — V1 bench supply (assumed)
 
 - 5.1 V 5 A, PD 9 V 3 A / 12 V 2.25 A / 15 V 1.8 A **[spec]**. Assumed

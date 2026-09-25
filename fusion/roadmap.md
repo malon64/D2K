@@ -65,6 +65,9 @@ Candidate architecture to evaluate, in Fusion Electronics:
 - **Flat cables instead of stock cables:** flat HDMI flex with right-angle
   micro-HDMI and HDMI A ends (also solves the hinge), a short internal USB link
   for the 5in touch, and a folded 22-pin DSI FFC.
+  - [x] W2/W3 candidate modelled with Adafruit DIY USB/HDMI parts
+        (`Cables_V1_flat`); order list in [parts.md](parts.md). Check M3 (5in
+        port pitch) and Q14 (micro HDMI bend) before ordering.
 - **Pi 5 height:** the USB-A stacks (15.6 mm) and the RJ45 (13.5 mm) set the
   lower stack height, and the console doesn't need them. Options: keep them;
   remove them from the board; or later move to a **Raspberry Pi Compute

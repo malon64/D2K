@@ -60,8 +60,10 @@ Pass `readOnly: true` for the tools. A script that raises is rolled back by
 Fusion as a whole.
 
 To rebuild `D2K_Electronics_V1` from scratch: `00` → `10` → `20` → `30` → `40`
-→ `70` (each part script activates or checks the document and skips existing
-components; `65` only patches designs built before its fix).
+→ `70` (stock cables) → `75` (flat-cable variant) (each part script activates
+or checks the document and skips existing components; `65` only patches
+designs built before its fix). Show one cable variant at a time: hide the
+other component's occurrence (light bulb) in the browser.
 To refresh the library and the V1 schematic: `python electronics/gen_d2k_lbr.py`,
 `python electronics/gen_d2k_v1_sch.py`, then `60`. **Uploading a name that
 already exists creates a second file, not a version**: delete the old `D2K`

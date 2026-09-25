@@ -4,6 +4,21 @@ Newest first. Each entry: the decision, why, and what it affects. Project-level
 decisions (compute, screens, roadmap) live in the Notion workspace; they are
 repeated here only where they drive the Fusion work.
 
+## 2026-09-25 — Flat-cable candidate for W2/W3: Adafruit DIY USB/HDMI parts
+
+- **Decision:** model W2 (HDMI) and W3 (USB touch) with Adafruit's modular
+  flat-cable parts (`Cables_V1_flat`): right-angle micro HDMI on the Pi,
+  straight HDMI A and straight micro B on the 5in, straight USB A on the Pi,
+  20-pin FPC ribbons folded flat behind the boards. The user orders them if
+  the model shows a real gain.
+- **Why:** one documented system for both cables, published dimensions,
+  cheap parts, tested with a Raspberry Pi. Straight adapters on the 5in keep
+  the thin upper half thin (a right-angle HDMI A plate would add ~5.5 mm).
+- **Result:** footprint 176 × 154 → 118 × 73.5 mm (lower) and 202 → 142 mm wide
+  (upper), for +2–3 mm of thickness behind the boards; see constraints.md.
+  Open risk: the two 5in straight adapters overlap by 0.15 mm on the ~17 mm
+  port pitch read from the drawing (M3).
+
 ## 2026-09-25 — Stock cables modelled as keep-outs at the ports
 
 - **Decision:** `Cables_V1_stock` in `D2K_Electronics_V1` models each V1 cable

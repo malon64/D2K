@@ -75,6 +75,29 @@ compaction work has to beat.
 | W4 FFC 22-pin | 12 × 0.3 mm flat | folds | arches over the cooler: stack ≈ 28.3 mm |
 | W5 Dupont on GPIO 4/6 | 5.1 × 2.5 × 14 mm | 2.5 bundle / 3 mm | 14 mm tall on top of the header |
 
+### Flat-cable variant (Adafruit DIY USB/HDMI parts, 2026-09-25)
+
+`Cables_V1_flat` (`scripts/electronics_v1/75_cables_v1_flat.py`) replaces W2
+and W3 with right-angle / straight plug adapters joined by 10 mm FPC ribbons
+folded flat behind the boards. Measured in the model:
+
+| Envelope | Bare parts | + stock W2/W3 | + flat W2/W3 |
+| --- | --- | --- | --- |
+| Lower half (4in + Pi) | 108.3 × 65.1 × 28.1 mm | 176 × 154 mm footprint | **118 × 73.5 × 30.8 mm** |
+| Upper half (5in) | 124.8 × 89.5 × 13.6 mm | 202 × 117 mm footprint | **142 × 89.5 × 15.9 mm** |
+
+- Reach past the parts: Pi micro-HDMI adapter plate 8.4 mm below the 4in
+  edge; USB A adapter 9.8 mm past the 4in side edge; the two 5in adapters and
+  their 180° ribbon fold 20 mm past the 5in port edge.
+- The ribbons behind the boards add ~2.7 mm (lower) and ~2.3 mm (upper) of
+  thickness. Routing them beside the boards instead trades that for width.
+- **The two straight adapters on the 5in collide:** HDMI A adapter 17.3 mm
+  wide and micro B adapter 17 mm wide on ports ~17 mm apart (read from the
+  drawing) overlap by 0.15 mm. Measure the port pitch (M3) before ordering.
+- A right-angle HDMI A adapter on the 5in would reach only ~11 mm past the
+  edge but its plate hangs ~19 mm behind the port: +5.5 mm on the thin upper
+  half. The straight adapter was chosen for thickness.
+
 The bare parts measure 108.3 × 65.1 × 28.1 mm (4in + Pi) and
 124.8 × 89.5 × 13.6 mm (5in). With stock cables, their ends alone push the
 footprint to roughly 176 × 154 mm around the lower pair and 202 mm wide at the
