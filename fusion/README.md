@@ -12,6 +12,7 @@ UI is in French).
 
 | Path | What it is |
 | --- | --- |
+| [roadmap.md](roadmap.md) | **Goals of the Fusion work** (see the wiring, shrink the electronics, design the clamshell) and the step plan. |
 | [decisions.md](decisions.md) | Dated decision log (what was decided, why, what it affects). |
 | [open-questions.md](open-questions.md) | Open questions and **missing data**, with how to resolve each. |
 | [wiring.md](wiring.md) | V1 wiring (Pi 5 + two Waveshare screens) and **wiring warnings**. |

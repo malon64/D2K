@@ -31,6 +31,8 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q9 | Which USB-C supply is used on the bench (official 27 W or other)? | A non-5 A supply caps USB at 600 mA. |
 | Q10 | Should the phase 1 layout reference `D2K_Electronics_V1` components (light) instead of the Pi 5 STEP? | Would make `D2K_phase1` open faster; needs the user's go-ahead because it edits the master layout. |
 | Q11 | Does the 5in (H) run reliably from the Touch port alone (no DC), with the backlight at full brightness? | Bench powers it that way today; confirm there is no brownout. |
+| Q12 | Target console width? | Notion *Architecture* says ~140–160 mm, *Mécanique* studies 180–190 mm, phase 1 uses 165 mm. With the 108.3 mm 4in plus D-pad/Circle Pad (~26 mm) and walls on each side, below ~175 mm the controls don't fit beside the screen. Decide with the 1:1 mock-up. |
+| Q13 | Keep the Pi 5 USB-A/RJ45 connectors in the console, remove them, or move to a Compute Module 5 later? | They set the lower stack height (15.6 / 13.5 mm). See roadmap step 4. |
 
 ## Resolved
 
