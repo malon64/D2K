@@ -35,6 +35,8 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q13 | Keep the Pi 5 USB-A/RJ45 connectors in the console, remove them, or move to a Compute Module 5 later? | They set the lower stack height (15.6 / 13.5 mm). See roadmap step 4. |
 | Q14 | Which right-angle micro HDMI bend (Adafruit 3557 R or 3558 L) sends the ribbon towards the Pi's component side? | Depends on the Pi 5 receptacle keying; buy both or check with the board in hand. |
 | Q15 | Ribbons behind the boards (+2–3 mm thickness) or beside them (+width)? | Decide in the layout study with the shell width. |
+| Q16 | Do the Adafruit ribbons survive the hinge? | Cycle-test in the printed hinge prototype (thousands of openings, R ≥ 6 mm wrap). Fallback: custom dynamic-flex PCB with the same 20-pin ends. |
+| Q17 | How many ribbon conductors carry VBUS/GND in the Adafruit USB adapters, and is it enough for the 5in (~400 mA, more at full backlight)? | Check the adapter schematics/continuity; otherwise feed the 5in from a separate power pair through the power/audio passage. |
 
 ## Resolved
 

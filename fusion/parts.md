@@ -89,7 +89,7 @@ by a 20-pin FPC ribbon (10 mm wide). Adafruit tested it with a Raspberry Pi at
 | 1 | Straight HDMI plug adapter | 3548 | 27.5 × 17.3 × 5 mm | 5in HDMI "Display" port |
 | 1 | Straight USB Type A plug | 4109 | 30 × 17 × 5 mm | Pi USB 2.0 port (no right-angle USB A in the range) |
 | 1 | Straight micro B plug | 4106 | 23 × 17 × 3 mm | 5in Touch port. **Collides with the HDMI adapter if the ports are < 17.2 mm apart (M3).** Fallback: Right Angle micro B Up/Down 4104/4105 (PCB 17 × 13.3 × 3.6 + 11 mm plug; adds depth behind the 5in). |
-| 2 | 20-pin FPC ribbon, 10 mm wide | 3560 (10 cm), 3561 (20 cm), 3562 (30 cm), 3563 (50 cm) | 10 mm wide | Bench route needs ~24 cm (HDMI) and ~30 cm (USB) including the clips: 30 cm or 50 cm. The final console route will be shorter; lengths are cheap to re-buy. |
+| 2 + spares | 20-pin FPC ribbon, 10 mm wide | 3560 (10 cm), 3561 (20 cm), 3562 (30 cm), 3563 (50 cm) | 10 mm wide | Both ribbons cross the hinge. Model route + hinge wrap/slack + clips: **~28 cm (HDMI) → 30 cm; ~33 cm (USB) → 50 cm.** Buy spares: they are cheap and the hinge cycle test may wear some out. |
 
 Pre-made alternative for W3: one-piece "FPV flat FPC" cables, micro USB 90°
 to USB A male (15/20/50 cm, sold as *Permanent* / fpv-solution); thinner at the

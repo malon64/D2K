@@ -98,6 +98,33 @@ folded flat behind the boards. Measured in the model:
   edge but its plate hangs ~19 mm behind the port: +5.5 mm on the thin upper
   half. The straight adapter was chosen for thickness.
 
+### Ribbons through the hinge
+
+Both flat ribbons (W2 HDMI, W3 USB touch + 5in power) run from the Pi in the
+lower half to the 5in in the upper half, so both cross the clamshell hinge.
+Speaker wires and any other upper-half supply will join them later.
+
+- **Separate passages** (Notion rule): W2 alone near one end of the hinge,
+  W3 (power + data, later the four speaker wires) near the other. In the model
+  they cross at X ≈ 95 and X ≈ 8 (4in coordinates), inside the screen width,
+  so the hinge ends stay free for L1/L2/R1/R2.
+- **Passage size:** 10 mm ribbon + clearance = 14 mm wide per passage (keep-out
+  boxes `Hinge_passage_*` in `Cables_V1_flat`), more when the speaker wires
+  share W3's passage.
+- **Dynamic bend:** the hinge flexes the ribbon at every opening. Keep a bend
+  radius of at least ~6 mm (≈ 25–100 × the ~0.2 mm ribbon thickness, IPC-2223
+  guidance for dynamic flex): wind the ribbon round a mandrel / hollow barrel
+  (rolling loop or wrap-around), never a crease at a hinge edge, and leave a
+  slack loop so it is never taut at full opening.
+- **Length allowance:** 180° wrap at R 6 mm + 20 mm slack ≈ 39 mm per ribbon.
+- **Durability:** Adafruit does not rate its ribbons for repeated flexing.
+  Cycle-test them in the hinge prototype; if they crack, replace the ribbon
+  with a custom flex PCB (polyimide, rolled-annealed copper, same 20-pin
+  0.5 mm ends) made for dynamic bending.
+- Both 5in ports (HDMI, Touch) are on the same short edge, so the ribbon that
+  crosses at the other end (W3 in the model) runs ~127 mm across the back of
+  the 5in. Swapping the sides moves that long run to W2 instead.
+
 The bare parts measure 108.3 × 65.1 × 28.1 mm (4in + Pi) and
 124.8 × 89.5 × 13.6 mm (5in). With stock cables, their ends alone push the
 footprint to roughly 176 × 154 mm around the lower pair and 202 mm wide at the

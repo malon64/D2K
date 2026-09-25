@@ -92,7 +92,9 @@ themselves come after the V0 shell.
       the 4in need ≳ 170 mm ([open-questions.md](open-questions.md) Q12).
 - [ ] 1:1 flat ergonomic mock-up of the lower half (Notion workflow step 4),
       printed and held with the real buttons and Circle Pads.
-- [ ] Hinge prototype with dummy cables at real bend radii.
+- [ ] Hinge prototype with the **real flat ribbons** (W2 and W3 in separate
+      passages, R ≥ 6 mm winding, slack loop): open/close cycle test, video +
+      touch checked during the test (Q16).
 - [ ] Shell V0 (fit and function), then V1 with the art direction:
       translucent ice blue (#298CC8 / #91BDE2) as the main material, candy pink
       (#DABFDB) on buttons and small parts only, capsule shapes and large radii,

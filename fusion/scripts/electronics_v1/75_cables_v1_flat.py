@@ -21,7 +21,21 @@ import adsk.fusion
 
 DOC_NAME = "D2K_Electronics_V1"
 COMP_NAME = "Cables_V1_flat"
+REBUILD = True            # delete and rebuild an existing Cables_V1_flat
 RIBBON_W, RIBBON_T = 10.0, 0.3
+
+# Both ribbons cross the clamshell hinge (in this flat layout: the gap between
+# the 4in top edge and the 5in). Notion rule: HDMI alone on one side, power +
+# audio on the other, so W2 crosses near the right end and W3 near the left.
+# Each passage is a keep-out 14 mm wide (10 mm ribbon + clearance) around a
+# winding mandrel: a moving flex needs a large bend radius (~25-100 x its
+# thickness: >= 6 mm for these ~0.2 mm ribbons).
+HINGE_Y = 77.6                       # hinge axis, midway in the gap
+HINGE_MANDREL_R = 6.0
+HINGE_PASSAGE_W = 14.0
+X_CROSS_HDMI, X_CROSS_USB = 95.0, 8.0
+# Length to add per ribbon at the hinge: 180° wrap round the mandrel + slack loop.
+HINGE_ALLOWANCE = math.pi * HINGE_MANDREL_R + 20.0
 
 T = adsk.fusion.TemporaryBRepManager.get()
 
@@ -78,9 +92,12 @@ def run(context):
         return
     des = adsk.fusion.Design.cast(app.activeProduct)
     root = des.rootComponent
-    if any(o.component.name == COMP_NAME for o in root.occurrences):
-        print("SKIP", COMP_NAME, "exists")
-        return
+    for o in list(root.occurrences):
+        if o.component.name == COMP_NAME:
+            if not REBUILD:
+                print("SKIP", COMP_NAME, "exists")
+                return
+            o.deleteMe()
     occs = {o.component.name: o for o in root.occurrences}
     pi, ws5 = occs["Raspberry_Pi_5"], occs["Waveshare_5in_HDMI_LCD_H"]
     items, report = [], []
@@ -119,21 +136,28 @@ def run(context):
     micro_b = ([t_face, t_cy - 8.5, t_cz - 1.5], [t_end, t_cy + 8.5, t_cz + 1.5])
     items.append(("W3_straight_microB_adapter", box(*micro_b)))
 
-    # --- Ribbon routes (flat bench layout: 5in above the 4in, both glass +Z).
+    # --- Ribbon routes (flat bench layout: 5in above the 4in, both glass +Z),
+    # each crossing the hinge in its own passage.
     fold_x = max(h_end, t_end) + 1.2             # 180° fold just past the 5in adapters
-    back_lo, back_up_hdmi, back_up_usb = -24.15, -9.15, -9.75
-    gap_y_hdmi, gap_y_usb = 72.15, 80.15         # climb between the two screens
-    hd_pts = [[cx, y_plate, plate_bot], [cx, y_plate, back_lo], [cx, gap_y_hdmi, back_lo],
-              [cx, gap_y_hdmi, back_up_hdmi], [cx, h_cy, back_up_hdmi], [cx, h_cy, -8.25],
+    back_lo, back_up = -24.15, -9.15
+    y_shift = 30.0                               # HDMI turns towards its passage behind the Pi
+    hx, ux = X_CROSS_HDMI, X_CROSS_USB
+    hd_pts = [[cx, y_plate, plate_bot], [cx, y_plate, back_lo], [cx, y_shift, back_lo], [hx, y_shift, back_lo],
+              [hx, HINGE_Y, back_lo], [hx, HINGE_Y, back_up], [hx, h_cy, back_up], [hx, h_cy, -8.25],
               [fold_x, h_cy, -8.25], [fold_x, h_cy, h_cz], [h_end, h_cy, h_cz]]
-    hd_items, hd_len = ribbon("W2", hd_pts, [0, 0, 0, 0, 0, 1, 1, 1])
-    ux = cx - 12.0                               # USB run beside the HDMI run, behind it
+    hd_items, hd_len = ribbon("W2", hd_pts, [0, 0, 1, 0, 0, 0, 0, 1, 1, 1])
     us_pts = [[u_end, u_cy, u_cz], [u_end - 1.15, u_cy, u_cz], [u_end - 1.15, u_cy, back_lo - 0.7],
-              [ux, u_cy, back_lo - 0.7], [ux, gap_y_usb, back_lo - 0.7], [ux, gap_y_usb, back_up_usb],
-              [ux, t_cy, back_up_usb], [ux, t_cy, -8.25], [fold_x, t_cy, -8.25], [fold_x, t_cy, t_cz],
+              [ux, u_cy, back_lo - 0.7], [ux, HINGE_Y, back_lo - 0.7], [ux, HINGE_Y, back_up - 0.6],
+              [ux, t_cy, back_up - 0.6], [ux, t_cy, -8.25], [fold_x, t_cy, -8.25], [fold_x, t_cy, t_cz],
               [t_end, t_cy, t_cz]]
     us_items, us_len = ribbon("W3", us_pts, [1, 1, 1, 0, 0, 0, 0, 1, 1, 1])
     items += hd_items + us_items
+
+    # Hinge passages (keep-outs) with the winding mandrel, for each ribbon.
+    z_lo, z_hi = back_lo - 1.5, back_up + 1.5
+    for name, x in (("W2_HDMI", hx), ("W3_USB_power", ux)):
+        items.append(("Hinge_passage_" + name, box([x - HINGE_PASSAGE_W / 2, HINGE_Y - HINGE_MANDREL_R - 1.0, z_lo],
+                                                   [x + HINGE_PASSAGE_W / 2, HINGE_Y + HINGE_MANDREL_R + 1.0, z_hi])))
 
     occ = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
     comp = occ.component
@@ -153,10 +177,17 @@ def run(context):
     black = des.appearances.itemByName("D2K_glass_black")
     metal = des.appearances.itemByName("D2K_connector_metal")
     grey = des.appearances.itemByName("D2K_cable_grey")
+    keepout = des.appearances.itemByName("D2K_active_area")
     for b in comp.bRepBodies:
-        b.appearance = (grey if "_ribbon_" in b.name else metal if b.name.endswith("_plug") else black) or b.appearance
+        if b.name.startswith("Hinge_passage_"):
+            b.appearance = keepout or b.appearance
+            b.opacity = 0.25
+        else:
+            b.appearance = (grey if "_ribbon_" in b.name else metal if b.name.endswith("_plug") else black) or b.appearance
 
-    report.append("W2 HDMI ribbon centreline %.0f mm, W3 USB ribbon %.0f mm (plus ~15 mm in the clips)" % (hd_len, us_len))
+    for label, length in (("W2 HDMI", hd_len), ("W3 USB", us_len)):
+        report.append("%s ribbon: route %.0f + hinge wrap/slack %.0f + clips ~15 = %.0f mm to order" % (
+            label, length, HINGE_ALLOWANCE, length + HINGE_ALLOWANCE + 15))
     ov = overlap(hdmi_a, micro_b)
     report.append("5in adapters HDMI A vs micro B overlap (x, y, z mm): %.2f %.2f %.2f -> %s" % (
         ov[0], ov[1], ov[2], "COLLIDE" if min(ov) > 0 else "clear"))

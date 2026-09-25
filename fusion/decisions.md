@@ -4,6 +4,17 @@ Newest first. Each entry: the decision, why, and what it affects. Project-level
 decisions (compute, screens, roadmap) live in the Notion workspace; they are
 repeated here only where they drive the Fusion work.
 
+## 2026-09-25 — Flat ribbons cross the hinge in two separate passages
+
+- **Decision:** W2 (HDMI) crosses the hinge near one end, W3 (USB touch +
+  5in power, later joined by the speaker wires) near the other, each in a
+  14 mm passage with a ≥ 6 mm winding radius and ~39 mm of wrap + slack.
+- **Why:** user reminder that the ribbons will pass through the clamshell
+  hinge; Notion rule of HDMI alone on one side, power + audio on the other;
+  a flex that moves at every opening needs a large bend radius.
+- **Affects:** ribbon lengths to order (30 cm HDMI, 50 cm USB, plus spares),
+  constraints.md "Ribbons through the hinge", open questions Q16/Q17.
+
 ## 2026-09-25 — Flat-cable candidate for W2/W3: Adafruit DIY USB/HDMI parts
 
 - **Decision:** model W2 (HDMI) and W3 (USB touch) with Adafruit's modular
