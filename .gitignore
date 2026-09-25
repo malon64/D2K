@@ -48,3 +48,6 @@
 .cache/
 Thumbs.db
 Desktop.ini
+
+# Fusion source assets (large meshes/STEP, redistribution terms unknown)
+/fusion/assets/local/
