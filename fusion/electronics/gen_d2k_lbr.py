@@ -17,15 +17,17 @@ GRID = 2.54  # 0.1 inch, EAGLE's default schematic grid
 # ---------------------------------------------------------------- pinouts ---
 # Each connector: list of (connector pin number, signal name, EAGLE direction).
 # Signal names are shared between both ends of a cable so nets read the same.
+# List order is the symbol's row order: both ends of a cable use the same
+# order so the schematic draws each cable as straight wires.
 
-MICRO_HDMI_D = [  # HDMI type D receptacle (Raspberry Pi 5 HDMI0/HDMI1)
-    (1, "HPD", "pas"), (2, "UTILITY", "pas"),
+MICRO_HDMI_D = [  # HDMI type D receptacle (Raspberry Pi 5 HDMI0/HDMI1), rows in type A order
     (3, "TMDS_D2+", "pas"), (4, "TMDS_D2_SH", "pas"), (5, "TMDS_D2-", "pas"),
     (6, "TMDS_D1+", "pas"), (7, "TMDS_D1_SH", "pas"), (8, "TMDS_D1-", "pas"),
     (9, "TMDS_D0+", "pas"), (10, "TMDS_D0_SH", "pas"), (11, "TMDS_D0-", "pas"),
     (12, "TMDS_CLK+", "pas"), (13, "TMDS_CLK_SH", "pas"), (14, "TMDS_CLK-", "pas"),
-    (15, "CEC", "pas"), (16, "DDC_GND", "pas"), (17, "DDC_SCL", "pas"),
-    (18, "DDC_SDA", "pas"), (19, "+5V", "pas"),
+    (15, "CEC", "pas"), (2, "UTILITY", "pas"), (17, "DDC_SCL", "pas"),
+    (18, "DDC_SDA", "pas"), (16, "DDC_GND", "pas"), (19, "+5V", "pas"),
+    (1, "HPD", "pas"),
 ]
 
 HDMI_A = [  # HDMI type A receptacle (Waveshare 5inch HDMI LCD (H) "Display")
@@ -66,9 +68,9 @@ GPIO_40 = [
 USB2_A = [(1, "VBUS", "pas"), (2, "D-", "pas"), (3, "D+", "pas"), (4, "GND", "pas")]
 USB3_A = USB2_A + [(5, "SSRX-", "pas"), (6, "SSRX+", "pas"), (7, "GND_DRAIN", "pas"),
                    (8, "SSTX-", "pas"), (9, "SSTX+", "pas")]
-USB_C_SINK = [("A4/A9/B4/B9", "VBUS", "pas"), ("A5", "CC1", "pas"), ("B5", "CC2", "pas"),
-              ("A1/A12/B1/B12", "GND", "pas")]
-MICRO_B = [(1, "VBUS", "pas"), (2, "D-", "pas"), (3, "D+", "pas"), (4, "ID", "pas"), (5, "GND", "pas")]
+USB_C_SINK = [("A4", "VBUS", "pas"), ("A5", "CC1", "pas"), ("A1", "GND", "pas"),  # VBUS also A9/B4/B9,
+              ("B5", "CC2", "pas")]                                                  # GND also A12/B1/B12
+MICRO_B = [(1, "VBUS", "pas"), (2, "D-", "pas"), (3, "D+", "pas"), (5, "GND", "pas"), (4, "ID", "pas")]
 MICRO_B_POWER = [(1, "VBUS", "pas"), (5, "GND", "pas")]
 FAN_4 = [(1, "5V", "pas"), (2, "PWM", "pas"), (3, "GND", "pas"), (4, "TACH", "pas")]
 
@@ -91,7 +93,7 @@ DEVICES = [
             "VERIFY": "MIPI_22 IO0/IO1 roles and FAN pin order are from the generic RPi pinout, check before wiring",
         },
         "gates": [
-            ("PWR", "RPI5_USBC_PWR", "USB-C power in (J?)", USB_C_SINK, "L"),
+            ("PWR", "RPI5_USBC_PWR", "USB-C power in", USB_C_SINK, "L"),
             ("HDMI0", "HDMI_D", "micro-HDMI", MICRO_HDMI_D, "R"),
             ("HDMI1", "HDMI_D", "micro-HDMI", MICRO_HDMI_D, "R"),
             ("DISP0", "MIPI_22", "CAM/DISP 22p", MIPI_22, "R"),
@@ -168,7 +170,12 @@ def fmt(v):
     return f"{v:.2f}".rstrip("0").rstrip(".")
 
 
-def symbol_xml(name, title, pins, side):
+def symbol_layout(pins, side):
+    """Split pins into left/right columns and size the box.
+
+    Pin connection points: left pins at (-5.08, -GRID*(i+1)), right pins at
+    (width + 5.08, -GRID*(i+1)), relative to the symbol origin.
+    """
     if side == "LR":  # split evenly (40-pin header: odd pins left, even right)
         left = [p for p in pins if int(p[0]) % 2 == 1]
         right = [p for p in pins if int(p[0]) % 2 == 0]
@@ -182,7 +189,11 @@ def symbol_xml(name, title, pins, side):
     longest = max(len(p[1].split("@")[0]) for p in pins)
     sides = 2 if left and right else 1
     width = GRID * max(8, math.ceil((longest * sides * 1.6 + 6) / GRID))
-    rows = max(len(left), len(right))
+    return left, right, width, max(len(left), len(right))
+
+
+def symbol_xml(name, title, pins, side):
+    left, right, width, rows = symbol_layout(pins, side)
     top, bottom = GRID, -GRID * rows - GRID
     out = [f'<symbol name="{name}">']
     for x1, y1, x2, y2 in [(0, top, width, top), (width, top, width, bottom),
@@ -191,10 +202,16 @@ def symbol_xml(name, title, pins, side):
     out.append(f'<text x="0" y="{fmt(top + 1.27)}" size="1.778" layer="95">&gt;NAME</text>')
     out.append(f'<text x="0" y="{fmt(bottom - 2.54)}" size="1.778" layer="96">&gt;VALUE</text>')
     out.append(f'<text x="{fmt(width / 2)}" y="{fmt(top - 1.9)}" size="1.27" layer="97" align="center">{escape(title)}</text>')
-    for i, (_, sig, d) in enumerate(left):
-        out.append(f'<pin name="{escape(sig)}" x="{fmt(-5.08)}" y="{fmt(-GRID * (i + 1))}" length="middle" direction="{d}"/>')
-    for i, (_, sig, d) in enumerate(right):
-        out.append(f'<pin name="{escape(sig)}" x="{fmt(width + 5.08)}" y="{fmt(-GRID * (i + 1))}" length="middle" direction="{d}" rot="R180"/>')
+    # Symbol-only devices have no pads, so the connector pin number is drawn
+    # as text on each pin line: that is what the bench wiring is done by.
+    for i, (num, sig, d) in enumerate(left):
+        y = -GRID * (i + 1)
+        out.append(f'<pin name="{escape(sig)}" x="{fmt(-5.08)}" y="{fmt(y)}" length="middle" direction="{d}"/>')
+        out.append(f'<text x="-2.54" y="{fmt(y + 0.3)}" size="1.016" layer="97" align="bottom-center">{escape(str(num))}</text>')
+    for i, (num, sig, d) in enumerate(right):
+        y = -GRID * (i + 1)
+        out.append(f'<pin name="{escape(sig)}" x="{fmt(width + 5.08)}" y="{fmt(y)}" length="middle" direction="{d}" rot="R180"/>')
+        out.append(f'<text x="{fmt(width + 2.54)}" y="{fmt(y + 0.3)}" size="1.016" layer="97" align="bottom-center">{escape(str(num))}</text>')
     out.append("</symbol>")
     return "\n".join(out)
 
@@ -207,46 +224,73 @@ def pin_table(gates):
     return "<br>".join(rows)
 
 
-def build():
-    symbols, seen = [], {}
+def gate_symbols():
+    """Map (device, gate) -> (symbol name, title, pins, side).
+
+    The same connector drawn facing the other way (Pi end vs screen end) gets
+    its own symbol, suffixed with its side.
+    """
+    seen, out = {}, {}
+    for dev in DEVICES:
+        for gname, sname, title, pins, side in dev["gates"]:
+            if seen.get(sname, side) != side:
+                sname = f"{sname}_{side}"
+            seen.setdefault(sname, side)
+            out[(dev["name"], gname)] = (sname, title, pins, side)
+    return out
+
+
+LAYERS_XML = "\n".join(  # Pins (93) hidden: its direction markers clutter the connector rows
+    f'<layer number="{n}" name="{nm}" color="{c}" fill="1" visible="{"no" if n == 93 else "yes"}" active="yes"/>'
+    for n, nm, c in [(91, "Nets", 2), (92, "Busses", 1), (93, "Pins", 2), (94, "Symbols", 4),
+                     (95, "Names", 7), (96, "Values", 7), (97, "Info", 7), (98, "Guide", 6)])
+
+HEADER_XML = (
+    '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE eagle SYSTEM "eagle.dtd">\n'
+    '<eagle version="9.6.2">\n<drawing>\n<settings>\n<setting alwaysvectorfont="no"/>\n'
+    '<setting verticaltext="up"/>\n</settings>\n'
+    '<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" '
+    'altdistance="0.01" altunitdist="inch" altunit="inch"/>\n'
+    f"<layers>\n{LAYERS_XML}\n</layers>\n")
+
+
+def library_xml(name=None):
+    """The <library> element; name is set when embedded in a schematic."""
+    gsyms = gate_symbols()
+    symbols, done = [], set()
+    for sname, title, pins, side in gsyms.values():
+        if sname not in done:
+            done.add(sname)
+            symbols.append(symbol_xml(sname, title, pins, side))
     devicesets = []
     for dev in DEVICES:
         gates_xml = []
-        for gi, (gname, sname, title, pins, side) in enumerate(dev["gates"]):
-            # Same connector drawn facing the other way (Pi end vs screen end) gets its own symbol
-            if seen.get(sname, side) != side:
-                sname = f"{sname}_{side}"
-            if sname not in seen:
-                seen[sname] = side
-                symbols.append(symbol_xml(sname, title, pins, side))
+        for gi, (gname, *_rest) in enumerate(dev["gates"]):
+            sname = gsyms[(dev["name"], gname)][0]
             gates_xml.append(f'<gate name="{gname}" symbol="{sname}" x="{fmt(gi * 50.8)}" y="0" addlevel="next"/>')
         attrs = "".join(f'<attribute name="{k}" value="{escape(v, {chr(34): "&quot;"})}"/>'
                         for k, v in dev["attrs"].items())
         desc = escape(f"<b>{dev['desc']}</b><br><br>Connector pin = signal:<br>") + escape(pin_table(dev["gates"]))
         devicesets.append(
-            f'<deviceset name="{dev["name"]}" prefix="{dev["prefix"]}">\n'
+            f'<deviceset name="{dev["name"]}" prefix="{dev["prefix"]}" uservalue="yes">\n'
             f"<description>{desc}</description>\n"
             f"<gates>\n" + "\n".join(gates_xml) + "\n</gates>\n"
             f'<devices>\n<device name="">\n<technologies>\n<technology name="">{attrs}</technology>\n'
             f"</technologies>\n</device>\n</devices>\n</deviceset>"
         )
-    layers = [(91, "Nets", 2), (92, "Busses", 1), (93, "Pins", 2), (94, "Symbols", 4),
-              (95, "Names", 7), (96, "Values", 7), (97, "Info", 7), (98, "Guide", 6)]
-    layers_xml = "\n".join(f'<layer number="{n}" name="{nm}" color="{c}" fill="1" visible="yes" active="yes"/>'
-                           for n, nm, c in layers)
     lib_desc = escape("<b>D2K V1 modules</b><br>Raspberry Pi 5, Active Cooler, Waveshare 5inch HDMI LCD (H), "
                       "Waveshare 4-DSI-TOUCH-A, 27 W USB-C PSU. Symbol-only devices for the system "
                       "interconnect schematic. Generated by gen_d2k_lbr.py.")
+    open_tag = f'<library name="{name}">' if name else "<library>"
     return (
-        '<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE eagle SYSTEM "eagle.dtd">\n'
-        '<eagle version="9.6.2">\n<drawing>\n<settings>\n<setting alwaysvectorfont="no"/>\n'
-        '<setting verticaltext="up"/>\n</settings>\n'
-        '<grid distance="0.1" unitdist="inch" unit="inch" style="lines" multiple="1" display="no" '
-        'altdistance="0.01" altunitdist="inch" altunit="inch"/>\n'
-        f"<layers>\n{layers_xml}\n</layers>\n<library>\n<description>{lib_desc}</description>\n"
+        f"{open_tag}\n<description>{lib_desc}</description>\n"
         "<packages>\n</packages>\n<symbols>\n" + "\n".join(symbols) + "\n</symbols>\n"
-        "<devicesets>\n" + "\n".join(devicesets) + "\n</devicesets>\n</library>\n</drawing>\n</eagle>\n"
+        "<devicesets>\n" + "\n".join(devicesets) + "\n</devicesets>\n</library>\n"
     )
+
+
+def build():
+    return HEADER_XML + library_xml() + "</drawing>\n</eagle>\n"
 
 
 if __name__ == "__main__":

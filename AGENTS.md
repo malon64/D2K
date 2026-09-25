@@ -79,7 +79,7 @@ in a new `docs/<board>-struggles.md`.
 | `docs/linux-struggles.md` | Linux-generic porting notes. |
 | `docs/pegasus-development.md` | Theme development notes. |
 | `library/` | **Private, git-ignored** ROMs, art and metadata. Never commit it. |
-| `fusion/` | Autodesk Fusion work (Fusion project **D2K**): build scripts run through the Fusion MCP, the generated electronics library, and the decision / open-question / wiring / constraint docs. **Read `fusion/README.md` before touching Fusion** (the phase 1 design can crash it). |
+| `fusion/` | Autodesk Fusion work (Fusion project **D2K**): build scripts run through the Fusion MCP, the generated electronics library, and the decision / open-question / wiring / constraint docs. **Read `fusion/README.md` before touching Fusion** (one small script at a time: heavy designs and uploads stall it). |
 
 ## Raspberry Pi access
 

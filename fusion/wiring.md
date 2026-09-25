@@ -2,8 +2,10 @@
 
 Scope: Raspberry Pi 5 + Active Cooler, Waveshare 5inch HDMI LCD (H) (upper
 screen), Waveshare 4-DSI-TOUCH-A (lower touch screen), Raspberry Pi 27 W USB-C
-supply on the mains. Pinouts are in `electronics/gen_d2k_lbr.py`; device
-references below follow `D2K.flbr`.
+supply on the mains. The schematic is the Fusion Electronics design `D2K_V1`
+(source `electronics/D2K_V1.sch`), with the same W1–W6 references; pinouts are
+in `electronics/gen_d2k_lbr.py`. Parts: PS1 supply, U1 Pi 5, LCD1 5in, LCD2
+4in, M1 cooler.
 
 ## Connections
 
@@ -13,7 +15,7 @@ references below follow `D2K.flbr`.
 | W2 | Pi 5 `HDMI0` (micro-HDMI, next to USB-C) | 5in (H) `HDMI` (type A, "Display") | micro-HDMI (D) to HDMI (A) | Video 800×480 @ 60 Hz + HDMI audio (to the 5in jack) |
 | W3 | Pi 5 `USB2_0` (USB-A) | 5in (H) `TOUCH` (micro-USB "Touch") | USB-A to micro-B **data** cable | Touch (USB HID) and the screen's power, about 400 mA |
 | W4 | Pi 5 `DISP1` (22-pin, CAM/DISP 1) | 4in `DSI` (22-pin) | FFC 22-pin 0.5 mm 200 mm **reverse** (supplied) | 2 or 4 DSI lanes, touch I²C (Goodix 0x14, i2c-10), 3V3 |
-| W5 | Pi 5 `GPIO` pin 2 or 4 (5 V) + pin 6 (GND) | 4in `PWR` (2-pin) | Supplied 2-wire lead (red 5 V, black GND) | Backlight/panel 5 V, 180 mA typical |
+| W5 | Pi 5 `GPIO` pin 4 (5 V) + pin 6 (GND) | 4in `PWR` (2-pin) | Supplied 2-wire lead (red 5 V, black GND) | Backlight/panel 5 V, 180 mA typical |
 | W6 | Active Cooler lead | Pi 5 `FAN` (4-pin JST-SH) | Captive fan lead | 5 V, PWM, tach |
 | — | 5in (H) `AUDIO` 3.5 mm jack | Headset | — | HDMI audio (V1 sound path, as on the bench today) |
 
@@ -29,8 +31,8 @@ the upper role.
 
 ## Wiring warnings
 
-1. **The GPIO 5 V pins are not fused.** The 4in power lead must go red → pin 2
-   or 4, black → pin 6. One pin off puts 5 V onto pin 1 (3V3) or a GPIO
+1. **The GPIO 5 V pins are not fused.** The 4in power lead must go red → pin 4,
+   black → pin 6. One pin off puts 5 V onto pin 1 (3V3) or a GPIO
    (pin 3), which can destroy the SoC. Pin 1 is at the header end farthest from
    the USB ports; pins 2/4/6 are the outer row at that end. Check with the Pi
    unplugged.
@@ -55,7 +57,9 @@ the upper role.
 7. **Fan lead:** the Active Cooler connector is small and keyed; push it
    straight and fully down, stop on any resistance (Raspberry Pi warning). The
    cooler is not meant to be removed once clipped on.
-8. **FFC and HDMI routing:** do not fold the FFC sharply over the Pi's edge.
-   Mounted on the 4in back, the Pi's micro-HDMI and USB-C face the lower edge
-   of the screen. Leave room for the plug bodies and the cable bend
+8. **FFC and HDMI routing:** do not fold the FFC sharply over the Pi's edge;
+   with the Active Cooler fitted it has to arch over the cooler to reach
+   DISP1. Mounted on the 4in back, the Pi's micro-HDMI and USB-C face the lower
+   edge of the screen. Leave room for the plug bodies and the cable bends: the
+   3D keep-outs are in `D2K_Electronics_V1` / `Cables_V1_stock`
    ([constraints.md](constraints.md)).

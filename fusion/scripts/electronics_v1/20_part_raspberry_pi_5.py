@@ -96,7 +96,9 @@ def run(context):
         ("Fan_header_4p", box(64.6, 67.6, 47.0, 53.0, 1.6, 5.8)),
         ("SoC_BCM2712", box(24.5, 41.5, 14.7, 31.0, 1.6, 3.0)),
         # Active Cooler: 63.5 x 42.5 footprint, heights above the PCB estimated
-        ("Cooler_base", box(0.9, 64.4, 6.5, 49.0, 3.2, 5.2)),
+        # Base plate stops under the fan: the MIPI connectors stay exposed (product photo)
+        ("Cooler_base", box(0.9, 34.4, 6.5, 49.0, 3.2, 5.2)),
+        ("Cooler_base_under_fan", box(34.4, 64.4, 19.0, 49.0, 3.2, 5.2)),
         ("Cooler_fins", box(0.9, 34.4, 6.5, 49.0, 5.2, 14.9)),
         ("Cooler_fan_30x30", box(34.4, 64.4, 19.0, 49.0, 5.2, 14.9)),
     ]

@@ -79,7 +79,8 @@ def run(context):
     items += [
         ("Adapter_PCB", box(79.1, 93.1, 12.55, 52.55, -3.0, 0)),
         ("Conn_DSI_22p_0.5mm", box(79.6, 84.0, 16.5, 34.0, -4.2, -3.0)),
-        ("Conn_Power_2p_5V_GND", box(80.0, 86.0, 44.5, 50.5, -7.5, -3.0)),
+        # Must stay under the Pi PCB, which rests on the 5 mm standoffs (Z = -5)
+        ("Conn_Power_2p_5V_GND", box(80.0, 86.0, 44.5, 50.5, -4.9, -3.0)),
     ]
     add_bodies(c, items)
     print(COMP_NAME, "bodies", c.bRepBodies.count)

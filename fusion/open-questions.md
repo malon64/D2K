@@ -7,7 +7,7 @@ model, doc), then move it to **Resolved** at the bottom.
 
 | ID | Item | Why it matters | How to get it | Model value now |
 | --- | --- | --- | --- | --- |
-| M1 | 5in (H) total thickness and layer stack | Upper shell height (phase 1 has 12 mm) | Calipers: glass to the tallest rear part (HDMI A socket) | ~13.6 mm est. |
+| M1 | 5in (H) total thickness and layer stack | Upper shell height | Calipers: glass to the tallest rear part (HDMI A socket) | ~13.6 mm est. |
 | M2 | 5in (H) mounting hole diameter and tab thickness | Screw size and bosses in the upper shell | Calipers | ø3.2, 1.6 mm est. |
 | M3 | 5in (H) port positions and heights | Plug clearance in the upper shell | Calipers from the glass edge | Scaled from the drawing |
 | M4 | 4in DSI boss heights (corner / inner) and adapter board height | Stack height, Pi standoff length | Calipers once received | 2.1 / 5.0 / 3.0 mm est. |
@@ -15,6 +15,7 @@ model, doc), then move it to **Resolved** at the bottom.
 | M6 | Active Cooler height above the Pi PCB | Lower stack and airflow | Calipers once fitted | 13.3 fins / 15.3 pins est. |
 | M7 | Pi 5 connector heights (USB stack, RJ45, micro-HDMI) | Lower stack; USB-A/RJ45 may be the tallest parts | Calipers or the official STEP in Fusion | 15.6 / 13.5 / 3.4 mm est. |
 | M8 | Current draw: 4in backlight at full brightness, 5in at full brightness, Pi under emulation | Power budget for the future battery | USB power meter on the bench | 180 mA / 400 mA typical only |
+| M9 | Real bench cables: plug overmold W × H × L outside the port, cable diameter, tightest comfortable bend radius (HDMI, USB-A/micro-B, PSU USB-C), FFC length/width, 4in lead length | Stock-cable keep-outs in `Cables_V1_stock`, baseline for the compaction | Calipers + bend the cable by hand around a round object | Typical values (constraints.md table) |
 
 ## Open questions
 
@@ -29,9 +30,8 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q7 | Keep the Pi on the screen back, or mount it separately in the lower shell? | The screen-back stack is ~28 mm; see constraints. |
 | Q8 | HDMI through the hinge: flat HDMI flex/cable part, and right-angle adapters at both ends | Notion P1 purchase; defines the upper shell edge space. |
 | Q9 | Which USB-C supply is used on the bench (official 27 W or other)? | A non-5 A supply caps USB at 600 mA. |
-| Q10 | Should the phase 1 layout reference `D2K_Electronics_V1` components (light) instead of the Pi 5 STEP? | Would make `D2K_phase1` open faster; needs the user's go-ahead because it edits the master layout. |
 | Q11 | Does the 5in (H) run reliably from the Touch port alone (no DC), with the backlight at full brightness? | Bench powers it that way today; confirm there is no brownout. |
-| Q12 | Target console width? | Notion *Architecture* says ~140–160 mm, *Mécanique* studies 180–190 mm, phase 1 uses 165 mm. With the 108.3 mm 4in plus D-pad/Circle Pad (~26 mm) and walls on each side, below ~175 mm the controls don't fit beside the screen. Decide with the 1:1 mock-up. |
+| Q12 | Console width and thickness? | Not fixed (user): an output of the electronics optimisation and placement. Notion pages disagree (~140–160 vs ~180–190 mm). With the 108.3 mm 4in plus D-pad/Circle Pad (~26 mm) and walls on each side, the controls need ≳ 170 mm if they sit beside the screen. Check with the 1:1 mock-up. |
 | Q13 | Keep the Pi 5 USB-A/RJ45 connectors in the console, remove them, or move to a Compute Module 5 later? | They set the lower stack height (15.6 / 13.5 mm). See roadmap step 4. |
 
 ## Resolved
@@ -40,3 +40,5 @@ model, doc), then move it to **Resolved** at the bottom.
 | --- | --- | --- | --- |
 | R1 | The upper screen is the **5inch HDMI LCD (H)** (USB touch, audio jack), not another 5in variant. | 2026-09-25 | parts.md, `30_part_waveshare_5in_hdmi_h.py` |
 | R2 | V1 electronics scope = Pi 5 + both Waveshare screens on mains power; ESP32, audio and battery later. | 2026-09-25 | decisions.md |
+| R3 | (was Q10) Point the phase 1 layout at the light models? Obsolete: the user removed `D2K_phase1`. | 2026-09-25 | decisions.md |
+| R4 | 4in power lead pins: pin 4 (5V) + pin 6 (GND). | 2026-09-25 | wiring.md, `D2K_V1` |

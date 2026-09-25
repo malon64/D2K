@@ -29,7 +29,9 @@ estimated (to be measured on the real part). Coordinates are those of the
 ## Raspberry Pi Active Cooler SC1148 (ordered)
 
 - 63.5 × 42.5 mm footprint, 13.7 mm tall; fan section 30 × 30 mm; two
-  spring-loaded push pins on opposite corners **[drawing]**.
+  spring-loaded push pins on opposite corners **[drawing]**. The base plate
+  does not extend under the lower-right corner: the Pi's MIPI connectors stay
+  exposed **[photo]**.
 - 5 V from the Pi fan header, PWM + tach, 8000 rpm max, 1.09 CFM **[spec]**.
 - Height above the Pi PCB (base on the SoC) **[est]**: top of fins 13.3 mm,
   push pins 15.3 mm.
