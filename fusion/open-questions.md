@@ -15,6 +15,8 @@ model, doc), then move it to **Resolved** at the bottom.
 | M6 | Active Cooler height above the Pi PCB | Lower stack and airflow | Calipers once fitted | 13.3 fins / 15.3 pins est. |
 | M7 | Pi 5 connector heights (USB stack, RJ45, micro-HDMI) | Lower stack; USB-A/RJ45 may be the tallest parts | Calipers or the official STEP in Fusion | 15.6 / 13.5 / 3.4 mm est. |
 | M8 | Current draw: 4in backlight at full brightness, 5in at full brightness, Pi under emulation | Power budget for the future battery | USB power meter on the bench | 180 mA / 400 mA typical only |
+| M10 | WM8960 board current at full volume on both speakers (from the Pi 3V3 pin) | Its amplifier runs from the Pi's 3.3 V rail | USB power meter / series ammeter on the 3V3 jumper | ~0.3 A peak est. |
+| M11 | Circle Pad pinout and supply (VCC, GND, X, Y) and its flex contact pitch | Wiring to the ESP32 ADC pins; breakout needed | Multimeter on the module; calipers on the flex | Assumed VCC/X/Y/GND |
 | M9 | Real bench cables: plug overmold W × H × L outside the port, cable diameter, tightest comfortable bend radius (HDMI, USB-A/micro-B, PSU USB-C), FFC length/width, 4in lead length | Stock-cable keep-outs in `Cables_V1_stock`, baseline for the compaction | Calipers + bend the cable by hand around a round object | Typical values (constraints.md table) |
 
 ## Open questions
@@ -37,6 +39,10 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q15 | Ribbons behind the boards (+2–3 mm thickness) or beside them (+width)? | Decide in the layout study with the shell width. |
 | Q16 | Do the Adafruit ribbons survive the hinge? | Cycle-test in the printed hinge prototype (thousands of openings, R ≥ 6 mm wrap). Fallback: custom dynamic-flex PCB with the same 20-pin ends. |
 | Q17 | How many ribbon conductors carry VBUS/GND in the Adafruit USB adapters, and is it enough for the 5in (~400 mA, more at full backlight)? | Check the adapter schematics/continuity; otherwise feed the 5in from a separate power pair through the power/audio passage. |
+| Q18 | Exact Linux overlay for the Waveshare WM8960 board on Pi 5 (`wm8960-soundcard` or Waveshare's driver)? | Confirm on the Pi, record in docs/raspberry-pi-struggles.md. |
+| Q19 | Speaker connection: recrimp the PH1.25 leads onto a 4-pin plug for the WM8960 SPK header, or an adapter? | Check the SPK header pitch (likely PH2.0) on the real board. |
+| Q20 | Circle Pad breakout for the breadboard (4-contact flex) | Buy or make a small flex-to-pin adapter once M11 gives the pitch. |
+| Q21 | Is the Pi 3V3 rail fine for the WM8960 speaker amplifier long term, or does the audio need its own 3.3 V regulator (or a 5 V class-D amplifier) in the final power design? | Decide after M10; feeds the power step. |
 
 ## Resolved
 

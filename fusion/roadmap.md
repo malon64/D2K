@@ -35,16 +35,15 @@ tidy enough to be shown, and their size sets the shell size.
 
 ## Step 2 — Controls bench: ESP32-S3-Zero on the MB-102 breadboard
 
-- [ ] ESP32-S3-Zero in the library + pin assignment for 15 buttons, 4 Circle
-      Pad axes (ADC1 pins), USB to the Pi. Check the pin count first.
-- [ ] Breadboard schematic and a 3D breadboard view (MB-102, tact switches,
-      jumper routes) to wire from.
-- [ ] Circle Pad pinout measured (multimeter) and added to the library.
+- [x] ESP32-S3-Zero in the library + pin assignment for 15 buttons, 4 Circle
+      Pad axes (ADC1 pins), USB to the Pi (schematic sheet 2, wiring.md).
+- [ ] 3D breadboard view (MB-102, tact switches, jumper routes) to wire from.
+- [ ] Circle Pad pinout measured (multimeter) and added to the library (M11).
 
 ## Step 3 — Audio and power bench
 
-- [ ] WM8960 board (I²S/I²C on the Pi header) + two 8 Ω speakers in the library
-      and schematic.
+- [x] WM8960 board (I²S/I²C on the Pi header) + two 8 Ω speakers in the library
+      and schematic (sheet 3, wiring.md).
 - [ ] Battery, protection, USB-C charge + power-path, 5 V rail once chosen.
       Warning for the choice: a Pi 5 under emulation load plus two screens can
       draw roughly 12–20 W at peaks; from one 3.7 V cell that is 4–6 A into a

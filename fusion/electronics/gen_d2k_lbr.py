@@ -74,6 +74,36 @@ MICRO_B = [(1, "VBUS", "pas"), (2, "D-", "pas"), (3, "D+", "pas"), (5, "GND", "p
 MICRO_B_POWER = [(1, "VBUS", "pas"), (5, "GND", "pas")]
 FAN_4 = [(1, "5V", "pas"), (2, "PWM", "pas"), (3, "GND", "pas"), (4, "TACH", "pas")]
 
+# Waveshare ESP32-S3-Zero (ESP32-S3FH4R2): castellated rows 15.24 mm apart,
+# numbered L1-L9 / R1-R9 from the USB-C end. The 5V/3V3 pins are NOT named
+# like the Pi rails so EAGLE does not merge them into the Pi's 5V/3V3 nets.
+ESP32_S3_ZERO_MAIN = [
+    ("L1", "5V_IN", "pas"), ("L2", "GND@1", "pwr"), ("L3", "3V3_OUT", "pas"),
+    ("L4", "GPIO1", "io"), ("L5", "GPIO2", "io"), ("L6", "GPIO3", "io"),
+    ("L7", "GPIO4", "io"), ("L8", "GPIO5", "io"), ("L9", "GPIO6", "io"),
+    ("R1", "GPIO43_TX", "io"), ("R2", "GPIO44_RX", "io"), ("R3", "GPIO13", "io"),
+    ("R4", "GPIO12", "io"), ("R5", "GPIO11", "io"), ("R6", "GPIO10", "io"),
+    ("R7", "GPIO9", "io"), ("R8", "GPIO8", "io"), ("R9", "GPIO7", "io"),
+]
+# Solder pads (no header): three on the front next to R9, eight on the back.
+ESP32_S3_ZERO_PADS = [
+    ("F", "GPIO14", "io"), ("F", "GPIO15", "io"), ("F", "GPIO16", "io"),
+    ("B", "GPIO17", "io"), ("B", "GPIO18", "io"), ("B", "GPIO38", "io"), ("B", "GPIO39", "io"),
+    ("B", "GPIO40", "io"), ("B", "GPIO41", "io"), ("B", "GPIO42", "io"), ("B", "GPIO45", "io"),
+]
+USB_C_DEVICE = [("A4", "VBUS", "pas"), ("A7", "D-", "pas"), ("A6", "D+", "pas"), ("A1", "GND", "pas")]
+
+# Waveshare WM8960 Audio Board header P2 (8x2), from the board schematic
+# netlist: 5 = SCL, 7 = SDA (check the silkscreen), 13 = DAC data in
+# (silkscreen TXSDA), 14 = ADC data out (RXSDA), 15/16 = MCLK via jumper P1.
+WM8960_HEADER = [
+    (1, "VCC@1", "pas"), (2, "VCC@2", "pas"), (3, "GND@1", "pas"), (4, "GND@2", "pas"),
+    (5, "SCL", "pas"), (6, "NC@6", "nc"), (7, "SDA", "pas"), (8, "NC@8", "nc"),
+    (9, "CLK@9", "pas"), (10, "CLK@10", "pas"), (11, "WS@11", "pas"), (12, "WS@12", "pas"),
+    (13, "TXSDA_DAC_IN", "pas"), (14, "RXSDA_ADC_OUT", "pas"), (15, "MCLK_RX", "pas"), (16, "MCLK_TX", "pas"),
+]
+WM8960_SPK = [(1, "LP", "pas"), (2, "LN", "pas"), (3, "RN", "pas"), (4, "RP", "pas")]
+
 # ---------------------------------------------------------------- devices ---
 # gates: (gate name, symbol name, symbol title, pin list, pins side)
 
@@ -161,6 +191,67 @@ DEVICES = [
                                                   ("A4", "VBUS", "pas"), ("A5", "CC", "pas"),
                                                   ("A1", "GND", "pas")], "LR2")],
     },
+    {
+        "name": "ESP32_S3_ZERO", "prefix": "U",
+        "desc": "Waveshare ESP32-S3-Zero (ESP32-S3FH4R2, 4 MB flash, 2 MB PSRAM). D2K embedded controller: "
+                "USB HID gamepad to the Pi. 18 x 23.5 mm, 2 x 9 castellated pins 2.54 mm pitch, rows 15.24 mm apart "
+                "(fits a breadboard). On board: WS2812 on GPIO21, BOOT on GPIO0, native USB on GPIO19/20 (USB-C). "
+                "GPIO33-37 used by the PSRAM. ADC1 = GPIO1-10. Strapping: GPIO0, 3, 45, 46.",
+        "attrs": {
+            "MANUFACTURER": "Waveshare", "MPN": "ESP32-S3-Zero",
+            "SUPPLY": "5V pin / USB-C 3.7-6 V, >= 500 mA; 3V3_OUT from the on-board LDO",
+            "LOGIC": "3.3 V, not 5 V tolerant",
+            "DOC": "https://www.waveshare.com/wiki/ESP32-S3-Zero",
+        },
+        "gates": [
+            ("MAIN", "ESP32_S3_ZERO", "ESP32-S3-Zero castellated", ESP32_S3_ZERO_MAIN, "S9"),
+            ("PADS", "ESP32_S3_ZERO_PADS", "Solder pads F=front B=back", ESP32_S3_ZERO_PADS, "R"),
+            ("USB", "USB_C_DEVICE", "USB-C (native USB)", USB_C_DEVICE, "L"),
+        ],
+    },
+    {
+        "name": "TACT_SWITCH_6X6", "prefix": "SW",
+        "desc": "6 x 6 mm through-hole tact switch (bench stand-in for the New 3DS XL membrane buttons). "
+                "Pins 1-2 and 3-4 are joined inside; the switch closes 1/2 to 3/4.",
+        "attrs": {"MPN": "6x6 tact switch", "VERIFY": "Check which pin pairs are joined with a multimeter"},
+        "gates": [("S", "TACT_SWITCH", "6x6 tact", [("1/2", "P1", "pas"), ("3/4", "P2", "pas")], "S1")],
+    },
+    {
+        "name": "CIRCLE_PAD_N3DSXL", "prefix": "JS",
+        "desc": "New 3DS XL Circle Pad module (KasynParts), 2 analog axes on a 4-contact flex. "
+                "PINOUT NOT VERIFIED: identify VCC, GND, X, Y with a multimeter before wiring (Notion).",
+        "attrs": {"SUPPLY": "3.3 V from the ESP32 (ADC full scale ~3.1 V at 11 dB attenuation)",
+                  "VERIFY": "Pin order and supply voltage unknown; needs a 4-contact flex breakout",
+                  "DOC": "https://kasynparts.com/product/original-3d-analog-joystick-module-stick-replacement-for-new-2ds-xl-new-3ds-xl-new-3ds/"},
+        "gates": [("P", "CIRCLE_PAD", "Circle Pad (pinout TBC)",
+                   [(1, "VCC", "pas"), (2, "X", "pas"), (3, "Y", "pas"), (4, "GND", "pas")], "R")],
+    },
+    {
+        "name": "WM8960_AUDIO_BOARD", "prefix": "U",
+        "desc": "Waveshare WM8960 Audio Board (SKU 15019): WM8960 codec, I2C control (0x1A), I2S audio, "
+                "24 MHz crystal as MCLK, 1 W/ch class-D speaker outputs (8 ohm), 3.5 mm headset jack, MEMS mic. "
+                "Runs from 3.3 V only: the speaker supply (SPKVDD) is the same 3.3 V rail.",
+        "attrs": {
+            "MANUFACTURER": "Waveshare", "MPN": "WM8960 Audio Board", "SKU": "15019",
+            "SUPPLY": "3.3 V (logic, codec AND speaker amplifier)",
+            "SPEAKER": "8 ohm, 1 W/ch at 5 V SPKVDD; ~0.4 W/ch at the board's 3.3 V",
+            "I2C_ADDR": "0x1A",
+            "DOC": "https://www.waveshare.com/wiki/WM8960_Audio_Board",
+            "VERIFY": "Header pins 5/7 (SCL/SDA) from the schematic netlist: check the silkscreen",
+        },
+        "gates": [
+            ("HDR", "WM8960_HEADER", "Header P2 8x2", WM8960_HEADER, "LR"),
+            ("SPK", "WM8960_SPK", "SPK J1 4p", WM8960_SPK, "R"),
+        ],
+    },
+    {
+        "name": "SPEAKER_8R_2W", "prefix": "LS",
+        "desc": "Waveshare 2030 Cavity Speaker Type B (SKU 27859): 8 ohm 2 W, 20 x 30 x 6.8 mm, "
+                "2-pin PH1.25 plug on ~120 mm wires (does not mate with the WM8960 board's 4-pin SPK header).",
+        "attrs": {"MANUFACTURER": "Waveshare", "MPN": "2030 Cavity Speaker Type B", "SKU": "27859",
+                  "DOC": "https://www.waveshare.com/8ohm-2w-speaker-b.htm"},
+        "gates": [("S", "SPEAKER", "Speaker 8R PH1.25", [(1, "SPK+", "pas"), (2, "SPK-", "pas")], "L")],
+    },
 ]
 
 # --------------------------------------------------------------- XML output --
@@ -181,6 +272,9 @@ def symbol_layout(pins, side):
         right = [p for p in pins if int(p[0]) % 2 == 0]
     elif side == "LR2":  # PSU: mains in on the left, USB-C out on the right
         left, right = pins[:2], pins[2:]
+    elif side.startswith("S"):  # "S<n>": first n pins on the left, the rest on the right
+        n = int(side[1:])
+        left, right = pins[:n], pins[n:]
     elif side == "L":
         left, right = pins, []
     else:
@@ -279,7 +373,8 @@ def library_xml(name=None):
             f"</technologies>\n</device>\n</devices>\n</deviceset>"
         )
     lib_desc = escape("<b>D2K V1 modules</b><br>Raspberry Pi 5, Active Cooler, Waveshare 5inch HDMI LCD (H), "
-                      "Waveshare 4-DSI-TOUCH-A, 27 W USB-C PSU. Symbol-only devices for the system "
+                      "Waveshare 4-DSI-TOUCH-A, 27 W USB-C PSU, ESP32-S3-Zero, 6x6 tact switch, New 3DS XL "
+                      "Circle Pad, WM8960 Audio Board, 8 ohm speaker. Symbol-only devices for the system "
                       "interconnect schematic. Generated by gen_d2k_lbr.py.")
     open_tag = f'<library name="{name}">' if name else "<library>"
     return (

@@ -4,16 +4,36 @@ Newest first. Each entry: the decision, why, and what it affects. Project-level
 decisions (compute, screens, roadmap) live in the Notion workspace; they are
 repeated here only where they drive the Fusion work.
 
-## 2026-09-25 — Flat ribbons cross the hinge in two separate passages
+## 2026-09-25 — Controls and audio wiring (schematic sheets 2 and 3)
 
-- **Decision:** W2 (HDMI) crosses the hinge near one end, W3 (USB touch +
-  5in power, later joined by the speaker wires) near the other, each in a
-  14 mm passage with a ≥ 6 mm winding radius and ~39 mm of wrap + slack.
-- **Why:** user reminder that the ribbons will pass through the clamshell
-  hinge; Notion rule of HDMI alone on one side, power + audio on the other;
-  a flex that moves at every opening needs a large bend radius.
-- **Affects:** ribbon lengths to order (30 cm HDMI, 50 cm USB, plus spares),
-  constraints.md "Ribbons through the hinge", open questions Q16/Q17.
+- **ESP32-S3-Zero pin plan:** Circle Pads on ADC1 GPIO1–4; the 15 buttons on
+  the header pins GPIO5–9, 11–13 first, then the solder pads GPIO14–18, 38, 39;
+  each button to GND with the internal pull-up. Kept free: GPIO10 (ADC1, for
+  the battery voltage), GPIO40–42 (Hall, vibration, Pi power control),
+  GPIO43/44 (UART0, the future system link to the Pi). GPIO45 avoided
+  (strapping). ESP32 to the Pi over USB (W7) on the Pi's second USB 2.0 port.
+- **Why:** every ADC input needed later (battery) must be on ADC1, so ADC1
+  pins are not all spent on buttons; header pins first keeps most wiring on
+  the breadboard; the free pins match the Notion ESP32 duties.
+- **Audio:** WM8960 board on the Pi's I2C1 (GPIO2/3) and I2S (GPIO18–21) with
+  eight jumper wires (W8), MCLK jumper open (on-board 24 MHz crystal), the two
+  speakers on its bridged outputs (W9). Power from the Pi 3V3 pin, because
+  the board is 3.3 V only; its current is to be measured (M10, Q21).
+- **Drawing:** sheets 2 and 3 connect by net labels; the Pi's audio pins are
+  labelled on sheet 1 next to the W5 power lead.
+
+## 2026-09-25 — Hinge crossing: rules noted, not modelled yet
+
+- **Decision (user):** do not put the hinge calculation in the model yet;
+  keep it as a side note. The rules for later: W2 (HDMI) crosses near one end,
+  W3 (USB touch + 5in power, later the speaker wires) near the other, each in
+  a 14 mm passage with a ≥ 6 mm winding radius and ~39 mm of wrap + slack per
+  ribbon.
+- **Why:** the ribbons will pass through the clamshell hinge (user reminder);
+  Notion rule of HDMI alone on one side, power + audio on the other; a flex
+  that moves at every opening needs a large bend radius.
+- **Affects:** ribbon lengths to order include the allowance (30 cm HDMI,
+  50 cm USB, plus spares); constraints.md "Ribbons through the hinge"; Q16/Q17.
 
 ## 2026-09-25 — Flat-cable candidate for W2/W3: Adafruit DIY USB/HDMI parts
 

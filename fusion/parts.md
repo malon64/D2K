@@ -75,6 +75,36 @@ estimated (to be measured on the real part). Coordinates are those of the
 - Sources: <https://www.waveshare.com/wiki/5inch_HDMI_LCD_(H)>,
   <https://www.waveshare.com/5inch-hdmi-lcd-h.htm>
 
+## Waveshare ESP32-S3-Zero — embedded controller (ordered)
+
+- 18 × 23.5 mm, 2 × 9 castellated pins at 2.54 mm, rows 15.24 mm apart
+  (straddles a breadboard); solder pads GPIO14–16 (front) and GPIO17, 18,
+  38–42, 45 (back, ø1.43 mm) **[drawing]**.
+- ESP32-S3FH4R2 (4 MB flash, 2 MB PSRAM on GPIO33–37), native USB on the
+  USB-C (GPIO19/20), WS2812 on GPIO21, BOOT on GPIO0; ADC1 = GPIO1–10;
+  3.3 V logic **[spec]**.
+- Power: 5V pin or USB-C, 3.7–6 V, ≥ 500 mA **[spec]**.
+- Source: <https://www.waveshare.com/wiki/ESP32-S3-Zero>
+
+## Waveshare WM8960 Audio Board (SKU 15019) — audio (ordered)
+
+- WM8960 codec: I²C control (0x1A), I²S audio, 24 MHz crystal as MCLK,
+  headphone 16 Ω 40 mW, speakers 8 Ω 1 W/ch (bridged class-D), MEMS mic,
+  3.5 mm 4-pole jack **[spec]**.
+- **3.3 V only**, and the speaker supply (SPKVDD) is tied to that 3.3 V: about
+  0.4 W per channel in practice **[schematic]**.
+- Header P2 8 × 2 at 2.54 mm; SPK connector J1 4-pin (LP, LN, RN, RP); MCLK
+  jumper P1 **[schematic]**. Header pin order in `gen_d2k_lbr.py`.
+- Sources: <https://www.waveshare.com/wiki/WM8960_Audio_Board> (user manual,
+  schematic)
+
+## Waveshare 2030 Cavity Speaker Type B (SKU 27859) × 2 — speakers (ordered)
+
+- 8 Ω, 2 W, 20 × 30 × 6.8 mm, 2-pin **PH1.25** plug on ~120 mm wires **[spec]**.
+- The plug does not mate with the WM8960 board's 4-pin SPK header: needs a
+  recrimped 4-pin plug or an adapter.
+- Source: <https://www.waveshare.com/8ohm-2w-speaker-b.htm>
+
 ## Flat cables — proposed order (Adafruit DIY USB/HDMI cable parts)
 
 One system for both cables: small plug adapters with a flex-cable clip, joined

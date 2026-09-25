@@ -98,19 +98,20 @@ folded flat behind the boards. Measured in the model:
   edge but its plate hangs ~19 mm behind the port: +5.5 mm on the thin upper
   half. The straight adapter was chosen for thickness.
 
-### Ribbons through the hinge
+### Ribbons through the hinge (side note, not modelled yet)
 
 Both flat ribbons (W2 HDMI, W3 USB touch + 5in power) run from the Pi in the
 lower half to the 5in in the upper half, so both cross the clamshell hinge.
-Speaker wires and any other upper-half supply will join them later.
+Speaker wires and any other upper-half supply will join them later. The hinge
+is **not in the model yet** (user, 2026-09-25): these are the rules to apply
+when it is. Script 75 keeps a `HINGE_IN_MODEL` switch (off) that draws the
+passages below.
 
 - **Separate passages** (Notion rule): W2 alone near one end of the hinge,
-  W3 (power + data, later the four speaker wires) near the other. In the model
-  they cross at X ≈ 95 and X ≈ 8 (4in coordinates), inside the screen width,
-  so the hinge ends stay free for L1/L2/R1/R2.
-- **Passage size:** 10 mm ribbon + clearance = 14 mm wide per passage (keep-out
-  boxes `Hinge_passage_*` in `Cables_V1_flat`), more when the speaker wires
-  share W3's passage.
+  W3 (power + data, later the four speaker wires) near the other, both inside
+  the screen width so the hinge ends stay free for L1/L2/R1/R2.
+- **Passage size:** 10 mm ribbon + clearance = 14 mm wide per passage, more
+  when the speaker wires share W3's passage.
 - **Dynamic bend:** the hinge flexes the ribbon at every opening. Keep a bend
   radius of at least ~6 mm (≈ 25–100 × the ~0.2 mm ribbon thickness, IPC-2223
   guidance for dynamic flex): wind the ribbon round a mandrel / hollow barrel
