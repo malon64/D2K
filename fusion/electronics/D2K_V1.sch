@@ -1600,9 +1600,9 @@
 </net>
 <net name="BTN_DPAD_UP" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO5"/>
-<wire x1="-5.08" y1="-20.32" x2="-15.24" y2="-20.32" width="0.1524" layer="91"/>
-<label x="-15.24" y="-20.32" size="1.778" layer="95" rot="R180"/>
+<pinref part="U2" gate="PADS" pin="GPIO14"/>
+<wire x1="40.64" y1="-53.34" x2="50.8" y2="-53.34" width="0.1524" layer="91"/>
+<label x="50.8" y="-53.34" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW1" gate="S" pin="P1"/>
@@ -1612,9 +1612,9 @@
 </net>
 <net name="BTN_DPAD_DOWN" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO6"/>
-<wire x1="-5.08" y1="-22.86" x2="-15.24" y2="-22.86" width="0.1524" layer="91"/>
-<label x="-15.24" y="-22.86" size="1.778" layer="95" rot="R180"/>
+<pinref part="U2" gate="PADS" pin="GPIO15"/>
+<wire x1="40.64" y1="-55.88" x2="50.8" y2="-55.88" width="0.1524" layer="91"/>
+<label x="50.8" y="-55.88" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW2" gate="S" pin="P1"/>
@@ -1696,9 +1696,9 @@
 </net>
 <net name="BTN_START" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO14"/>
-<wire x1="40.64" y1="-53.34" x2="50.8" y2="-53.34" width="0.1524" layer="91"/>
-<label x="50.8" y="-53.34" size="1.778" layer="95"/>
+<pinref part="U2" gate="PADS" pin="GPIO16"/>
+<wire x1="40.64" y1="-58.42" x2="50.8" y2="-58.42" width="0.1524" layer="91"/>
+<label x="50.8" y="-58.42" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW9" gate="S" pin="P1"/>
@@ -1708,9 +1708,9 @@
 </net>
 <net name="BTN_SELECT" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO15"/>
-<wire x1="40.64" y1="-55.88" x2="50.8" y2="-55.88" width="0.1524" layer="91"/>
-<label x="50.8" y="-55.88" size="1.778" layer="95"/>
+<pinref part="U2" gate="PADS" pin="GPIO17"/>
+<wire x1="40.64" y1="-60.96" x2="50.8" y2="-60.96" width="0.1524" layer="91"/>
+<label x="50.8" y="-60.96" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW10" gate="S" pin="P1"/>
@@ -1720,9 +1720,9 @@
 </net>
 <net name="BTN_HOME" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO16"/>
-<wire x1="40.64" y1="-58.42" x2="50.8" y2="-58.42" width="0.1524" layer="91"/>
-<label x="50.8" y="-58.42" size="1.778" layer="95"/>
+<pinref part="U2" gate="PADS" pin="GPIO18"/>
+<wire x1="40.64" y1="-63.5" x2="50.8" y2="-63.5" width="0.1524" layer="91"/>
+<label x="50.8" y="-63.5" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW11" gate="S" pin="P1"/>
@@ -1732,9 +1732,9 @@
 </net>
 <net name="BTN_L1" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO17"/>
-<wire x1="40.64" y1="-60.96" x2="50.8" y2="-60.96" width="0.1524" layer="91"/>
-<label x="50.8" y="-60.96" size="1.778" layer="95"/>
+<pinref part="U2" gate="PADS" pin="GPIO38"/>
+<wire x1="40.64" y1="-66.04" x2="50.8" y2="-66.04" width="0.1524" layer="91"/>
+<label x="50.8" y="-66.04" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW12" gate="S" pin="P1"/>
@@ -1744,9 +1744,9 @@
 </net>
 <net name="BTN_R1" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO18"/>
-<wire x1="40.64" y1="-63.5" x2="50.8" y2="-63.5" width="0.1524" layer="91"/>
-<label x="50.8" y="-63.5" size="1.778" layer="95"/>
+<pinref part="U2" gate="PADS" pin="GPIO39"/>
+<wire x1="40.64" y1="-68.58" x2="50.8" y2="-68.58" width="0.1524" layer="91"/>
+<label x="50.8" y="-68.58" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW13" gate="S" pin="P1"/>
@@ -1756,9 +1756,9 @@
 </net>
 <net name="BTN_L2" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO38"/>
-<wire x1="40.64" y1="-66.04" x2="50.8" y2="-66.04" width="0.1524" layer="91"/>
-<label x="50.8" y="-66.04" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO6"/>
+<wire x1="-5.08" y1="-22.86" x2="-15.24" y2="-22.86" width="0.1524" layer="91"/>
+<label x="-15.24" y="-22.86" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW14" gate="S" pin="P1"/>
@@ -1768,9 +1768,9 @@
 </net>
 <net name="BTN_R2" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO39"/>
-<wire x1="40.64" y1="-68.58" x2="50.8" y2="-68.58" width="0.1524" layer="91"/>
-<label x="50.8" y="-68.58" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO5"/>
+<wire x1="-5.08" y1="-20.32" x2="-15.24" y2="-20.32" width="0.1524" layer="91"/>
+<label x="-15.24" y="-20.32" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW15" gate="S" pin="P1"/>

@@ -45,15 +45,17 @@ PARTS = {  # part: (deviceset, value)
 # pins first, then the solder pads. Kept free on purpose: GPIO10 (ADC1, battery
 # voltage later), GPIO40-42 (lid Hall sensor, vibration, Pi power control),
 # GPIO43/44 (UART0: system link to the Pi later). GPIO45 is a strapping pin.
+# Which button sits on which GPIO follows the breadboard layout
+# (gen_breadboard.py): with this order no two jumper wires cross.
 BUTTONS = [  # (switch, net, ESP32 gate, ESP32 pin)
-    ("SW1", "BTN_DPAD_UP", "MAIN", "GPIO5"), ("SW2", "BTN_DPAD_DOWN", "MAIN", "GPIO6"),
+    ("SW1", "BTN_DPAD_UP", "PADS", "GPIO14"), ("SW2", "BTN_DPAD_DOWN", "PADS", "GPIO15"),
     ("SW3", "BTN_DPAD_LEFT", "MAIN", "GPIO7"), ("SW4", "BTN_DPAD_RIGHT", "MAIN", "GPIO8"),
     ("SW5", "BTN_A", "MAIN", "GPIO9"), ("SW6", "BTN_B", "MAIN", "GPIO11"),
     ("SW7", "BTN_X", "MAIN", "GPIO12"), ("SW8", "BTN_Y", "MAIN", "GPIO13"),
-    ("SW9", "BTN_START", "PADS", "GPIO14"), ("SW10", "BTN_SELECT", "PADS", "GPIO15"),
-    ("SW11", "BTN_HOME", "PADS", "GPIO16"), ("SW12", "BTN_L1", "PADS", "GPIO17"),
-    ("SW13", "BTN_R1", "PADS", "GPIO18"), ("SW14", "BTN_L2", "PADS", "GPIO38"),
-    ("SW15", "BTN_R2", "PADS", "GPIO39"),
+    ("SW9", "BTN_START", "PADS", "GPIO16"), ("SW10", "BTN_SELECT", "PADS", "GPIO17"),
+    ("SW11", "BTN_HOME", "PADS", "GPIO18"), ("SW12", "BTN_L1", "PADS", "GPIO38"),
+    ("SW13", "BTN_R1", "PADS", "GPIO39"), ("SW14", "BTN_L2", "MAIN", "GPIO6"),
+    ("SW15", "BTN_R2", "MAIN", "GPIO5"),
 ]
 STICKS = [("JS1", "LSTICK", "GPIO1", "GPIO2"), ("JS2", "RSTICK", "GPIO3", "GPIO4")]
 PARTS.update({sw: ("TACT_SWITCH_6X6", net) for sw, net, _, _ in BUTTONS})

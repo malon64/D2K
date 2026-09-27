@@ -37,7 +37,9 @@ tidy enough to be shown, and their size sets the shell size.
 
 - [x] ESP32-S3-Zero in the library + pin assignment for 15 buttons, 4 Circle
       Pad axes (ADC1 pins), USB to the Pi (schematic sheet 2, wiring.md).
-- [ ] 3D breadboard view (MB-102, tact switches, jumper routes) to wire from.
+- [x] Breadboard view (2D, MB-102, tact switches, every jumper with its holes)
+      plus the Pi GPIO jumpers: `electronics/breadboard_v1.html`, published as
+      "D2K Bench Wiring".
 - [ ] Circle Pad pinout measured (multimeter) and added to the library (M11).
 
 ## Step 3 — Audio and power bench

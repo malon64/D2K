@@ -18,7 +18,7 @@ UI is in French).
 | [wiring.md](wiring.md) | V1 wiring (Pi 5 + two Waveshare screens) and **wiring warnings**. |
 | [constraints.md](constraints.md) | Mechanical, electrical and tooling constraints, and the minimum envelopes set by the parts. |
 | [parts.md](parts.md) | Part specs used in the models: dimensions, electrical data, sources, modelling assumptions. |
-| [electronics/](electronics/) | `gen_d2k_lbr.py` generates `D2K.lbr` (EAGLE 9 library of the V1 modules, uploaded as `D2K.flbr`); `gen_d2k_v1_sch.py` generates `D2K_V1.sch`, the V1 bench interconnect schematic (uploaded as the `D2K_V1` Electronics design). |
+| [electronics/](electronics/) | `gen_d2k_lbr.py` generates `D2K.lbr` (EAGLE 9 library of the V1 modules, uploaded as `D2K.flbr`); `gen_d2k_v1_sch.py` generates `D2K_V1.sch`, the V1 bench interconnect schematic, 3 sheets (uploaded as the `D2K_V1` Electronics design); `gen_breadboard.py` generates `breadboard_v1.html`, the 2D breadboard + Pi GPIO wiring guide with a wire checklist (published as the "D2K Bench Wiring" artifact). |
 | [scripts/electronics_v1/](scripts/electronics_v1/) | Build scripts for the `D2K_Electronics_V1` design, numbered in run order. |
 | [scripts/tools/](scripts/tools/) | Read-only helpers: design inventory, project tree listing / admin download. |
 | [scripts/phase1/](scripts/phase1/) | **Legacy.** Scripts behind the removed `D2K_phase1` layout (envelopes, reference imports, project organisation). Kept for the reference-import and project-organisation code. |

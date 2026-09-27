@@ -4,6 +4,21 @@ Newest first. Each entry: the decision, why, and what it affects. Project-level
 decisions (compute, screens, roadmap) live in the Notion workspace; they are
 repeated here only where they drive the Fusion work.
 
+## 2026-09-27 — Breadboard layout drives the button-to-GPIO order
+
+- **Decision:** the breadboard view (`electronics/gen_breadboard.py`) puts the
+  ESP32-S3-Zero across the channel at the left end (columns 2–10, USB-C off the
+  board edge), the 15 switches across the channel in four groups (D-pad, face,
+  system, shoulders, columns 15–62), all switch GNDs on the bottom − rail, and
+  routes each wire in its own lane. To keep every wire uncrossed, L2/R2 moved
+  to the header pins GPIO6/GPIO5, D-pad up/down to the front pads GPIO14/15,
+  and Start/Select/Home/L1/R1 to GPIO16/17/18/38/39. The schematic reads the
+  same table, so it followed.
+- **Why:** a wiring guide the user builds from must be unambiguous; any
+  button can go on any GPIO, so the order is free to follow the layout.
+- **Affects:** wiring.md pin table, `D2K_V1` sheet 2, the published "D2K Bench
+  Wiring" page.
+
 ## 2026-09-25 — Controls and audio wiring (schematic sheets 2 and 3)
 
 - **ESP32-S3-Zero pin plan:** Circle Pads on ADC1 GPIO1–4; the 15 buttons on
