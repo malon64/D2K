@@ -277,6 +277,16 @@ FocusScope {
         onTriggered: root.readMusicStatus()
     }
 
+    // Second half of the dual-screen placement in Component.onCompleted.
+    Timer {
+        id: panelFullscreen
+        interval: 300
+        onTriggered: {
+            root.hostWindow.visibility = Window.FullScreen
+            touchWindow.visibility = Window.FullScreen
+        }
+    }
+
     function applySystemStatus(status) {
         if (!status)
             return
@@ -428,6 +438,12 @@ FocusScope {
                 panels.sort(function(a, b) { return a.virtualY - b.virtualY || a.virtualX - b.virtualX })
                 var upper = panels[0]
                 var lower = panels[1]
+                // This also runs when Pegasus rebuilds the theme after a game.
+                // A fullscreen window ignores moves, so one pushed onto the
+                // wrong output (seen after Alt+F4 on a PSP game) would stay
+                // there: leave fullscreen, place, then re-enter it below.
+                hostWindow.visibility = Window.Windowed
+                touchWindow.visibility = Window.Windowed
                 hostWindow.screen = upper
                 hostWindow.x = upper.virtualX
                 hostWindow.y = upper.virtualY
@@ -440,9 +456,9 @@ FocusScope {
                 touchWindow.height = lower.height
                 // Fullscreen keeps each panel pinned to its output: labwc
                 // re-places ordinary windows around the desktop panel whenever
-                // an output mode changes.
-                hostWindow.visibility = Window.FullScreen
-                touchWindow.visibility = Window.FullScreen
+                // an output mode changes. It is applied after a short delay so
+                // the compositor has moved the windows first.
+                panelFullscreen.restart()
             }
             else {
                 hostWindow.flags = Qt.FramelessWindowHint
