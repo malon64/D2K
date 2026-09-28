@@ -93,7 +93,8 @@ def ini_mismatches(template, destination):
             # equals their built-in default; only the real values matter.
             if key.endswith("\\default"):
                 continue
-            if actual.get(section, {}).get(key) != value:
+            # An empty template value means "unbound"; PPSSPP drops such keys.
+            if actual.get(section, {}).get(key, "" if value == "" else None) != value:
                 yield f"[{section}] {key}"
 
 

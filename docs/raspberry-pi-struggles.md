@@ -207,6 +207,22 @@ for that game only.
 
 ### 3DS (Azahar)
 
+- **Frequent freezes are Vulkan pipeline compilation.** Seen on Super Mario 3D
+  Land with the cooler fitted (54 °C, no throttling): two `Pipeline worker`
+  threads at 100 % while `EmuThread` waits on a futex. V3DV builds pipelines
+  slowly and the game blocks until each new one exists; the disk pipeline
+  cache (`use_disk_shader_cache`, `async_shader_compilation` already on) makes
+  a game smoother the more it has been played. OpenGL is not an option (Azahar
+  needs more than V3D's GL 3.1).
+- **Software renderer rejected:** `graphics_api=0` removes the pipeline
+  workers (four `SwRenderer` threads, ~2.5 cores) but the frame rate is far
+  worse and both 3DS screens are drawn in each window. Note that changing
+  `graphics_api` requires `graphics_api\default=false`, and Azahar must be
+  closed first, since it saves its config on exit.
+- Azahar rewrites its analog-stick bindings in its own notation (a per-key
+  prefix list); the overlay stores that notation so `--check` stays clean.
+- Text entry and choice screens open an Azahar dialog and pause the game until
+  answered.
 - Azahar is the heaviest target: about two full cores and the Pi reached 85 °C.
   Use the overlay's Vulkan backend, `resolution_factor=1` and asynchronous
   shader compilation.
