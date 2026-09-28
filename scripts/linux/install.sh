@@ -136,7 +136,9 @@ install_flycast() {
 }
 
 # N64 except Ocarina of Time. ares renders black on V3DV and RMG stalls; this
-# native core + Rice build is the one that plays on the Pi.
+# native core + Rice build is the one that plays on the Pi. Do not pass
+# USE_GLES=1: Mupen64Plus runs Rice on a desktop GL context, where a GLES build
+# swaps red and blue in every texture.
 install_mupen64plus() {
     [[ -x $software_dir/mupen64plus/bin/mupen64plus ]] && return
     step 'Mupen64Plus (N64, source build)'

@@ -192,6 +192,18 @@ for that game only.
   inaccuracies (e.g. Super Mario 64's file-select icons) and renders the PAL
   Ocarina of Time framebuffer incorrectly. It needs `--datadir` (ROM database
   and OSD font), otherwise it exits right after starting.
+- **Blue textures (red/blue swapped) came from a Rice build with
+  `USE_GLES=1`.** Mupen64Plus creates a desktop OpenGL context on the Pi, but
+  a GLES build only uploads BGRA textures when the GLES extension
+  `GL_EXT_texture_format_BGRA8888` exists, which a desktop context never
+  reports; it then labels BGRA data as RGBA. Untextured colours and green
+  surfaces looked fine, brown ground turned cyan and yellow icons blue. Build
+  Rice without `USE_GLES` (the installer does; `ldd` must show `libGL`, not
+  `libGLESv2`). The earlier "wrong colours" seen on Ocarina of Time were
+  probably the same bug.
+- **Only Start worked on the keyboard:** `[Input-SDL-Control1] mode = 2`
+  (fully automatic) makes the input plugin replace the keyboard bindings with
+  its defaults; the overlay sets `mode = 0` (manual).
 - **Ship of Harkinian** runs Ocarina of Time natively. The working build is
   `soh-raspberry-pi.AppImage` from `soh-raspberry-pi-0.0.2.zip` (not an
   official HarbourMasters release; the installer checks its SHA-256 and takes
