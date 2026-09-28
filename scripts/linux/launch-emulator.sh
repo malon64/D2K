@@ -313,7 +313,10 @@ fi
 rm -f "$home_request"
 use_desktop_session
 export DISPLAY="${DISPLAY:-:0}"
-setsid "${cmd[@]}" &
+# The emulator's output goes to its own log, not to the pipe inherited from
+# Pegasus: chatty emulators (Azahar) stalled on that pipe and 3DS games froze
+# when started from D2K but ran smoothly when started from a shell.
+setsid "${cmd[@]}" > "$state_dir/$console-emulator.log" 2>&1 < /dev/null &
 emulator_pid=$!
 log "$console started: pid=$emulator_pid program=$program"
 
