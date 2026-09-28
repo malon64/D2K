@@ -14,7 +14,7 @@ own pad.
 
 | Key | DS / 3DS | PS1 / PSP | Dreamcast | GameCube | N64 / Ocarina of Time |
 | --- | --- | --- | --- | --- | --- |
-| Arrows | D-pad | D-pad | D-pad | Main stick | Stick |
+| Arrows | D-pad | D-pad | **Analog stick** | Main stick | Stick |
 | Numpad 8 (top) | X | Triangle | Y | Y | – |
 | Numpad 4 (left) | Y | Square | X | B | B |
 | Numpad 6 (right) | A | Circle | B | X | – |
@@ -23,7 +23,7 @@ own pad.
 | Numpad 1 / 3 | 3DS ZL / ZR | PS1 L2 / R2 | – | – / Z | Z / – |
 | Enter | Start | Start | Start | Start | Start |
 | Backspace | Select | Select | – | – | – |
-| I J K L | 3DS circle pad | Analog stick | Analog stick | C-stick | C-buttons |
+| I J K L | 3DS circle pad | Analog stick | **D-pad** | C-stick | C-buttons |
 | T F G H | 3DS C-stick | – | – | D-pad | D-pad |
 | Mouse, touch screen | DS / 3DS touch screen (lower panel) | – | – | – | – |
 | Super+Esc | Leave the game (all consoles) | | | | |
