@@ -34,7 +34,9 @@ compositors re-place ordinary windows when an output changes.
 
 `flatpak run` and AppImage runtimes are wrappers: the visible emulator is a
 child that can outlive them. The launcher starts each emulator with `setsid`
-and watches and stops the **whole process group**; for Flatpaks it also checks
+and watches and stops the **whole process group** (checking the main PID
+first: right after `setsid ... &` the group may not exist yet, and reading that
+as "exited" once skipped all window placement); for Flatpaks it also checks
 `flatpak ps --columns=application` and finishes with `flatpak kill <app-id>`.
 Do not add `--user` to `flatpak ps` or `flatpak kill`; the installed Flatpak
 version rejects it.

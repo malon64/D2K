@@ -15,6 +15,8 @@ cmd=()
 program=
 flatpak_app=
 stop_pattern=
+upper_window=
+focused=false
 
 log() { mkdir -p "$state_dir"; printf '%(%FT%T%z)T  %s\n' -1 "$*" >> "$log_path"; }
 
@@ -198,6 +200,7 @@ layout_single() {
         window=$(find_largest_window < <(xdotool search --onlyvisible --name "$title" 2>/dev/null || true))
     fi
     [[ -n $window ]] || return 1
+    upper_window=$window
     place_on_panel "$window" 1
 }
 
@@ -206,6 +209,7 @@ layout_melonds() {
     local -a windows
     mapfile -t windows < <(xdotool search --onlyvisible --pid "$emulator_pid" 2>/dev/null | sort -n)
     [[ -n ${windows[0]:-} && -n ${windows[1]:-} ]] || return 1
+    upper_window=${windows[0]}
     place_on_panel "${windows[0]}" 1
     place_on_panel "${windows[1]}" 2
 }
@@ -215,6 +219,7 @@ layout_azahar() {
     primary=$(xdotool search --onlyvisible --name 'Azahar.*([Pp]rimary|[Pp]rincip)' 2>/dev/null | head -n 1 || true)
     secondary=$(xdotool search --onlyvisible --name 'Azahar.*([Ss]econdary|[Ss]econd|[Bb]ottom)' 2>/dev/null | head -n 1 || true)
     [[ -n $primary && -n $secondary ]] || return 1
+    upper_window=$primary
     place_on_panel "$primary" 1
     place_on_panel "$secondary" 2
 }
@@ -235,6 +240,10 @@ flatpak_running() {
 # group counts: AppImage runtimes and flatpak wrappers start the real game as
 # a child that can outlive the process the launcher started.
 emulator_running() {
+    # The main process first: right after `setsid ... &` the child may not have
+    # created its process group yet, and treating that as an exit skipped the
+    # whole placement loop.
+    kill -0 "$emulator_pid" 2>/dev/null && return 0
     kill -0 -- "-$emulator_pid" 2>/dev/null && return 0
     [[ -n $flatpak_app ]] && flatpak_running "$flatpak_app"
 }
@@ -316,6 +325,11 @@ while emulator_running; do
     # Every tick while the emulator boots, then every 2 s for the session.
     if ((SECONDS <= layout_deadline || SECONDS >= next_layout)); then
         layout && placed=true
+        # Give the game keyboard focus once: otherwise keys can keep going to
+        # the Pegasus window that launched it.
+        if [[ $placed == true && $focused == false && -n $upper_window ]]; then
+            xdotool windowactivate "$upper_window" 2>/dev/null && focused=true && log "focused window=$upper_window"
+        fi
         next_layout=$((SECONDS + 2))
     fi
     if [[ $placed == false && $SECONDS -gt $layout_deadline && $layout_warning == false ]]; then
