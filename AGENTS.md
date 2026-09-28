@@ -50,7 +50,7 @@ Summary as of 24 September 2026:
   battery, lid Hall sensor, vibration and clean shutdown. Until it exists, the
   keyboard scheme in `docs/controls.md` stands in.
 - **Audio:** Waveshare WM8960 I²S board + two 8 Ω / 2 W speakers + headphone jack.
-- **Cooling:** official Raspberry Pi 5 Active Cooler (SC1148), on order.
+- **Cooling:** official Raspberry Pi 5 Active Cooler (SC1148), fitted 28 September 2026.
 - **Roadmap:** software on Pi (mostly done) → two physical screens on Pi (now)
   → ROCK 4D test → ESP32 controls → audio → power → full bench "electronics
   gate" → mechanical prototype → V1 integration. No detailed shell before the
@@ -113,7 +113,9 @@ in a new `docs/<board>-struggles.md`.
 Earlier the upper panel was a Samsung TV on HDMI0 with sound; the wiring and the
 screens change, so check `wlr-randr` before assuming these names.
 
-The Pi has no fan yet and throttles under load; an Active Cooler is recommended.
+The official Active Cooler is fitted (fan at `/sys/class/hwmon/*` name `pwmfan`,
+`fan1_input` = RPM). Plug its cable in before boot: the firmware only enables
+the fan node (`/proc/device-tree/cooling_fan/status`) if it sees a fan at boot.
 Screen roles are set in `configure-desktop.sh` (`D2K_UPPER_OUTPUT`,
 `D2K_LOWER_OUTPUT`, modes, touch device); the theme and launcher follow the
 top-to-bottom desktop layout automatically. Controls (numpad diamond, arrows,

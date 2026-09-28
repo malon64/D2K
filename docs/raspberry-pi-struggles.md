@@ -121,6 +121,16 @@ To tell an emulator's speed problem from a stall, compare its CPU use with its
 main thread's wait channel (`cat /proc/<pid>/wchan`): `hrtimer_nanosleep`
 means its own speed limiter is sleeping, i.e. it is not CPU bound.
 
+### Active Cooler not detected when plugged in while running
+
+The fan cable was connected with the Pi on: no `pwmfan` hwmon, no cooling
+device, `pwm_fan` not loaded, and `/proc/device-tree/cooling_fan/status` read
+`disabled`. The firmware enables that node only if it finds a fan at boot
+(`cooling_fan` in `/boot/firmware/overlays/README`: "enabled automatically by
+the firmware"). After a reboot: status `okay`, `pwm-fan` cooling device 1/4,
+about 2,860 RPM at 51 °C. `dtparam=cooling_fan=on` would force it, but would
+hide a badly seated connector.
+
 ### Measured: DS without a cooler (24 September 2026)
 
 Mario Kart DS, desk monitor 1920×1080 upper + Waveshare 800×480 lower, JIT on,
