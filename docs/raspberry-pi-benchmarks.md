@@ -52,11 +52,11 @@ during a session: some of them open a second instance on the screens.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-01 | Dreamcast | Sonic Adventure (USA, Rev A) | Flycast, defaults (OpenGL, native 640x480, threaded rendering) | 20% | main 6%, audio <1% | ~23% | 48.8 °C, fan ~2970 rpm / `0x0` | Plays well (player). Large headroom: the internal resolution could go up if a larger screen needs it |
 | 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
-| 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 24% (emulation) | Vulkan render 18% | ~85% | 52.1 °C / `0x0` | GPU-bound, CPU light. 13 audio underruns in 1.5 minutes (audio buffer 118 samples at 44.1 kHz, 2.7 ms). Pretty playable, but the sound glitches at times (player); audio fix in the PSP notes |
+| 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 21–24% (emulation) | Vulkan render 12–18% | 48–85% depending on the scene | 51–52 °C / `0x0` | First session: pretty playable, but glitchy sound (13 underruns in 1.5 min, 2.7 ms buffer) and the game opened on the lower panel. After the audio and window fixes (PSP notes): plays well on the upper panel, 0 underruns in 2 min 40 s (player: good) |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
-session it was at 1.7–1.8 GHz: the `ondemand` governor keeps it lower when
-the CPU is lightly loaded.
+sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
+when the CPU is lightly loaded.
 
 ## Notes per console
 
@@ -113,7 +113,8 @@ skips that work while the PID is alive.
 ### PSP
 
 PPSSPP is GPU-bound on the Pi, not CPU-bound: in Midnight Club 3 the V3D was
-~85% busy while the emulation thread used 24% of a core. The levers are
+48–85% busy depending on the scene, while the emulation thread used 21–24% of
+a core. The levers are
 `InternalResolution` (2 = 960x544, already above the 800x480 panel) and
 `AnisotropyLevel` (4); lowering either should free GPU time if a game slows
 down.
@@ -126,8 +127,13 @@ silent. Fix applied the same day, both halves of the melonDS one:
 `ExtraAudioBuffering = True` in `docs/emulator-configs/linux/ppsspp/ppsspp.ini`,
 and PPSSPP added to the `pipewire-pulse` rule (`50-d2k-emulator-audio.conf`),
 matched by its Flatpak id (`pipewire.access.portal.app_id`) because its
-stream carries no application name. To verify: `pw-top` shows QUANT 1024 on
-`PPSSPPSDL` and its `ERR` stays near 0.
+stream carries no application name. Verified the same day: `pw-top` showed
+QUANT 941 on `PPSSPPSDL` (the 1024/48000 floor expressed at 44.1 kHz, 21 ms)
+and 0 underruns after 2 min 40 s, and the player confirmed the sound is good.
+
+The game also opened on the lower panel: PPSSPP retitles its window to the
+running game, so the launcher's title search missed it. The launcher now
+finds it by window class (see `docs/raspberry-pi-struggles.md`).
 
 ## To measure
 
