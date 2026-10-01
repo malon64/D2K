@@ -2,7 +2,8 @@
 # Configures the Raspberry Pi OS (Labwc) desktop for the D2K panels:
 #   - screen layout: upper panel above, lower touch panel centred below (kanshi)
 #   - touch input mapped to the lower panel only (Labwc)
-#   - sound pinned to one HDMI port (WirePlumber)
+#   - sound pinned to one HDMI port (WirePlumber), melonDS audio buffer floor
+#     (pipewire-pulse)
 #   - melonDS without title bars, Super+Esc as the keyboard Home button, and
 #     the numpad always sending digits (the face-button diamond, docs/controls.md)
 # Safe to re-run; re-run it after rewiring the screens. --check verifies it.
@@ -31,6 +32,7 @@ muted_audio_card=${D2K_MUTED_AUDIO_CARD:-alsa_card.platform-107c706400.hdmi}
 kanshi_config="$config_home/kanshi/config"
 labwc_config="$config_home/labwc/rc.xml"
 wireplumber_rule="$config_home/wireplumber/wireplumber.conf.d/50-d2k-audio.conf"
+pulse_rule="$config_home/pipewire/pipewire-pulse.conf.d/50-d2k-melonds.conf"
 marker='# Managed by D2K scripts/linux/configure-desktop.sh'
 
 size_of() { [[ $1 =~ ([0-9]+)x([0-9]+) ]] && echo "${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"; }
@@ -49,6 +51,19 @@ monitor.alsa.rules = [
   {
     matches = [ { device.name = \"$muted_audio_card\" } ]
     actions = { update-props = { device.disabled = true } }
+  }
+]"
+
+# melonDS's audio arrives through the PulseAudio API. Even with
+# PULSE_LATENCY_MSEC (launch-emulator.sh) it asks for 480 samples, which
+# PipeWire rounds down to a 256-sample (5 ms) graph, and Mario Kart DS still
+# underran ~6 times a minute (docs/raspberry-pi-benchmarks.md). A 1024-sample
+# floor gives it 21 ms of margin.
+pulse_text="$marker
+pulse.rules = [
+  {
+    matches = [ { application.name = \"melonDS\" } { application.process.binary = \"melonDS\" } ]
+    actions = { update-props = { pulse.min.quantum = 1024/48000 } }
   }
 ]"
 
@@ -139,6 +154,7 @@ if [[ ${1:-} == --check ]]; then
     xkb_options_edit check || { echo "XKB option $numpad_option missing: $labwc_environment" >&2; status=1; }
     [[ -f $kanshi_config && $(<"$kanshi_config") == "$kanshi_text" ]] || { echo "Screen layout differs: $kanshi_config" >&2; status=1; }
     [[ -f $wireplumber_rule && $(<"$wireplumber_rule") == "$wireplumber_text" ]] || { echo "Audio rule differs: $wireplumber_rule" >&2; status=1; }
+    [[ -f $pulse_rule && $(<"$pulse_rule") == "$pulse_text" ]] || { echo "melonDS audio rule differs: $pulse_rule" >&2; status=1; }
     labwc_edit check || { echo "Labwc entries missing: $labwc_config" >&2; status=1; }
     ((status == 0)) && echo 'Desktop configuration check passed.'
     exit "$status"
@@ -158,5 +174,10 @@ fi
 xkb_options_edit apply
 if write_managed "$wireplumber_rule" "$wireplumber_text"; then
     systemctl --user restart wireplumber 2>/dev/null || true
+fi
+# pipewire-pulse reads its rules only at start. Restarting it drops every
+# PulseAudio client (Pegasus' sounds, MPD), so restart D2K afterwards.
+if write_managed "$pulse_rule" "$pulse_text"; then
+    systemctl --user restart pipewire-pulse 2>/dev/null || true
 fi
 echo "Desktop configured: $upper_output above $lower_output, touch on $touch_output, audio device $muted_audio_card disabled."

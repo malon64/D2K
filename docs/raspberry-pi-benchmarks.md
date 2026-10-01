@@ -82,8 +82,15 @@ is 1024 samples, but melonDS's SDL stream pulls the graph down to 256 samples
 (5.3 ms at 48 kHz), so any short stall in the emulator or the compositor is
 an audible gap. Fix applied the same day: `launch-emulator.sh` starts melonDS
 with `PULSE_LATENCY_MSEC=40` and `PIPEWIRE_LATENCY=2048/48000` (~40 ms, on
-whichever audio API SDL uses). To verify: count `ERR` in `pw-top -b -n 2`
-after a similar session; it should stay near 0.
+whichever audio API SDL uses). The player heard a clear improvement, but
+`pw-top` showed why it was not complete: melonDS goes through the PulseAudio
+API, 40 ms became a 480-sample request, PipeWire rounded the graph down to
+256 again, and melonDS still logged ~6–10 underruns a minute. Second fix:
+`configure-desktop.sh` adds a `pipewire-pulse` rule
+(`50-d2k-melonds.conf`, `pulse.min.quantum = 1024/48000`) so the graph runs
+at 1024 samples (21 ms) while melonDS plays. To verify: during a DS game,
+`pw-top` shows QUANT 1024 on the HDMI sink and the melonDS `ERR` count stays
+near 0.
 
 **A button sometimes not recognised in the game menus.** The emulation thread
 was at 50–59% in menus, so the CPU is not maxed out there. melonDS samples the
