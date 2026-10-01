@@ -369,3 +369,13 @@ and, with PipeWire's small buffers, kept it sleeping. `AUDIO_SYNC = False`
 and clean sound. To measure N64 speed, set `[Video-Rice] ShowFPS = True` and
 read VI/s in the window title; undo it afterwards (configure-emulators.sh
 resets it from the overlay).
+
+## GameCube ignores every key after a fast boot (Dolphin focus)
+
+Once Dolphin's caches were warm it booted in about a second, and the
+launcher focused its render window right away. X then reported the window
+as active, but Dolphin ignored every key, Start included: it only reads
+input while its own focus tracking says the render window is focused, and
+it missed that early activation. Re-activating the window did not help.
+`[Input] BackgroundInput = True` (in `docs/emulator-configs/linux/dolphin/Dolphin.ini`)
+makes it read keys regardless; nothing else is on screen during a game.
