@@ -90,7 +90,8 @@ API, 40 ms became a 480-sample request, PipeWire rounded the graph down to
 (`50-d2k-melonds.conf`, `pulse.min.quantum = 1024/48000`) so the graph runs
 at 1024 samples (21 ms) while melonDS plays. To verify: during a DS game,
 `pw-top` shows QUANT 1024 on the HDMI sink and the melonDS `ERR` count stays
-near 0.
+near 0. Verified the same day on Mario Kart DS: QUANT 1024 on both the sink
+and melonDS, 0 underruns after 1.5 minutes of play.
 
 **A button sometimes not recognised in the game menus.** The emulation thread
 was at 50–59% in menus, so the CPU is not maxed out there. melonDS samples the
