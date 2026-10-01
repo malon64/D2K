@@ -183,11 +183,17 @@ also the 3DS freezes in `docs/raspberry-pi-struggles.md`.
 
 The long shadows cutting across the screen are a rendering bug, not a speed
 problem. Azahar has no usable OpenGL path on the Pi (Xwayland exposes OpenGL
-3.1), so candidates are Vulkan options: `spirv_shader_gen` first.
+3.1), so candidates are Vulkan options. Tried the same day: `spirv_shader_gen=false`
+(GLSL generation) left the game on its title screen for over 4 minutes,
+both pipeline workers at 100% and the emulation idle, so it was reverted.
+The shadow bug is still open.
 
 Audio: the output stream ran at 204 samples and underran, like melonDS and
-PPSSPP before their fixes, and Azahar also opens the microphone
-(`input_type=0`, Auto) though no game here needs it.
+PPSSPP before their fixes, and Azahar also opened the microphone (`input_type=0`, Auto) though no game
+here needs it. Fixed the same day: Azahar joined the `pipewire-pulse` floor
+(matched by `org.azahar_emu.Azahar`) and `input_type=1` (Null) closes the
+microphone. Next session: output at 699 samples (the 21 ms floor at Azahar's
+rate), 0 underruns, no input stream.
 
 ## To measure
 
