@@ -55,6 +55,7 @@ during a session: some of them open a second instance on the screens.
 | 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 21–24% (emulation) | Vulkan render 12–18% | 48–85% depending on the scene | 51–52 °C / `0x0` | First session: pretty playable, but glitchy sound (13 underruns in 1.5 min, 2.7 ms buffer) and the game opened on the lower panel. After the audio and window fixes (PSP notes): plays well on the upper panel, 0 underruns in 2 min 40 s (player: good) |
 | 2026-10-01 | PS1 | Crash Bandicoot (Europe) | DuckStation, renderer Automatic, native resolution (1x), nearest filtering, no PGXP, CPU thread on; audio Cubeb, 50 ms buffer, 20 ms output latency, time-stretch | 8% (CPU thread) | video thread 7% | ~8% | 48.8 °C / `0x0` | Very light: the lightest console measured. Placed on the upper panel automatically; audio stream 275 samples at 44.1 kHz, 0 underruns in 1 min. Smooth, no problems (player) |
 | 2026-10-01 | N64 | Super Mario 64 (PAL) | Mupen64Plus, Rice video plugin (desktop GL), SDL audio, HLE RSP | 3–6% (main thread, asleep) → 12% after the fix | SDL audio 3% | ~12%, ~21 render jobs/s | 45.5 °C / `0x0` | Player: low frame rate and stuttering sound. Rice's VI/s counter showed **~40 of 50 VI/s** (80% speed) with `AUDIO_SYNC = True`, though the CPU idled. With `AUDIO_SYNC = False`: **50 VI/s**, 0 underruns (N64 notes); the player finds it smooth now. The PAL ROM still caps the game at 25 fps |
+| 2026-10-01 | N64 | The Legend of Zelda: Ocarina of Time (PAL) | Ship of Harkinian (native port, `soh-raspberry-pi.AppImage`), OpenGL, `InterpolationFPS = 20` (the original rate), VSync on, SDL audio | 16% (main thread) | 2% | ~7%, ~41 render jobs/s | 48.8–49.4 °C / `0x0` | Very light. Upper panel; audio stream 256 samples at 32 kHz, 0 underruns. Player's verdict pending |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
@@ -160,11 +161,16 @@ which fought PipeWire's 256-sample graph. The overlay now sets
 
 Measure VI/s, not just CPU, before calling an N64 game fast or slow. The PAL
 ROMs still make the game run at 25 fps, as on a PAL console; NTSC ROMs would
-give 30 fps and the original speed. Ship of Harkinian (Ocarina of Time) is a native port, not emulation,
-and still needs its own measurement.
+give 30 fps and the original speed.
+
+Ship of Harkinian runs Ocarina of Time natively and needs almost nothing: 16%
+of a core and 7% of the GPU at the game's original 20 fps
+(`InterpolationFPS = 20` in `shipofharkinian.json`). That leaves room for its
+frame interpolation (30 or 60 fps), which smooths motion without changing the
+game speed.
 
 ## To measure
 
-Ship of Harkinian (Ocarina of Time),
+
 GameCube (Dolphin) and 3DS (Azahar) have no measurement yet. Favour the
 heaviest game of each library.
