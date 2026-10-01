@@ -1,24 +1,27 @@
 # D2K controls (keyboard, mouse, touch)
 
 One control scheme for every console, for a French AZERTY keyboard with a
-number pad. Buttons are mapped **by position**: the numpad forms the DS button
-diamond, and each console gets whichever button sits at that position on its
-own pad.
+number pad. The numpad forms the DS button diamond. **Nintendo consoles are
+mapped by label**, like the DS: A is always numpad 6, B numpad 2, X numpad 8
+and Y numpad 4, whatever the button's place on the GameCube or N64 pad, so
+"A" is the same key on every Nintendo console (and the D2K menu's A). The
+PlayStation and Dreamcast are mapped **by position**: each gets whichever
+button sits at that place on its own pad.
 
 ```text
-  numpad        DS / 3DS     PlayStation    Dreamcast     GameCube
-  7  8  9      L   X   R    L1  △  R1     LT  Y  RT     L  Y  R
-  4     6      Y       A    □       ○    X       B     B     X
-  1  2  3      ZL  B  ZR    L2  ✕  R2     -   A   -     -  A  Z
+  numpad        DS / 3DS     GameCube      N64           PlayStation    Dreamcast
+  7  8  9      L   X   R    L   X   R    L   -   R     L1  △  R1     LT  Y  RT
+  4     6      Y       A    Y       A    -       A     □       ○    X       B
+  1  2  3      ZL  B  ZR    -   B   Z    Z   B   -     L2  ✕  R2     -   A   -
 ```
 
 | Key | DS / 3DS | PS1 / PSP | Dreamcast | GameCube | N64 / Ocarina of Time |
 | --- | --- | --- | --- | --- | --- |
 | Arrows | D-pad | D-pad | **Analog stick** | Main stick | Stick |
-| Numpad 8 (top) | X | Triangle | Y | Y | – |
-| Numpad 4 (left) | Y | Square | X | B | B |
-| Numpad 6 (right) | A | Circle | B | X | – |
-| Numpad 2 (bottom) | B | Cross | A | A | A |
+| Numpad 8 (top) | X | Triangle | Y | X | – |
+| Numpad 4 (left) | Y | Square | X | Y | – |
+| Numpad 6 (right) | A | Circle | B | A | A |
+| Numpad 2 (bottom) | B | Cross | A | B | B |
 | Numpad 7 / 9 | L / R | L1 / R1 (PSP: L / R) | L / R triggers | L / R | L / R |
 | Numpad 1 / 3 | 3DS ZL / ZR | PS1 L2 / R2 | – | – / Z | Z / – |
 | Enter | Start | Start | Start | Start | Start |

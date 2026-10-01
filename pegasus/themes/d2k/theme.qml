@@ -544,7 +544,7 @@ FocusScope {
         }
     }
 
-    // Menu controls, by position like the in-game scheme (docs/controls.md):
+    // Menu controls, the same keys as the DS in game (docs/controls.md):
     // the D-pad (arrows) and the left stick (I J K L) move, A (numpad 6)
     // selects, B (numpad 2) goes back. Pegasus' own accept / cancel keys
     // (Enter, Escape, gamepad A / B) keep working alongside them.
