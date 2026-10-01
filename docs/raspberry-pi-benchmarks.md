@@ -204,8 +204,12 @@ solid black column down to the ground, the shadow pass drawn instead of
 darkening the floor, so that fallback (or V3DV's storage-image atomics) is
 the likely failure. Mesa implements the interlock extension only in anv,
 radv, lavapipe and venus, so PanVK (ROCK 4D) lacks it too and would also use
-the fallback. No Azahar setting changes this path, and its OpenGL renderer
-needs OpenGL 4.3 (the Pi offers 3.1).
+the fallback. No Azahar setting changes this path. Its OpenGL renderer is not an option
+either: tried the same day with `graphics_api=1` and a Flatpak override
+`MESA_GL_VERSION_OVERRIDE=4.3`, the log said "Unknown or unsupported graphics
+API 1, falling back to available default" because the ARM64 Flatpak build has
+no OpenGL renderer compiled in (the Pi also offers only OpenGL 3.1). Using it
+would mean building Azahar from source with OpenGL enabled.
 
 So on the Pi 5 the 3DS is limited by the GPU driver, not by D2K settings: a
 shadow bug, and slow pipeline compilation for the freezes. On another board,
