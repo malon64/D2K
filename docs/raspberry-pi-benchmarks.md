@@ -54,6 +54,7 @@ during a session: some of them open a second instance on the screens.
 | 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
 | 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 21–24% (emulation) | Vulkan render 12–18% | 48–85% depending on the scene | 51–52 °C / `0x0` | First session: pretty playable, but glitchy sound (13 underruns in 1.5 min, 2.7 ms buffer) and the game opened on the lower panel. After the audio and window fixes (PSP notes): plays well on the upper panel, 0 underruns in 2 min 40 s (player: good) |
 | 2026-10-01 | PS1 | Crash Bandicoot (Europe) | DuckStation, renderer Automatic, native resolution (1x), nearest filtering, no PGXP, CPU thread on; audio Cubeb, 50 ms buffer, 20 ms output latency, time-stretch | 8% (CPU thread) | video thread 7% | ~8% | 48.8 °C / `0x0` | Very light: the lightest console measured. Placed on the upper panel automatically; audio stream 275 samples at 44.1 kHz, 0 underruns in 1 min. Smooth, no problems (player) |
+| 2026-10-01 | N64 | Super Mario 64 (PAL) | Mupen64Plus, Rice video plugin (desktop GL), SDL audio, HLE RSP | 6% (main thread, asleep in its speed limiter) | SDL audio 3% | ~12%, ~23 render jobs/s | 45.5 °C / `0x0` | Full speed: the game itself is 25 fps in PAL (30 in NTSC). Upper panel; audio stream 256 samples at 44.1 kHz, 0 underruns in 20 s. Player's verdict pending |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
@@ -144,8 +145,17 @@ turn on PGXP (less wobbly 3D) if a sharper picture is wanted; measure again
 after either. Its audio needs no D2K fix: DuckStation keeps its own 50 ms
 buffer, so its small PipeWire stream (275 samples) did not underrun.
 
+### N64
+
+Mupen64Plus is the lightest of all in Super Mario 64: the main thread spends
+most of its time in `hrtimer_nanosleep`, its speed limiter, which is the
+check AGENTS.md asks for before calling an N64 game slow. The PAL ROMs make
+the game run at 25 fps, as on a PAL console; a choppy look is the original
+game. Ship of Harkinian (Ocarina of Time) is a native port, not emulation,
+and still needs its own measurement.
+
 ## To measure
 
-N64 (Mupen64Plus, Ship of Harkinian),
+Ship of Harkinian (Ocarina of Time),
 GameCube (Dolphin) and 3DS (Azahar) have no measurement yet. Favour the
 heaviest game of each library.
