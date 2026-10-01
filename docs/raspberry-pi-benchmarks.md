@@ -171,6 +171,5 @@ game speed.
 
 ## To measure
 
-
 GameCube (Dolphin) and 3DS (Azahar) have no measurement yet. Favour the
 heaviest game of each library.
