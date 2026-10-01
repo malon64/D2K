@@ -51,9 +51,12 @@ during a session: some of them open a second instance on the screens.
 | Date | Console | Game | Emulator, key settings | Busiest thread | Other threads | GPU busy | Temp / throttled | Verdict |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-01 | Dreamcast | Sonic Adventure (USA, Rev A) | Flycast, defaults (OpenGL, native 640x480, threaded rendering) | 20% | main 6%, audio <1% | ~23% | 48.8 °C, fan ~2970 rpm / `0x0` | Plays well (player). Large headroom: the internal resolution could go up if a larger screen needs it |
-| 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | Playable, with flaws (player): sound briefly cuts out at times, and controls are sometimes slow to respond in the game menus. See the DS notes |
+| 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
+| 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 24% (emulation) | Vulkan render 18% | ~85% | 52.1 °C / `0x0` | GPU-bound, CPU light. 13 audio underruns in 1.5 minutes (audio buffer 118 samples at 44.1 kHz, 2.7 ms). Player's verdict pending |
 
-The ARM clock stayed at 2.4 GHz in both sessions.
+The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
+session it was at 1.7–1.8 GHz: the `ondemand` governor keeps it lower when
+the CPU is lightly loaded.
 
 ## Notes per console
 
@@ -93,13 +96,12 @@ at 1024 samples (21 ms) while melonDS plays. To verify: during a DS game,
 near 0. Verified the same day on Mario Kart DS: QUANT 1024 on both the sink
 and melonDS, 0 underruns after 1.5 minutes of play.
 
-**A button sometimes not recognised in the game menus.** The emulation thread
-was at 50–59% in menus, so the CPU is not maxed out there. melonDS samples the
-keys once per emulated frame, so a very short tap during a stall can be
-missed; a keyboard that drops numpad keys is the other suspect. To tell them
-apart, watch the raw key events while pressing numpad 6:
-`sudo libinput debug-events | grep KP6`. One `pressed` per tap means the
-keyboard is fine.
+**A button sometimes not recognised in the game menus.** Seen in the first
+session only; after the audio fixes the player reported every press working.
+Probably the same stalls: melonDS samples the keys once per emulated frame, so
+a very short tap during a stall can be missed. If it comes back, watch the raw
+key events while pressing numpad 6 (`sudo libinput debug-events | grep KP6`):
+one `pressed` per tap means the keyboard is fine and the emulator lost it.
 
 **Background work during a game.** `run.sh` kept its once-a-second loop
 running while a game played: HUD telemetry and `mpd.sh Status`, which starts
@@ -108,8 +110,22 @@ menu comes back (python seen in 4 of 50 samples). Fixed the same day: the
 launcher writes its PID to `~/.local/state/d2k/game-running` and `run.sh`
 skips that work while the PID is alive.
 
+### PSP
+
+PPSSPP is GPU-bound on the Pi, not CPU-bound: in Midnight Club 3 the V3D was
+~85% busy while the emulation thread used 24% of a core. The levers are
+`InternalResolution` (2 = 960x544, already above the 800x480 panel) and
+`AnisotropyLevel` (4); lowering either should free GPU time if a game slows
+down.
+
+PPSSPP's audio runs with the smallest buffer seen so far (118 samples at
+44.1 kHz, 2.7 ms: `AudioBufferSize = 256`, `ExtraAudioBuffering = False`)
+and underran ~9 times a minute. If the player hears cuts, the same kind of
+fix as melonDS applies: `ExtraAudioBuffering = True` in the overlay, or a
+`pulse.min.quantum` rule for PPSSPP.
+
 ## To measure
 
-PS1 (DuckStation), PSP (PPSSPP), N64 (Mupen64Plus, Ship of Harkinian),
+PS1 (DuckStation), N64 (Mupen64Plus, Ship of Harkinian),
 GameCube (Dolphin) and 3DS (Azahar) have no measurement yet. Favour the
 heaviest game of each library.
