@@ -60,7 +60,8 @@ monitor.alsa.rules = [
 # PipeWire rounds down to a 256-sample (5 ms) graph, and Mario Kart DS still
 # underran ~6 times a minute (docs/raspberry-pi-benchmarks.md). A 1024-sample
 # floor gives it 21 ms of margin. PPSSPP (Flatpak, matched by its app id)
-# ran at 118 samples (2.7 ms) and its sound glitched the same way.
+# ran at 118 samples (2.7 ms) and its sound glitched the same way, and
+# Azahar (Flatpak too) underran at 204 samples in Super Mario 3D Land.
 pulse_text="$marker
 pulse.rules = [
   {
@@ -68,6 +69,7 @@ pulse.rules = [
       { application.name = \"melonDS\" }
       { application.process.binary = \"melonDS\" }
       { pipewire.access.portal.app_id = \"org.ppsspp.PPSSPP\" }
+      { pipewire.access.portal.app_id = \"org.azahar_emu.Azahar\" }
     ]
     actions = { update-props = { pulse.min.quantum = 1024/48000 } }
   }
