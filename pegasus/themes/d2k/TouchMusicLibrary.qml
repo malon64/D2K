@@ -5,8 +5,9 @@ import QtQuick 2.0
 // pass under the frame chrome as the list scrolls -- which is the whole reason
 // the frame is split in two.
 //
-// Unlike the game grid there is no focus state here: tapping a row plays it
-// outright, so the only highlighted row is the one MPD is playing.
+// Tapping a row plays it outright, so the highlighted row is the one MPD is
+// playing. The D-pad / left stick move a separate cursor (cursorIndex) and A
+// plays the row under it; a tap moves the cursor too.
 Item {
     id: panel
     width: 800
@@ -17,7 +18,16 @@ Item {
     property var games
     property int trackCount: 0
     property int playingIndex: -1
+    property int cursorIndex: -1
     property bool paused: false
+
+    function revealCursor() {
+        if (cursorIndex >= 0)
+            list.positionViewAtIndex(cursorIndex, ListView.Contain)
+    }
+
+    onCursorIndexChanged: revealCursor()
+    Component.onCompleted: revealCursor()
 
     signal playTrack(int index)
     signal togglePlayback()
@@ -89,6 +99,27 @@ Item {
                 source: parent.isPlaying ? "assets/music-row-selected.png" : "assets/music-row.png"
                 fillMode: Image.Stretch
                 smooth: true
+            }
+
+            // Keyboard / gamepad cursor. Pulses like the game tile focus and,
+            // like it, never fades out entirely.
+            Rectangle {
+                id: cursorFrame
+                anchors.fill: parent
+                anchors.margins: 3
+                radius: 12
+                color: "transparent"
+                border.color: panel.theme.cyanInk
+                border.width: 2
+                visible: index === panel.cursorIndex
+                onVisibleChanged: if (!visible) opacity = 1
+
+                SequentialAnimation on opacity {
+                    running: cursorFrame.visible
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.35; duration: 260; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 1.0; duration: 260; easing.type: Easing.InOutQuad }
+                }
             }
 
             // Sits just inside the selected panel's hollow window, whose left

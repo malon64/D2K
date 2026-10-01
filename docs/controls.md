@@ -28,7 +28,21 @@ own pad.
 | Mouse, touch screen | DS / 3DS touch screen (lower panel) | – | – | – | – |
 | Super+Esc | Leave the game (all consoles) | | | | |
 
-Menus: arrows, Enter and the touch screen drive the Pegasus menu.
+## Menus (Pegasus)
+
+The D2K menu uses the same positions: D-pad or left stick to move, A to
+select, B to go back. The touch screen keeps working alongside.
+
+| Control | Keys | Console carousel | Game grid | Music |
+| --- | --- | --- | --- | --- |
+| D-pad / left stick | Arrows / I J K L | Previous / next console | Move the selection | ↑↓ one track, ←→ four tracks |
+| A | Numpad 6 (also Enter) | Open the console | Launch the game | Play the track, or pause / resume the playing one |
+| B | Numpad 2 (also Escape) | – | Back to the carousel | Back to the carousel |
+| – | Page Up / Page Down | – | Previous / next page | – |
+
+The keys are handled in `theme.qml` (`handleKey`), from both windows, because a
+tap gives the lower window keyboard focus. Numpad keys never move the
+selection. Pegasus' own accept and cancel bindings (gamepad A / B) also work.
 
 Emulator extras kept from their defaults: Flycast Tab (menu), Space
 (fast-forward), F12 (screenshot).

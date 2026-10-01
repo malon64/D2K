@@ -16,6 +16,7 @@ Item {
     property int pageCount: 1
     property bool launching: false
     property int playingIndex: -1
+    property int musicCursor: -1
     property bool paused: false
 
     signal previousConsole()
@@ -64,6 +65,7 @@ Item {
             games: panel.games
             trackCount: panel.gameCount
             playingIndex: panel.playingIndex
+            cursorIndex: panel.musicCursor
             paused: panel.paused
 
             onPlayTrack: panel.playTrack(index)

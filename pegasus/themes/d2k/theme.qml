@@ -21,6 +21,10 @@ FocusScope {
     // playingIndex is what this theme last asked MPD to play, which is why it
     // survives leaving and re-entering the music screen.
     property int playingIndex: -1
+
+    // Row the arrows / left stick point at in the track list; -1 until there
+    // is one (A then acts on the playing track, or the first one).
+    property int musicCursor: -1
     property bool musicPaused: false
     property int musicSeq: 0
     property int musicPositionMs: -1
@@ -161,6 +165,7 @@ FocusScope {
         consoleSound.play()
 
         if (musicCollection) {
+            musicCursor = playingIndex
             navState = "music"
             api.memory.set("d2kNav", "music")
             return
@@ -202,6 +207,7 @@ FocusScope {
 
         gameSound.play()
         playingIndex = index
+        musicCursor = index
         musicPaused = false
         musicCommandAt = Date.now()
         musicPositionMs = -1
@@ -217,6 +223,28 @@ FocusScope {
         musicPaused = !musicPaused
         musicCommandAt = Date.now()
         sendMusicCommand(musicPaused ? "pause" : "resume")
+    }
+
+    function moveMusicCursor(delta) {
+        if (!gameCount)
+            return
+
+        // The first press only shows the cursor where playback already is.
+        var from = musicCursor >= 0 ? musicCursor : Math.max(0, playingIndex)
+        var next = musicCursor >= 0 ? Math.max(0, Math.min(gameCount - 1, from + delta)) : from
+        if (next !== musicCursor)
+            navigationSound.play()
+        musicCursor = next
+    }
+
+    // A on the playing track pauses / resumes it; on any other row it plays
+    // that row.
+    function activateMusicCursor() {
+        var target = musicCursor >= 0 ? musicCursor : Math.max(0, playingIndex)
+        if (target === playingIndex)
+            toggleMusic()
+        else
+            playTrack(target)
     }
 
     function baseName(path) {
@@ -248,6 +276,8 @@ FocusScope {
         for (var i = 0; i < gameCount; i++) {
             if (baseName(trackPath(i)) === name) {
                 playingIndex = i
+                if (musicCursor < 0)
+                    musicCursor = i
                 return
             }
         }
@@ -495,6 +525,7 @@ FocusScope {
             restoreConsole()
 
             if (savedNav === "music" && currentCollection && gameCount && musicCollection) {
+                musicCursor = -1
                 navState = "music"
             }
             else if (savedNav === "games" && currentCollection && gameCount) {
@@ -513,59 +544,84 @@ FocusScope {
         }
     }
 
-    Keys.onPressed: {
+    // Menu controls, by position like the in-game scheme (docs/controls.md):
+    // the D-pad (arrows) and the left stick (I J K L) move, A (numpad 6)
+    // selects, B (numpad 2) goes back. Pegasus' own accept / cancel keys
+    // (Enter, Escape, gamepad A / B) keep working alongside them.
+    function isPadButton(event, key) {
+        return event.key === key && (event.modifiers & Qt.KeypadModifier) !== 0
+    }
+
+    function isMenuAccept(event) {
+        return isPadButton(event, Qt.Key_6) || api.keys.isAccept(event)
+    }
+
+    function isMenuBack(event) {
+        return isPadButton(event, Qt.Key_2) || api.keys.isCancel(event)
+    }
+
+    // "left", "right", "up", "down" or "". Numpad keys never move: with Num
+    // Lock off they arrive as arrows, and they are the face buttons.
+    function menuDirection(event) {
+        if (event.modifiers & Qt.KeypadModifier)
+            return ""
+
+        switch (event.key) {
+        case Qt.Key_Left: case Qt.Key_J: return "left"
+        case Qt.Key_Right: case Qt.Key_L: return "right"
+        case Qt.Key_Up: case Qt.Key_I: return "up"
+        case Qt.Key_Down: case Qt.Key_K: return "down"
+        }
+        return ""
+    }
+
+    // Called from both windows: tapping the lower panel gives it keyboard
+    // focus, and the keys must keep working from there.
+    function handleKey(event) {
         if (navState === "boot")
             return
 
+        var direction = menuDirection(event)
+
         if (navState === "consoles") {
-            if (event.key === Qt.Key_Left || event.key === Qt.Key_Up) {
+            if (direction === "left" || direction === "up") {
                 event.accepted = true
                 selectConsole(consoleIndex - 1)
             }
-            else if (event.key === Qt.Key_Right || event.key === Qt.Key_Down) {
+            else if (direction === "right" || direction === "down") {
                 event.accepted = true
                 selectConsole(consoleIndex + 1)
             }
-            else if (api.keys.isAccept(event)) {
+            else if (isMenuAccept(event)) {
                 event.accepted = true
                 openConsole()
             }
             return
         }
 
-        // The track list is touch-only by design: there is no focused row to
-        // move, so the D-pad does nothing here and only Back is wired up.
+        // Up / down move the cursor one track, left / right one screenful.
         if (navState === "music") {
-            if (api.keys.isCancel(event)) {
+            if (direction !== "") {
+                event.accepted = true
+                moveMusicCursor(direction === "up" ? -1 : direction === "down" ? 1
+                                : direction === "left" ? -4 : 4)
+            }
+            else if (isMenuAccept(event)) {
+                event.accepted = true
+                activateMusicCursor()
+            }
+            else if (isMenuBack(event)) {
                 event.accepted = true
                 backToCollections()
-            }
-            else if (api.keys.isAccept(event)) {
-                event.accepted = true
-                toggleMusic()
             }
             return
         }
 
-        if (event.key === Qt.Key_Left) {
+        if (direction !== "") {
             event.accepted = true
             navigationSound.play()
-            selectGame(gameIndex - 1)
-        }
-        else if (event.key === Qt.Key_Right) {
-            event.accepted = true
-            navigationSound.play()
-            selectGame(gameIndex + 1)
-        }
-        else if (event.key === Qt.Key_Up) {
-            event.accepted = true
-            navigationSound.play()
-            selectGame(gameIndex - d2k.gridColumns)
-        }
-        else if (event.key === Qt.Key_Down) {
-            event.accepted = true
-            navigationSound.play()
-            selectGame(gameIndex + d2k.gridColumns)
+            selectGame(gameIndex + (direction === "left" ? -1 : direction === "right" ? 1
+                                    : direction === "up" ? -d2k.gridColumns : d2k.gridColumns))
         }
         else if (event.key === Qt.Key_PageUp) {
             event.accepted = true
@@ -575,15 +631,17 @@ FocusScope {
             event.accepted = true
             stepPage(1)
         }
-        else if (api.keys.isAccept(event)) {
+        else if (isMenuAccept(event)) {
             event.accepted = true
             launchSelectedGame()
         }
-        else if (api.keys.isCancel(event)) {
+        else if (isMenuBack(event)) {
             event.accepted = true
             backToCollections()
         }
     }
+
+    Keys.onPressed: handleKey(event)
 
     TopPanel {
         theme: d2k
@@ -634,7 +692,11 @@ FocusScope {
             pageCount: root.pageCount
             launching: root.launching
             playingIndex: root.playingIndex
+            musicCursor: root.musicCursor
             paused: root.musicPaused
+
+            focus: true
+            Keys.onPressed: root.handleKey(event)
 
             onPlayTrack: root.playTrack(index)
             onTogglePlayback: root.toggleMusic()
