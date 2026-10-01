@@ -9,6 +9,19 @@ software_dir="$HOME/.local/opt/d2k"
 cache_dir="$HOME/.cache/d2k"
 library_dir="$repo_root/library/consoles"
 home_request="$state_dir/home-request"
+# Holds the launcher's PID while a game runs, so run.sh can pause its menu-only
+# background work.
+game_marker="$state_dir/game-running"
+
+# True while a launcher is alive. The PID check keeps a marker left behind by a
+# killed launcher from pausing the menu for good. Builtins only: run.sh calls
+# this every second.
+game_running() {
+    local pid
+    [[ -f $game_marker ]] || return 1
+    read -r pid < "$game_marker" 2>/dev/null || return 1
+    [[ $pid =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null
+}
 
 # Scripts started over SSH, from Pegasus, or from autostart all need the
 # logged-in desktop's session bus and Labwc's Xwayland display. D2K keeps its

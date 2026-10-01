@@ -75,6 +75,7 @@ in a new `docs/<board>-struggles.md`.
 | `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. |
 | `docs/emulator-configs/{windows,linux}/` | Per-emulator config overlays (only the keys D2K needs). |
 | `docs/raspberry-pi-struggles.md` | Every Pi problem met so far and its fix. **Read before changing Pi behaviour.** |
+| `docs/raspberry-pi-benchmarks.md` | Measured game performance on the Pi (method + results); repeat it on any new board. |
 | `docs/controls.md` | The keyboard/mouse/touch control scheme and where each emulator stores it. |
 | `docs/linux-struggles.md` | Linux-generic porting notes. |
 | `docs/pegasus-development.md` | Theme development notes. |
@@ -96,7 +97,7 @@ in a new `docs/<board>-struggles.md`.
   comes from Debian.
 - Build sources and downloads: `~/.cache/d2k/` (the Ship of Harkinian zip lives
   in `~/.cache/d2k/downloads/`; it is not downloadable from an official source).
-- Runtime state: `~/.local/state/d2k/` (`launch-<console>.log`, `home-request`,
+- Runtime state: `~/.local/state/d2k/` (`launch-<console>.log`, `home-request`, `game-running`,
   `mpd/`).
 - Pi-local config written by the scripts: `~/.config/kanshi/config` (screen
   layout), `~/.config/labwc/rc.xml` (touch mapping, melonDS rule, Super+Esc),

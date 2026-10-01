@@ -84,8 +84,10 @@ QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM="$qt_platform" "$pegasus" &
 pegasus_pid=$!
 sample_cpu
 while kill -0 "$pegasus_pid" 2>/dev/null; do
-    # Once a second: HUD telemetry, and the music player's position.
-    if ((SECONDS != last_second)); then
+    # Once a second: HUD telemetry, and the music player's position. Both are
+    # only shown in the menu, so they pause while a game runs: each status
+    # write starts mpc and python3, CPU time the emulator can use instead.
+    if ((SECONDS != last_second)) && ! game_running; then
         last_second=$SECONDS
         write_system_status || true
         if [[ $music_prepared == true && $music_ready == true ]]; then

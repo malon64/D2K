@@ -107,7 +107,8 @@ with two outputs, D2K follows their top-to-bottom desktop position. Press
 diamond, Enter = Start) are in [docs/controls.md](docs/controls.md).
 
 Deployment troubleshooting is split into [general Linux notes](docs/linux-struggles.md)
-and [Raspberry Pi 5 notes](docs/raspberry-pi-struggles.md). Agents working on
+and [Raspberry Pi 5 notes](docs/raspberry-pi-struggles.md). Measured game
+performance is in [Raspberry Pi 5 benchmarks](docs/raspberry-pi-benchmarks.md). Agents working on
 the Pi should start with [AGENTS.md](AGENTS.md).
 
 ## Theme development

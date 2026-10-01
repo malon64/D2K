@@ -36,8 +36,12 @@ build_command() {
     cmd=() program= flatpak_app= stop_pattern=
     case $console in
         # The stylesheet collapses melonDS's menu bar in both of its windows.
+        # melonDS's SDL audio stream pulled PipeWire down to 256-sample (5 ms)
+        # buffers and every short stall became a sound gap; ask for ~40 ms on
+        # whichever API SDL picks (docs/raspberry-pi-benchmarks.md).
         ds) program="$software_dir/melonds/AppRun"
-            cmd=(env QT_QPA_PLATFORM=xcb "$program" -stylesheet "$linux_dir/melonds.qss" "$rom") ;;
+            cmd=(env QT_QPA_PLATFORM=xcb PULSE_LATENCY_MSEC=40 PIPEWIRE_LATENCY=2048/48000
+                 "$program" -stylesheet "$linux_dir/melonds.qss" "$rom") ;;
         dreamcast) program="$software_dir/flycast/bin/flycast"
             cmd=(env SDL_VIDEODRIVER=x11 "$program" "$rom") ;;
         ps1) program="$software_dir/duckstation/AppRun"
@@ -267,7 +271,7 @@ stop_emulator() {
 
 if [[ $console == --self-test ]]; then
     build_command ds '/tmp/Test DS.nds'
-    [[ ${cmd[3]} == -stylesheet && ${cmd[-1]} == '/tmp/Test DS.nds' ]]
+    [[ ${cmd[5]} == -stylesheet && ${cmd[-1]} == '/tmp/Test DS.nds' && " ${cmd[*]} " == *' PULSE_LATENCY_MSEC=40 '* ]]
     build_command dreamcast '/tmp/Test Dreamcast.cdi'
     [[ ${cmd[-1]} == '/tmp/Test Dreamcast.cdi' ]]
     build_command ps1 '/tmp/Test Disc.cue'
@@ -291,8 +295,11 @@ if [[ $# -ne 2 || ! $console =~ ^(ds|dreamcast|ps1|n64|gamecube|3ds|psp)$ ]]; th
 fi
 
 log "===== launch-$console start: rom=$rom ====="
+mkdir -p "$state_dir"
+echo $$ > "$game_marker"
 "$mpd_script" Pause >/dev/null 2>&1 || log 'MPD pause failed (non-fatal)'
 return_to_menu() {
+    rm -f "$game_marker"
     "$mpd_script" Resume >/dev/null 2>&1 || log 'MPD resume failed (non-fatal)'
     log "===== launch-$console end ====="
     exit 0
