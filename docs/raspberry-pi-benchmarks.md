@@ -53,6 +53,7 @@ during a session: some of them open a second instance on the screens.
 | 2026-10-01 | Dreamcast | Sonic Adventure (USA, Rev A) | Flycast, defaults (OpenGL, native 640x480, threaded rendering) | 20% | main 6%, audio <1% | ~23% | 48.8 °C, fan ~2970 rpm / `0x0` | Plays well (player). Large headroom: the internal resolution could go up if a larger screen needs it |
 | 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
 | 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 21–24% (emulation) | Vulkan render 12–18% | 48–85% depending on the scene | 51–52 °C / `0x0` | First session: pretty playable, but glitchy sound (13 underruns in 1.5 min, 2.7 ms buffer) and the game opened on the lower panel. After the audio and window fixes (PSP notes): plays well on the upper panel, 0 underruns in 2 min 40 s (player: good) |
+| 2026-10-01 | PS1 | Crash Bandicoot (Europe) | DuckStation, renderer Automatic, native resolution (1x), nearest filtering, no PGXP, CPU thread on; audio Cubeb, 50 ms buffer, 20 ms output latency, time-stretch | 8% (CPU thread) | video thread 7% | ~8% | 48.8 °C / `0x0` | Very light: the lightest console measured. Placed on the upper panel automatically; audio stream 275 samples at 44.1 kHz, 0 underruns in 1 min. Player's verdict pending |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
@@ -135,8 +136,16 @@ The game also opened on the lower panel: PPSSPP retitles its window to the
 running game, so the launcher's title search missed it. The launcher now
 finds it by window class (see `docs/raspberry-pi-struggles.md`).
 
+### PS1
+
+DuckStation barely loads the Pi in Crash Bandicoot: 8% of a core and 8% of
+the GPU at native resolution. There is room to raise `ResolutionScale` or
+turn on PGXP (less wobbly 3D) if a sharper picture is wanted; measure again
+after either. Its audio needs no D2K fix: DuckStation keeps its own 50 ms
+buffer, so its small PipeWire stream (275 samples) did not underrun.
+
 ## To measure
 
-PS1 (DuckStation), N64 (Mupen64Plus, Ship of Harkinian),
+N64 (Mupen64Plus, Ship of Harkinian),
 GameCube (Dolphin) and 3DS (Azahar) have no measurement yet. Favour the
 heaviest game of each library.
