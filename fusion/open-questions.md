@@ -24,7 +24,7 @@ model, doc), then move it to **Resolved** at the bottom.
 | ID | Question | Notes |
 | --- | --- | --- |
 | Q1 | Which Pi 5 22-pin connector is DISP1? | Model assumes the one nearer the micro-HDMI ports. Read the silkscreen. |
-| Q2 | Exact `config.txt` lines for the 4in on DSI1 vs DSI0 on Pi 5 | Waveshare's guide lists `vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a` with `,dsi0` for DSI0; confirm the DSI1 line on the Pi and record it in `docs/raspberry-pi-struggles.md`. |
+| Q2 | Exact `config.txt` lines for the 4in on DSI1 vs DSI0 on Pi 5 | Waveshare's guide lists `vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a` with `,dsi0` for DSI0; confirm the DSI1 line on the Pi and record it in `docs/platform.md`. |
 | Q3 | Wayland output name of the DSI panel (`DSI-1` or `DSI-2`) | Needed for `D2K_LOWER_OUTPUT` in `configure-desktop.sh`. Check `wlr-randr` once connected. |
 | Q4 | Pi 5 fan header pin order and 22-pin IO0/IO1 roles | Library uses the generic Raspberry Pi pinout; only matters if something other than the stock cooler/panel is wired. |
 | Q5 | 5in (H) speaker header pinout | Not published. Relevant if the 5in's own HDMI-audio amplifier is used for speakers instead of the WM8960. |
@@ -39,7 +39,7 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q15 | Ribbons behind the boards (+2–3 mm thickness) or beside them (+width)? | Decide in the layout study with the shell width. |
 | Q16 | Do the Adafruit ribbons survive the hinge? | Cycle-test in the printed hinge prototype (thousands of openings, R ≥ 6 mm wrap). Fallback: custom dynamic-flex PCB with the same 20-pin ends. |
 | Q17 | How many ribbon conductors carry VBUS/GND in the Adafruit USB adapters, and is it enough for the 5in (~400 mA, more at full backlight)? | Check the adapter schematics/continuity; otherwise feed the 5in from a separate power pair through the power/audio passage. |
-| Q18 | Exact Linux overlay for the Waveshare WM8960 board on Pi 5 (`wm8960-soundcard` or Waveshare's driver)? | Confirm on the Pi, record in docs/raspberry-pi-struggles.md. |
+| Q18 | Exact Linux overlay for the Waveshare WM8960 board on Pi 5 (`wm8960-soundcard` or Waveshare's driver)? | Confirm on the Pi, record in docs/platform.md. |
 | Q19 | Speaker connection: recrimp the PH1.25 leads onto a 4-pin plug for the WM8960 SPK header, or an adapter? | Check the SPK header pitch (likely PH2.0) on the real board. |
 | Q20 | Circle Pad breakout for the breadboard (4-contact flex) | Buy or make a small flex-to-pin adapter once M11 gives the pitch. |
 | Q21 | Is the Pi 3V3 rail fine for the WM8960 speaker amplifier long term, or does the audio need its own 3.3 V regulator (or a 5 V class-D amplifier) in the final power design? | Decide after M10; feeds the power step. |

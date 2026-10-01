@@ -80,7 +80,7 @@ overlay (`dtoverlay=wm8960-soundcard`, to confirm on the Pi), then MPD and the
 emulators on the new ALSA card.
 
 Software side (already in `scripts/linux/configure-desktop.sh` and
-[docs/raspberry-pi-struggles.md](../docs/raspberry-pi-struggles.md)):
+[docs/platform.md](../docs/platform.md)):
 `dtoverlay=vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a` for the 4in panel, touch
 mapping in Labwc, screen roles in kanshi. When the 4in is connected, the lower
 output becomes the DSI connector instead of the 5in HDMI, and the 5in moves to

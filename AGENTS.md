@@ -39,32 +39,16 @@ Summary as of 24 September 2026:
   4" DSI screen is untested on it. It replaces the Pi only if the HDMI + DSI
   screens, touch and dual-screen melonDS work without custom driver work and
   performance is measurably better.
-- **Screens (final):** upper Waveshare 5" HDMI 800×480; lower Waveshare
-  4-DSI-TOUCH-A 4" capacitive touch over DSI (480×800 rotated to landscape,
-  overlay `vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a`). DS is drawn 640×480 on
-  the lower screen (×2.5, 80 px bands). The 4" DSI is not received yet; today's
-  bench uses a desk monitor (upper) and the 5" HDMI as the touch lower screen.
-- **Controls:** an ESP32-S3 exposes a USB HID gamepad (D-pad, ABXY,
-  L1/R1/L2/R2, Start/Select, Home, two New 3DS XL circle pads: left = movement,
-  right = C-stick / N64 C-buttons / PS1 right stick; no L3/R3) and also handles
-  battery, lid Hall sensor, vibration and clean shutdown. Until it exists, the
-  keyboard scheme in `docs/controls.md` stands in.
-- **Audio:** Waveshare WM8960 I²S board + two 8 Ω / 2 W speakers + headphone jack.
-- **Cooling:** official Raspberry Pi 5 Active Cooler (SC1148), fitted 28 September 2026.
+- **Hardware parts and their status** are in the README's Hardware table. The
+  final lower screen is a Waveshare 4-DSI-TOUCH-A over DSI (overlay
+  `vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a`). The ESP32-S3 gamepad's left
+  circle pad is movement, the right one the C-stick / N64 C-buttons / PS1
+  right stick (no L3/R3); until it exists, the keyboard scheme in
+  `docs/controls.md` stands in.
 - **Roadmap:** software on Pi (mostly done) → two physical screens on Pi (now)
   → ROCK 4D test → ESP32 controls → audio → power → full bench "electronics
   gate" → mechanical prototype → V1 integration. No detailed shell before the
   electronics gate.
-
-## Moving to other hardware (ROCK 4D)
-
-The Linux scripts target Raspberry Pi OS; these parts are Pi-specific and need
-checking on another board: `vcgencmd` (heat/clock, HUD telemetry), HDMI output
-names and ALSA card names in `configure-desktop.sh`, the Labwc/kanshi desktop,
-the 16 KiB page-size Flycast build, Mesa V3D limits (OpenGL 3.1, ares black on
-V3DV), and the Ship of Harkinian `soh-raspberry-pi` build. Keep the generic
-parts (launcher, overlays, controls) board-independent and record what differs
-in a new `docs/<board>-struggles.md`.
 
 ## Repository map
 
@@ -74,11 +58,11 @@ in a new `docs/<board>-struggles.md`.
 | `scripts/windows/` | Windows preview: `run.ps1`, `launch-emulator.ps1`, `mpd.ps1`. |
 | `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. |
 | `docs/emulator-configs/{windows,linux}/` | Per-emulator config overlays (only the keys D2K needs). |
-| `docs/raspberry-pi-struggles.md` | Every Pi problem met so far and its fix. **Read before changing Pi behaviour.** |
-| `docs/raspberry-pi-benchmarks.md` | Measured game performance on the Pi (method + results); repeat it on any new board. |
-| `docs/controls.md` | The keyboard/mouse/touch control scheme and where each emulator stores it. |
-| `docs/linux-struggles.md` | Linux-generic porting notes. |
-| `docs/pegasus-development.md` | Theme development notes. |
+| `docs/platform.md` | How D2K runs on Linux and the Pi 5 (windows, displays, touch, audio, heat, GPU driver limits) and every platform problem with its fix; what to check on another board (ROCK 4D). **Read before changing Pi behaviour.** |
+| `docs/emulators.md` | Emulator per console, its settings, every emulator problem with its fix. **Read before changing an emulator or its overlay.** |
+| `docs/benchmarks.md` | Measured performance per console and the method; repeat it after changes and on any new board. |
+| `docs/controls.md` | The keyboard/menu/touch control scheme and where each emulator stores it. |
+| `docs/theme.md` | Theme development, the Windows preview, the launch lifecycle. |
 | `library/` | **Private, git-ignored** ROMs, art and metadata. Never commit it. |
 | `fusion/` | Autodesk Fusion work (Fusion project **D2K**): build scripts run through the Fusion MCP, the generated electronics library, and the decision / open-question / wiring / constraint docs. **Read `fusion/README.md` before touching Fusion** (one small script at a time: heavy designs and uploads stall it). |
 
@@ -102,7 +86,7 @@ in a new `docs/<board>-struggles.md`.
 - Pi-local config written by the scripts: `~/.config/kanshi/config` (screen
   layout), `~/.config/labwc/rc.xml` (touch mapping, melonDS rule, Super+Esc),
   `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (sound on one HDMI port),
-  `~/.config/pipewire/pipewire-pulse.conf.d/50-d2k-emulator-audio.conf` (melonDS / PPSSPP audio buffer floor),
+  `~/.config/pipewire/pipewire-pulse.conf.d/50-d2k-emulator-audio.conf` (melonDS / PPSSPP / Azahar audio buffer floor),
   `~/.config/autostart/d2k.desktop`.
 
 ## Current hardware wiring
@@ -115,14 +99,11 @@ in a new `docs/<board>-struggles.md`.
 Earlier the upper panel was a Samsung TV on HDMI0 with sound; the wiring and the
 screens change, so check `wlr-randr` before assuming these names.
 
-The official Active Cooler is fitted (fan at `/sys/class/hwmon/*` name `pwmfan`,
-`fan1_input` = RPM). Plug its cable in before boot: the firmware only enables
-the fan node (`/proc/device-tree/cooling_fan/status`) if it sees a fan at boot.
+The official Active Cooler is fitted (hwmon `pwmfan`, `fan1_input` = RPM); its
+cable must be plugged in before boot ([docs/platform.md](docs/platform.md#heat-and-cooling-pi-5)).
 Screen roles are set in `configure-desktop.sh` (`D2K_UPPER_OUTPUT`,
 `D2K_LOWER_OUTPUT`, modes, touch device); the theme and launcher follow the
-top-to-bottom desktop layout automatically. Controls (numpad diamond, arrows,
-Num Lock on) are in `docs/controls.md`. Emulator choice per console is in
-`docs/emulator-configs/README.md`.
+top-to-bottom desktop layout automatically.
 
 ## Working on the Pi remotely
 
@@ -177,16 +158,16 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
 - Overwriting a running bash script in place corrupts the running copy (bash
   reads scripts while executing). `run.sh` and `launch-emulator.sh` are usually
   running: write a new file and `mv` it into place.
-- Emulators persist settings on their own: Mupen64Plus saves command-line plugin
-  choices (a test with `--audio dummy` silenced every later game), Ship of
-  Harkinian writes `AudioBackend: null` after an audio error, melonDS rewrites
-  its TOML on exit, Azahar rewrites `\default` flags. Undo test changes.
+- Emulators write their own settings back (melonDS, Mupen64Plus, Ship of
+  Harkinian, Azahar): change configs with the emulator closed, and undo test
+  changes ([docs/emulators.md](docs/emulators.md#how-d2k-configures-emulators)).
+- Do not run an emulator binary with flags like `--version` on the Pi: Flycast
+  opened a second instance on the screens that way.
 - Alt+F4 can close Pegasus itself; use Super+Esc / `home-request`.
-- All N64 ROMs in the library are PAL (50 Hz): a "low frame rate" there can be
-  the original game speed, not the Pi. Measure the speed before tuning: with
-  Rice's `ShowFPS = True` the window title shows VI/s (50 = full PAL speed).
-  A main thread asleep at low CPU is not proof of full speed: with
-  `AUDIO_SYNC = True` the audio plugin held Mario 64 at ~40 VI/s that way.
+- A sleeping main thread at low CPU is not proof of full speed (Mupen64Plus'
+  audio sync held Mario 64 at ~40 of 50 VI/s that way). Measure the frame
+  rate where the emulator shows it, and remember the N64 ROMs are PAL (25 fps
+  in Mario 64 is the original speed).
 - ares renders N64 black on the Pi and was removed; do not reintroduce it
   there. Windows still uses ares.
 
@@ -194,6 +175,9 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
 
 - Match the surrounding style: bash with `set -euo pipefail`, small functions,
   comments that explain *why* (usually a Pi quirk, with a pointer to the docs).
-- Record every new Pi problem and its fix in `docs/raspberry-pi-struggles.md`.
+- Record every new problem and its fix once, where it belongs:
+  `docs/platform.md` (Linux, Pi, another board), `docs/emulators.md` (an
+  emulator), `docs/controls.md` (keys). Measurements go into
+  `docs/benchmarks.md`, linking to the fix instead of retelling it.
 - Emulator config changes go into the overlays in `docs/emulator-configs/`,
   never only into the Pi's live files.

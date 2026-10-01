@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Installs D2K on Raspberry Pi OS 64-bit (Trixie/Labwc). Safe to re-run: every
 # step skips work that is already done. See AGENTS.md and
-# docs/raspberry-pi-struggles.md for why each piece is installed this way.
+# docs/emulators.md and docs/platform.md for why each piece is installed this way.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 

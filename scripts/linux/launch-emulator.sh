@@ -22,7 +22,7 @@ log() { mkdir -p "$state_dir"; printf '%(%FT%T%z)T  %s\n' -1 "$*" >> "$log_path"
 
 # Ocarina of Time runs natively in Ship of Harkinian, which the installer
 # links to the library ROM as oot.z64. Every other N64 game uses Mupen64Plus:
-# ares renders black on the Pi's V3DV driver (docs/raspberry-pi-struggles.md).
+# ares renders black on the Pi's V3DV driver (docs/emulators.md).
 is_ocarina() {
     [[ -x $soh_dir/soh-raspberry-pi.AppImage && -e $soh_dir/oot.z64 ]] &&
         [[ $(realpath -- "$1") == $(realpath -- "$soh_dir/oot.z64") ]]
@@ -38,7 +38,7 @@ build_command() {
         # The stylesheet collapses melonDS's menu bar in both of its windows.
         # melonDS's SDL audio stream pulled PipeWire down to 256-sample (5 ms)
         # buffers and every short stall became a sound gap; ask for ~40 ms on
-        # whichever API SDL picks (docs/raspberry-pi-benchmarks.md).
+        # whichever API SDL picks (docs/platform.md).
         ds) program="$software_dir/melonds/AppRun"
             cmd=(env QT_QPA_PLATFORM=xcb PULSE_LATENCY_MSEC=40 PIPEWIRE_LATENCY=2048/48000
                  "$program" -stylesheet "$linux_dir/melonds.qss" "$rom") ;;

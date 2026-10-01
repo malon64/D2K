@@ -33,7 +33,7 @@ button sits at that place on its own pad.
 
 ## Menus (Pegasus)
 
-The D2K menu uses the same positions: D-pad or left stick to move, A to
+The D2K menu uses the same keys: D-pad or left stick to move, A to
 select, B to go back. The touch screen keeps working alongside.
 
 | Control | Keys | Console carousel | Game grid | Music |
@@ -50,11 +50,17 @@ selection. Pegasus' own accept and cancel bindings (gamepad A / B) also work.
 Emulator extras kept from their defaults: Flycast Tab (menu), Space
 (fast-forward), F12 (screenshot).
 
-**The numpad always sends digits.** Otherwise, with Num Lock off, it sends arrow
-codes and several emulators read numpad 8/4/6/2 as the D-pad.
+**The numpad always sends digits.** With Num Lock off it sends `KP_Up/…` and
+Qt emulators read numpad 8/4/6/2 as the D-pad (DS face buttons dead, arrows
+fine). Turning Num Lock on was not enough: Labwc (keyboard LED,
+`/sys/class/leds/*numlock*`) and Xwayland (`xset q`) were seen reporting
+opposite states, and one press of Num Lock broke it again. So
 `configure-desktop.sh` adds the XKB option `numpad:mac` to
-`~/.config/labwc/environment` (numpad = digits whatever Num Lock says) and also
-sets Num Lock on. Both apply at the next login or reboot.
+`~/.config/labwc/environment` (`XKB_DEFAULT_OPTIONS`; numpad = digits whatever
+Num Lock says) and also sets Num Lock on. Labwc reads that file at login, not
+on `labwc --reconfigure`; after a reboot, `xmodmap -pke | grep "keycode  80 "`
+on `:0` no longer lists `KP_Up`. `xdotool` key presses go through X's own lock
+state, so test numpad bindings on the real keyboard.
 
 ## Where each binding lives
 
@@ -78,3 +84,10 @@ keycap in that position).
 To change a key: edit the overlay, run `./scripts/linux/configure-emulators.sh`
 on the Pi (with the emulator closed, since most save their config on exit),
 then `--check`. Keep this table and the overlays in sync.
+
+Emulator defaults hid conflicts with this scheme, all overridden by the
+overlays: PPSSPP bound Rewind to Backspace (Select here), DuckStation and
+Mupen64Plus defaulted to WASD/IJKL, and Ship of Harkinian put the C-buttons
+on the arrows and the stick on WASD. Per-emulator control problems (melonDS
+with no keys, Mupen64Plus' automatic mode, Ship of Harkinian's mapping IDs,
+Dolphin ignoring keys after a fast boot) are in [`emulators.md`](emulators.md).
