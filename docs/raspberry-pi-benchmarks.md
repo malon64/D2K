@@ -52,7 +52,7 @@ during a session: some of them open a second instance on the screens.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-01 | Dreamcast | Sonic Adventure (USA, Rev A) | Flycast, defaults (OpenGL, native 640x480, threaded rendering) | 20% | main 6%, audio <1% | ~23% | 48.8 °C, fan ~2970 rpm / `0x0` | Plays well (player). Large headroom: the internal resolution could go up if a larger screen needs it |
 | 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
-| 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 24% (emulation) | Vulkan render 18% | ~85% | 52.1 °C / `0x0` | GPU-bound, CPU light. 13 audio underruns in 1.5 minutes (audio buffer 118 samples at 44.1 kHz, 2.7 ms). Player's verdict pending |
+| 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 24% (emulation) | Vulkan render 18% | ~85% | 52.1 °C / `0x0` | GPU-bound, CPU light. 13 audio underruns in 1.5 minutes (audio buffer 118 samples at 44.1 kHz, 2.7 ms). Pretty playable, but the sound glitches at times (player); audio fix in the PSP notes |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 session it was at 1.7–1.8 GHz: the `ondemand` governor keeps it lower when
@@ -90,7 +90,7 @@ whichever audio API SDL uses). The player heard a clear improvement, but
 API, 40 ms became a 480-sample request, PipeWire rounded the graph down to
 256 again, and melonDS still logged ~6–10 underruns a minute. Second fix:
 `configure-desktop.sh` adds a `pipewire-pulse` rule
-(`50-d2k-melonds.conf`, `pulse.min.quantum = 1024/48000`) so the graph runs
+(`50-d2k-emulator-audio.conf`, `pulse.min.quantum = 1024/48000`) so the graph runs
 at 1024 samples (21 ms) while melonDS plays. To verify: during a DS game,
 `pw-top` shows QUANT 1024 on the HDMI sink and the melonDS `ERR` count stays
 near 0. Verified the same day on Mario Kart DS: QUANT 1024 on both the sink
@@ -120,9 +120,14 @@ down.
 
 PPSSPP's audio runs with the smallest buffer seen so far (118 samples at
 44.1 kHz, 2.7 ms: `AudioBufferSize = 256`, `ExtraAudioBuffering = False`)
-and underran ~9 times a minute. If the player hears cuts, the same kind of
-fix as melonDS applies: `ExtraAudioBuffering = True` in the overlay, or a
-`pulse.min.quantum` rule for PPSSPP.
+and underran ~9 times a minute. The player heard no cuts but glitchy sound at
+times: with `FillAudioGaps = True`, PPSSPP patches each gap instead of going
+silent. Fix applied the same day, both halves of the melonDS one:
+`ExtraAudioBuffering = True` in `docs/emulator-configs/linux/ppsspp/ppsspp.ini`,
+and PPSSPP added to the `pipewire-pulse` rule (`50-d2k-emulator-audio.conf`),
+matched by its Flatpak id (`pipewire.access.portal.app_id`) because its
+stream carries no application name. To verify: `pw-top` shows QUANT 1024 on
+`PPSSPPSDL` and its `ERR` stays near 0.
 
 ## To measure
 

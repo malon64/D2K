@@ -102,7 +102,7 @@ in a new `docs/<board>-struggles.md`.
 - Pi-local config written by the scripts: `~/.config/kanshi/config` (screen
   layout), `~/.config/labwc/rc.xml` (touch mapping, melonDS rule, Super+Esc),
   `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (sound on one HDMI port),
-  `~/.config/pipewire/pipewire-pulse.conf.d/50-d2k-melonds.conf` (melonDS audio buffer floor),
+  `~/.config/pipewire/pipewire-pulse.conf.d/50-d2k-emulator-audio.conf` (melonDS / PPSSPP audio buffer floor),
   `~/.config/autostart/d2k.desktop`.
 
 ## Current hardware wiring
