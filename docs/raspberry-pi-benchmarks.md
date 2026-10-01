@@ -54,7 +54,7 @@ during a session: some of them open a second instance on the screens.
 | 2026-10-01 | DS | Mario Kart DS | melonDS, JIT on, software 3D renderer (threaded), `UseGL = false`, window through Xwayland | 77% in races, 50–59% in menus (emulation) | soft 3D 60%, main/UI 41%, Xwayland 55% | ~66% | 56.0 °C, fan ~3000 rpm / `0x0` | First session: brief sound cuts and some missed A presses in menus. After the audio fixes (DS notes): everything works well (player), 0 audio underruns |
 | 2026-10-01 | PSP | Midnight Club 3: DUB Edition | PPSSPP (Flatpak), Vulkan, internal resolution 2x (960x544), 4x anisotropic, `AudioBufferSize = 256`, no extra audio buffering | 21–24% (emulation) | Vulkan render 12–18% | 48–85% depending on the scene | 51–52 °C / `0x0` | First session: pretty playable, but glitchy sound (13 underruns in 1.5 min, 2.7 ms buffer) and the game opened on the lower panel. After the audio and window fixes (PSP notes): plays well on the upper panel, 0 underruns in 2 min 40 s (player: good) |
 | 2026-10-01 | PS1 | Crash Bandicoot (Europe) | DuckStation, renderer Automatic, native resolution (1x), nearest filtering, no PGXP, CPU thread on; audio Cubeb, 50 ms buffer, 20 ms output latency, time-stretch | 8% (CPU thread) | video thread 7% | ~8% | 48.8 °C / `0x0` | Very light: the lightest console measured. Placed on the upper panel automatically; audio stream 275 samples at 44.1 kHz, 0 underruns in 1 min. Smooth, no problems (player) |
-| 2026-10-01 | N64 | Super Mario 64 (PAL) | Mupen64Plus, Rice video plugin (desktop GL), SDL audio, HLE RSP | 6% (main thread, asleep in its speed limiter) | SDL audio 3% | ~12%, ~23 render jobs/s | 45.5 °C / `0x0` | Full speed: the game itself is 25 fps in PAL (30 in NTSC). Upper panel; audio stream 256 samples at 44.1 kHz, 0 underruns in 20 s. Player: the frame rate looks bad. That is the PAL ROM (25 fps, 50 Hz on a 60 Hz screen): the emulator keeps up (13% CPU over 10 s, asleep in its limiter, 0 audio underruns). Fix: NTSC ROMs |
+| 2026-10-01 | N64 | Super Mario 64 (PAL) | Mupen64Plus, Rice video plugin (desktop GL), SDL audio, HLE RSP | 3–6% (main thread, asleep) → 12% after the fix | SDL audio 3% | ~12%, ~21 render jobs/s | 45.5 °C / `0x0` | Player: low frame rate and stuttering sound. Rice's VI/s counter showed **~40 of 50 VI/s** (80% speed) with `AUDIO_SYNC = True`, though the CPU idled. With `AUDIO_SYNC = False`: **50 VI/s**, 0 underruns (N64 notes). The PAL ROM still caps the game at 25 fps |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
@@ -147,11 +147,20 @@ buffer, so its small PipeWire stream (275 samples) did not underrun.
 
 ### N64
 
-Mupen64Plus is the lightest of all in Super Mario 64: the main thread spends
-most of its time in `hrtimer_nanosleep`, its speed limiter, which is the
-check AGENTS.md asks for before calling an N64 game slow. The PAL ROMs make
-the game run at 25 fps, as on a PAL console; a choppy look is the original
-game. Ship of Harkinian (Ocarina of Time) is a native port, not emulation,
+Mupen64Plus needs little CPU in Super Mario 64, but the first measurement
+was misleading: the main thread used 3–6% of a core and was always asleep
+(`hrtimer_nanosleep`), which looked like a speed limiter waiting for the next
+frame. The player saw a low frame rate and heard stuttering sound, and Rice's
+counter (`[Video-Rice] ShowFPS = True` puts VI/s in the window title) showed
+~40 VI/s instead of 50. The sleep was the SDL audio plugin's `AUDIO_SYNC`:
+it paces the emulator on its own audio buffer (target 2048 + 1024 samples),
+which fought PipeWire's 256-sample graph. The overlay now sets
+`[Audio-SDL] AUDIO_SYNC = False`, so the core's VI limiter paces the game:
+50.0 VI/s, 12% CPU, 0 underruns over 20 s.
+
+Measure VI/s, not just CPU, before calling an N64 game fast or slow. The PAL
+ROMs still make the game run at 25 fps, as on a PAL console; NTSC ROMs would
+give 30 fps and the original speed. Ship of Harkinian (Ocarina of Time) is a native port, not emulation,
 and still needs its own measurement.
 
 ## To measure

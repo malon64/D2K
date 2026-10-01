@@ -358,3 +358,14 @@ output (`mpd.log`: `Failed to play on "D2K" (pulse): disconnected`), so D2K
 must be restarted after it. When restarting, wait for the old `run.sh` to
 exit, not just Pegasus: its cleanup runs `mpd.sh Stop` after Pegasus exits
 and once stopped the MPD the new `run.sh` had just started.
+
+## N64 slow with stuttering sound (Mupen64Plus AUDIO_SYNC)
+
+Super Mario 64 ran at ~40 of 50 VI/s, with stuttering sound, while
+Mupen64Plus's main thread used 3–6% of a core and was always asleep. The SDL
+audio plugin's `AUDIO_SYNC = True` paced the emulator on its own audio buffer
+and, with PipeWire's small buffers, kept it sleeping. `AUDIO_SYNC = False`
+(in `docs/emulator-configs/linux/mupen64plus/mupen64plus.cfg`) gives 50.0 VI/s
+and clean sound. To measure N64 speed, set `[Video-Rice] ShowFPS = True` and
+read VI/s in the window title; undo it afterwards (configure-emulators.sh
+resets it from the overlay).

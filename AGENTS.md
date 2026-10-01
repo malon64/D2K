@@ -183,8 +183,10 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
   its TOML on exit, Azahar rewrites `\default` flags. Undo test changes.
 - Alt+F4 can close Pegasus itself; use Super+Esc / `home-request`.
 - All N64 ROMs in the library are PAL (50 Hz): a "low frame rate" there can be
-  the original game speed, not the Pi. Check the emulator's CPU use and whether
-  its main thread sleeps in its speed limiter before tuning.
+  the original game speed, not the Pi. Measure the speed before tuning: with
+  Rice's `ShowFPS = True` the window title shows VI/s (50 = full PAL speed).
+  A main thread asleep at low CPU is not proof of full speed: with
+  `AUDIO_SYNC = True` the audio plugin held Mario 64 at ~40 VI/s that way.
 - ares renders N64 black on the Pi and was removed; do not reintroduce it
   there. Windows still uses ares.
 
