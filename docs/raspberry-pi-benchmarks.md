@@ -57,6 +57,7 @@ during a session: some of them open a second instance on the screens.
 | 2026-10-01 | N64 | Super Mario 64 (PAL) | Mupen64Plus, Rice video plugin (desktop GL), SDL audio, HLE RSP | 3–6% (main thread, asleep) → 12% after the fix | SDL audio 3% | ~12%, ~21 render jobs/s | 45.5 °C / `0x0` | Player: low frame rate and stuttering sound. Rice's VI/s counter showed **~40 of 50 VI/s** (80% speed) with `AUDIO_SYNC = True`, though the CPU idled. With `AUDIO_SYNC = False`: **50 VI/s**, 0 underruns (N64 notes); the player finds it smooth now. The PAL ROM still caps the game at 25 fps |
 | 2026-10-01 | N64 | The Legend of Zelda: Ocarina of Time (PAL) | Ship of Harkinian (native port, `soh-raspberry-pi.AppImage`), OpenGL, `InterpolationFPS = 20` (the original rate), VSync on, SDL audio | 16% (main thread) | 2% | ~7%, ~41 render jobs/s | 48.8–49.4 °C / `0x0` | Very light. Upper panel; audio stream 256 samples at 32 kHz, 0 underruns. Plays fine, no problems (player). The black bars seen in the intro were the cutscene. Note: `CVars/gSettings/LowResMode = 1` renders 4:3 at N64 resolution, so the picture is pillarboxed on a 16:9 screen |
 | 2026-10-01 | GameCube | Mario Kart: Double Dash!! (USA, GM4E01, 60 fps) | Dolphin (Debian, master 2503), JIT ARM64, dual core, OpenGL, HLE audio, `SyncGPU = True`, default resolution and shader compilation | 35% (CPU thread, in a race; 25% in menus) | video thread 58% (24% in menus) | ~68% in a race (22% in menus) | 53–54 °C / `0x0` | Heaviest GPU load after the PSP's peak, still with headroom. Upper panel; audio stream 256 samples at 48 kHz, 0 underruns. Speed not measured (Dolphin shows no counter by default). Player: a little sound stutter, with 0 PipeWire underruns (Dolphin's own mixer running dry on short speed dips): `[DSP] AudioStretch = True` added to the overlay. The A button seemed unmapped: GameCube A was numpad 2 (mapped by position) while the player pressed numpad 6, A on the DS. Nintendo consoles are now mapped by label (A = numpad 6, B = numpad 2, docs/controls.md). A fast boot then left Dolphin ignoring every key until `[Input] BackgroundInput = True` (docs/raspberry-pi-struggles.md). After these fixes: works (player) |
+| 2026-10-01 | 3DS | Super Mario 3D Land | Azahar 2126.1.1 (Flatpak), Vulkan, 1x resolution, SPIR-V shader generation, async shader compilation, disk shader cache, audio stretching | 97% + 96% (two `Pipeline worker` threads, still compiling after 1.5 min) | EmuThread 40%, Vulkan worker 41% | ~50% | 55–59 °C / `0x0` | Player: sound breaks, slow frame rate, and characters cast very long shadows cutting across the screen. Output audio buffer 204 samples, 56 underruns and rising; microphone input also open (105 underruns). Screens placed correctly (primary upper, touch lower). At 2 min 49 s the game froze: EmuThread waiting on a futex while both pipeline workers ran at 100% (the known 3DS freeze). See the 3DS notes |
 
 The ARM clock stayed at 2.4 GHz in the Dreamcast and DS sessions. In the PSP
 sessions it varied between 1.7 and 2.4 GHz: the `ondemand` governor lowers it
@@ -170,7 +171,25 @@ of a core and 7% of the GPU at the game's original 20 fps
 frame interpolation (30 or 60 fps), which smooths motion without changing the
 game speed.
 
+### 3DS
+
+Azahar is the heaviest console and the only one that does not play well yet.
+In Super Mario 3D Land its two `Pipeline worker` threads were still at ~97%
+each after 1.5 minutes, while the emulation thread used 40% and the GPU 50%:
+the game waits on Vulkan pipeline compilation, not on CPU or GPU power. Its
+own pipeline cache is on disk (13.6 MB for this game), but the Mesa V3DV
+shader cache kept growing during play, so the driver still compiles. See
+also the 3DS freezes in `docs/raspberry-pi-struggles.md`.
+
+The long shadows cutting across the screen are a rendering bug, not a speed
+problem. Azahar has no usable OpenGL path on the Pi (Xwayland exposes OpenGL
+3.1), so candidates are Vulkan options: `spirv_shader_gen` first.
+
+Audio: the output stream ran at 204 samples and underran, like melonDS and
+PPSSPP before their fixes, and Azahar also opens the microphone
+(`input_type=0`, Auto) though no game here needs it.
+
 ## To measure
 
-3DS (Azahar) has no measurement yet. Favour the
-heaviest game in the library.
+Every console has a first measurement. Repeat the same games after each fix
+and on the ROCK 4D.
