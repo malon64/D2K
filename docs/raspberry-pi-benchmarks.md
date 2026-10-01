@@ -192,7 +192,22 @@ Also tried: `use_hw_shader=false` (software vertex shading). The spikes stayed,
 so it is not vertex precision; most likely the game's shadow rendering, which
 in Azahar needs GPU features V3DV may lack. That setting did remove the
 pipeline compilation entirely (no `Pipeline worker` threads), but put the
-emulation thread at 96%. The shadow bug is still open.
+emulation thread at 96–99% with a visibly lower frame rate (player: not
+playable either way), so it was reverted.
+
+**Cause of the shadows: a missing Vulkan extension.** Azahar's log says
+`Extension VK_EXT_fragment_shader_interlock unavailable`: V3DV (V3D 7.1.10,
+Mesa 26.2.2) does not offer it, and Azahar's Vulkan renderer needs it to
+draw 3DS shadows. Seen from above, every object casts a solid black column
+down to the ground: the shadow volume itself, drawn instead of darkening
+the floor. No Azahar setting can supply a missing driver extension, and
+Azahar's OpenGL renderer needs OpenGL 4.3 (the Pi offers 3.1).
+
+So on the Pi 5 the 3DS is limited by hardware and driver, not by D2K
+settings: shadows need the interlock extension, the freezes are V3DV's slow
+pipeline compilation, and software vertex shading is CPU-bound. On another
+board, check first: `vulkaninfo | grep fragment_shader_interlock`, then the
+same Super Mario 3D Land scene.
 
 Audio: the output stream ran at 204 samples and underran, like melonDS and
 PPSSPP before their fixes, and Azahar also opened the microphone (`input_type=0`, Auto) though no game
