@@ -198,10 +198,15 @@ layout_single() {
         case $console in
             dreamcast) title='[Ff]lycast' ;;
             n64) title='[Mm]upen64|Ship of Harkinian' ;;
-            psp) title='PPSSPP' ;;
+            # By class: once a game boots PPSSPP retitles its window to the
+            # game ("ULES00108 : Midnight Club 3..."), so a title search
+            # missed it and the game stayed on the lower panel.
+            psp) window=$(find_largest_window < <(xdotool search --onlyvisible --class '^org\.ppsspp\.PPSSPP$' 2>/dev/null || true))
+                 title='PPSSPP' ;;
             *) return 1 ;;
         esac
-        window=$(find_largest_window < <(xdotool search --onlyvisible --name "$title" 2>/dev/null || true))
+        [[ -n $window ]] ||
+            window=$(find_largest_window < <(xdotool search --onlyvisible --name "$title" 2>/dev/null || true))
     fi
     [[ -n $window ]] || return 1
     upper_window=$window

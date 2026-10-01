@@ -143,8 +143,13 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
   (normally it starts from the Labwc autostart entry).
 - **Stop D2K**: `pkill -TERM -f '[s]cripts/linux/run.sh'` (its cleanup kills
   Pegasus and stops MPD). Pegasus catches SIGTERM and keeps running, so
-  `pkill -x pegasus-fe` alone does nothing; check `pgrep -x pegasus-fe` before
-  starting a new copy.
+  `pkill -x pegasus-fe` alone does nothing. Wait until `run.sh` itself has
+  exited, not just Pegasus, before starting a new copy: its cleanup stops MPD
+  *after* Pegasus is gone, and once landed on the new copy's MPD (no menu
+  music). Stop and start in separate SSH commands, so the start command's
+  `./scripts/linux/run.sh` text cannot match the `pkill -f`.
+- **Restarting `pipewire-pulse`** (done by `configure-desktop.sh` when the
+  emulator audio rule changes) drops MPD's output; restart D2K afterwards.
 - **Launch a game for testing**:
   `./scripts/linux/launch-emulator.sh <ds|dreamcast|ps1|psp|n64|gamecube|3ds> "$PWD/library/consoles/<console>/games/<game>/rom.<ext>"`
 - **Leave a game**: `touch ~/.local/state/d2k/home-request` (what Super+Esc does).

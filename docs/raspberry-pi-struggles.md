@@ -339,3 +339,22 @@ running, and starting `run.sh` again then gives two menus (and the old
 `run.sh` stops MPD under the new one when it finally exits). Stop D2K through
 `run.sh` instead: `pkill -TERM -f '[s]cripts/linux/run.sh'`; its cleanup sends
 SIGKILL to Pegasus after two seconds.
+
+## PSP game on the lower panel (PPSSPP retitles its window)
+
+PPSSPP runs as a Flatpak, so the launcher cannot find its window by PID and
+fell back to a title search for `PPSSPP`. Once a game boots, PPSSPP renames
+its window to the game (`ULES00108 : Midnight Club 3: DUB Edition`): when the
+boot was fast, the search never matched, placement timed out after 30 s, and
+the game stayed fullscreen wherever Labwc opened it, often the lower panel.
+`launch-emulator.sh` now searches by window class first
+(`org.ppsspp.PPSSPP`, stable across titles), then by title.
+
+## No menu music after an audio change
+
+`configure-desktop.sh` restarts `pipewire-pulse` when the emulator audio rule
+(`50-d2k-emulator-audio.conf`) changes. That disconnects MPD's PulseAudio
+output (`mpd.log`: `Failed to play on "D2K" (pulse): disconnected`), so D2K
+must be restarted after it. When restarting, wait for the old `run.sh` to
+exit, not just Pegasus: its cleanup runs `mpd.sh Stop` after Pegasus exits
+and once stopped the MPD the new `run.sh` had just started.
