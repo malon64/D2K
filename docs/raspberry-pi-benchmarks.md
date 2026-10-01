@@ -186,7 +186,13 @@ problem. Azahar has no usable OpenGL path on the Pi (Xwayland exposes OpenGL
 3.1), so candidates are Vulkan options. Tried the same day: `spirv_shader_gen=false`
 (GLSL generation) left the game on its title screen for over 4 minutes,
 both pipeline workers at 100% and the emulation idle, so it was reverted.
-The shadow bug is still open.
+A screenshot shows what the player called shadows: black spikes running from
+characters and objects (Mario, Toads, posts, plants) down to the screen edge.
+Also tried: `use_hw_shader=false` (software vertex shading). The spikes stayed,
+so it is not vertex precision; most likely the game's shadow rendering, which
+in Azahar needs GPU features V3DV may lack. That setting did remove the
+pipeline compilation entirely (no `Pipeline worker` threads), but put the
+emulation thread at 96%. The shadow bug is still open.
 
 Audio: the output stream ran at 204 samples and underran, like melonDS and
 PPSSPP before their fixes, and Azahar also opened the microphone (`input_type=0`, Auto) though no game
