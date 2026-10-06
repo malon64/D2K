@@ -1,4 +1,4 @@
-# D2K controls (keyboard, mouse, touch)
+# D2K controls (keyboard, gamepad, touch)
 
 One control scheme for every console, for a French AZERTY keyboard with a
 number pad. The numpad forms the DS button diamond. **Nintendo consoles are
@@ -30,6 +30,33 @@ button sits at that place on its own pad.
 | T F G H | 3DS C-stick | – | – | D-pad | D-pad |
 | Mouse, touch screen | DS / 3DS touch screen (lower panel) | – | – | – | – |
 | Super+Esc | Leave the game (all consoles) | | | | |
+
+## D2K Controls gamepad (ESP32-S3)
+
+The console's own buttons are a USB HID gamepad, "D2K Controls" (ESP32-S3,
+`firmware/esp32-controls/`, SDL GUID `03007f933a3000000110000011010000`). It
+sends A/B/X/Y **by label** (A = `BTN_A`), the D-pad as a hat, L1/R1 as
+buttons 6/7, L2/R2 as buttons 8/9 plus the Z/RZ trigger axes, Select 10,
+Start 11, Home 12. SDL recognises it as a game controller with an automatic
+mapping. It drives the same functions as the keyboard scheme above, and the
+keyboard keeps working, except in Azahar.
+
+| Pad | DS | 3DS (Azahar) | PS1 / PSP | GameCube | N64 |
+| --- | --- | --- | --- | --- | --- |
+| D-pad | D-pad | D-pad | D-pad | Main stick | Stick |
+| A (right) / B (bottom) | A / B | A / B | Circle / Cross | A / B | A / B |
+| X (top) / Y (left) | X / Y | X / Y | Triangle / Square | X / Y | – |
+| L1 / R1 | L / R | L / R | L1 / R1 (PSP L / R) | L / R | L / R |
+| L2 / R2 | – | ZL / ZR | PS1 L2 / R2 | – / Z | Z / – |
+| Start / Select | Start / Select | Start / Select | Start / Select | Start | Start |
+
+- **Azahar keeps one binding per button**, so its buttons are on the pad and
+  the numpad no longer drives 3DS buttons (the circle pad / C-stick keys stay).
+- The D-pad drives the GameCube and N64 sticks until the Circle Pads are
+  fitted; N64 C-buttons are keyboard-only for now (I J K L).
+- Flycast (Dreamcast) and Ship of Harkinian write their own pad mapping the
+  first time they see it; they still need checking against this table.
+- Home (button 12) is not bound in the emulators; it is meant to leave the game.
 
 ## Menus (Pegasus)
 
@@ -72,13 +99,13 @@ keycap in that position).
 
 | Emulator | Overlay | Key encoding |
 | --- | --- | --- |
-| melonDS (DS) | `melonds/keyboard.toml` → `melonDS.toml [Instance0.Keyboard]` | Qt key code; numpad keys carry `Qt::KeypadModifier` (numpad 8 = `0x20000038`) |
-| Azahar (3DS) | `azahar/qt-config.ini [Controls]` | Qt key code without modifier (numpad 8 = `56`); every key needs `\default=false` or Azahar ignores it |
-| DuckStation (PS1) | `duckstation/settings.ini [Pad1]` | Physical position: `Keyboard/Numpad8`, `Keyboard/UpArrow`, `Keyboard/I` |
-| PPSSPP (PSP) | `ppsspp/controls.ini` | `1-<Android keycode>`: numpad 1…9 = 145…153, Enter 66, Backspace 67 |
+| melonDS (DS) | `melonds/keyboard.toml` → `melonDS.toml [Instance0.Keyboard]` and `[Instance0.Joystick]` | Qt key code; numpad keys carry `Qt::KeypadModifier` (numpad 8 = `0x20000038`). Pad: SDL button number, hat = `0x100` + direction (up 257, right 258, down 260, left 264) |
+| Azahar (3DS) | `azahar/qt-config.ini [Controls]` | Qt key code without modifier (numpad 8 = `56`); every key needs `\default=false` or Azahar ignores it. Pad: `button:N,engine:sdl,guid:…,port:0`, hat `direction:up,…,hat:0` |
+| DuckStation (PS1) | `duckstation/settings.ini [Pad1]` | Physical position: `Keyboard/Numpad8`, `Keyboard/UpArrow`, `Keyboard/I`. Pad: a second line per button, `SDL-0/A`, `SDL-0/DPadUp`, `SDL-0/+LeftTrigger` |
+| PPSSPP (PSP) | `ppsspp/controls.ini` | `1-<Android keycode>`: numpad 1…9 = 145…153, Enter 66, Backspace 67. Pad: `10-<code>`, SDL a/b/x/y = 189/190/191/188, Back 196, Start 197, L1/R1 194/195 |
 | Flycast (Dreamcast) | `flycast/mappings/SDL_Keyboard.cfg` (whole file) | SDL scancode (position): numpad 1…9 = 89…97 |
-| Dolphin (GameCube) | `dolphin/GCPadNew.ini` | X11 base keysym: numpad 8 = `KP_Up`, 7 = `KP_Home`, 3 = `KP_Next` (independent of Num Lock) |
-| Mupen64Plus (N64) | `mupen64plus/mupen64plus.cfg [Input-SDL-Control1]` | SDL 1.2 keysym: numpad 1…9 = 257…265, arrows 273–276 |
+| Dolphin (GameCube) | `dolphin/GCPadNew.ini` | X11 base keysym: numpad 8 = `KP_Up`, 7 = `KP_Home`, 3 = `KP_Next` (independent of Num Lock). Pad: OR-ed in with a device-qualified input, `` `KP_Right` \| `SDL/0/D2K Controls:Button S` `` |
+| Mupen64Plus (N64) | `mupen64plus/mupen64plus.cfg [Input-SDL-Control1]` | SDL 1.2 keysym: numpad 1…9 = 257…265, arrows 273–276. Pad: `device = 0`, then `button(N)` / `hat(0 Left Right)` after the key in the same value |
 | Ship of Harkinian | `shipwright/keyboard.json` (rewrites the port-1 keyboard mappings) | PC scancode: numpad 7/8/9 = 71/72/73, arrows = 0x100 + code |
 
 To change a key: edit the overlay, run `./scripts/linux/configure-emulators.sh`

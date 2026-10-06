@@ -86,8 +86,13 @@ void sendReport(uint32_t s) {
   for (size_t i = 0; i < N_BUTTONS; i++) {
     if (s & (1u << i)) buttons |= 1u << BUTTONS[i].hidButton;
   }
-  // Axes stay centred until the Circle Pads are fitted.
-  Gamepad.send(0, 0, 0, 0, 0, 0, hatFrom(s), buttons);
+  // SDL's automatic gamepad mapping reads the triggers from the Z / RZ axes
+  // (lefttrigger:a2, righttrigger:a5), so L2/R2 also swing those axes from
+  // released (-127) to pressed (+127); raw-joystick emulators use buttons 8/9.
+  // The sticks stay centred until the Circle Pads are fitted.
+  int8_t l2 = (buttons & (1u << BUTTON_TL2)) ? 127 : -127;
+  int8_t r2 = (buttons & (1u << BUTTON_TR2)) ? 127 : -127;
+  Gamepad.send(0, 0, l2, r2, 0, 0, hatFrom(s), buttons);
   lastSend = millis();
 }
 

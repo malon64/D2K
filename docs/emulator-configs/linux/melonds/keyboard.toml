@@ -11,3 +11,20 @@ L = 536870967
 R = 536870969
 Start = 16777220
 Select = 16777219
+
+# D2K Controls (ESP32-S3) via SDL, joystick 0: button numbers, hat 0x100|dir.
+[Instance0]
+JoystickID = 0
+[Instance0.Joystick]
+Up = 257
+Down = 260
+Left = 264
+Right = 258
+A = 0
+B = 1
+X = 3
+Y = 4
+L = 6
+R = 7
+Start = 11
+Select = 10

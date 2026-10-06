@@ -31,9 +31,11 @@ templates = repo / "docs/emulator-configs/linux"
 
 
 def read_ini(path):
-    """{section: {key: value}} from "key = value" lines. Line-based on purpose:
-    melonDS's TOML has top-level keys and multi-line arrays that configparser
-    rejects; anything that is not a section header or key line is ignored."""
+    """{section: {key: [values]}} from "key = value" lines. Line-based on
+    purpose: melonDS's TOML has top-level keys and multi-line arrays that
+    configparser rejects; anything that is not a section header or key line is
+    ignored. A key repeated in a section keeps every value, in order:
+    DuckStation stores several bindings for one button that way."""
     sections, current = {}, None
     text = path.read_text(encoding="utf-8-sig") if path.exists() else ""
     for line in text.splitlines():
@@ -43,7 +45,7 @@ def read_ini(path):
             continue
         pair = re.match(r"^([^\s#;=][^=]*?)\s*=\s*(.*?)\s*$", line)
         if pair and current is not None:
-            current.setdefault(pair.group(1), pair.group(2))
+            current.setdefault(pair.group(1), []).append(pair.group(2))
     return sections
 
 
@@ -58,7 +60,7 @@ def overlay_ini(template, destination):
         out, current, seen = [], None, set()
 
         def flush():
-            out.extend(f"{key} = {value}\n" for key, value in values.items() if key not in seen)
+            out.extend(f"{key} = {value}\n" for key, vals in values.items() if key not in seen for value in vals)
 
         for line in lines:
             header = re.match(r"^\[([^]]+)\]", line)
@@ -69,8 +71,9 @@ def overlay_ini(template, destination):
             key = next((k for k in values if current == section
                         and re.match(rf"^{re.escape(k)}\s*=", line)), None)
             if key:
-                out.append(f"{key} = {values[key]}\n")
-                seen.add(key)
+                if key not in seen:  # first line of the key: write all its values
+                    out.extend(f"{key} = {value}\n" for value in values[key])
+                seen.add(key)        # later lines of the same key are dropped
             else:
                 out.append(line)
         if current == section:
@@ -94,7 +97,7 @@ def ini_mismatches(template, destination):
             if key.endswith("\\default"):
                 continue
             # An empty template value means "unbound"; PPSSPP drops such keys.
-            if actual.get(section, {}).get(key, "" if value == "" else None) != value:
+            if actual.get(section, {}).get(key, [""] if value == [""] else None) != value:
                 yield f"[{section}] {key}"
 
 
