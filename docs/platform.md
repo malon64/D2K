@@ -109,22 +109,43 @@ on mains power and BATTERY reads `100%`.
 
 ## Displays (Pi 5)
 
-### Two HDMI panels: roles come from the desktop layout
+### Panel roles come from the desktop layout
 
-HDMI0 is always DRM `HDMI-A-1` and HDMI1 `HDMI-A-2`. The layout is a kanshi
+HDMI0 is always DRM `HDMI-A-1` and HDMI1 `HDMI-A-2`; a panel on the **DISP 1**
+connector is `DSI-2` (on a second DRM card, `card2`). The layout is a kanshi
 profile written by `configure-desktop.sh`: upper output at `0,0`, lower output
 centred below it. To swap which screen is "top", change `D2K_UPPER_OUTPUT` /
-`D2K_LOWER_OUTPUT` (and their modes), re-run the script and restart D2K. After
-rewiring without doing this, the old profile no longer matches and the
-monitors come up with swapped modes (the Waveshare at 1080p, the monitor at
-800x480). The current wiring is in [`../AGENTS.md`](../AGENTS.md#current-hardware-wiring).
+`D2K_LOWER_OUTPUT` (and their modes, `D2K_LOWER_TRANSFORM`), re-run the script
+and restart D2K. After rewiring without doing this, the old profile no longer
+matches and Labwc places the outputs side by side, so the theme puts its
+panels on the wrong screens. The current wiring is in
+[`../AGENTS.md`](../AGENTS.md#current-hardware-wiring).
+
+### Waveshare 4-DSI-TOUCH-A: overlay, then rotate
+
+The DSI panel needs its overlay in `/boot/firmware/config.txt` (under `[all]`)
+and a reboot; without it the Pi shows no DSI output at all:
+
+```ini
+dtoverlay=vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a
+```
+
+That is for the DISP 1 connector; on DISP 0 append `,dsi0`. Which connector is
+used cannot be probed before the overlay is loaded (the connectors' I²C buses
+only appear with it), so try one and check `dmesg | grep -i waveshare` and
+`/sys/class/drm/card*-DSI-*/status`. When it works the kernel reports
+`dsi panel: waveshare,4.0-dsi-touch-a`, the touch controller appears as
+`Goodix Capacitive TouchScreen` (I²C `11-005d`) and the backlight as
+`/sys/class/backlight/11-0045`. The panel is 480x800 portrait: kanshi turns it
+to landscape with `transform 270` (90 left it upside down in the bench
+mounting).
 
 ### Waveshare 5" HDMI picture offset: use CVT timing
 
 With the EDID's preferred 800x480 timing (33.9 MHz) the Waveshare scaler shifts
 the picture. Waveshare's setup uses `hdmi_cvt 800 480 60 6`; under KMS the
 equivalent is a CVT custom mode applied by kanshi
-(`output HDMI-A-1 mode --custom 800x480@60Hz position 560,1080`).
+(`output HDMI-A-1 mode --custom 800x480@60Hz position 0,0`).
 `hdmi_cvt` / `hdmi_group` lines in `config.txt` are ignored under KMS.
 
 ### Waveshare dark with only its LEDs lit: it is not powered
@@ -144,16 +165,22 @@ output connected, both panels are stacked on it, scaled to fit.
 
 ## Touch (Pi 5)
 
-The Waveshare touch controller is a USB touchscreen (`WaveShare WS170120`).
 Without a mapping, libinput spreads touches over the whole desktop.
-`configure-desktop.sh` maps it to the lower panel in Labwc's `rc.xml`:
+`configure-desktop.sh` maps each touchscreen to its own output in Labwc's
+`rc.xml`; Labwc also applies that output's transform, so the rotated DSI
+panel needs no calibration matrix:
 
 ```xml
+<touch deviceName="Goodix Capacitive TouchScreen" mapToOutput="DSI-2" mouseEmulation="yes" />
 <touch deviceName="WaveShare WS170120" mapToOutput="HDMI-A-1" mouseEmulation="yes" />
 ```
 
-Both `WaveShare WS170120` and `WaveShare WS170120 (USB 1-1)` are listed because
-tools reported both names. `mouseEmulation` is what the theme and melonDS
+The DSI panel's Goodix controller is the menu. Raspberry Pi OS's default
+`rc.xml` already lists `11-005d Goodix Capacitive TouchScreen`, but libinput
+names the device without the bus prefix, so D2K adds its own entry. The 5"
+HDMI panel's USB touch (`WaveShare WS170120`, also reported as
+`WaveShare WS170120 (USB 1-1)`) stays mapped to its own screen so a touch
+there cannot reach the menu. `mouseEmulation` is what the theme and melonDS
 expect. A tap gives the lower window keyboard focus, which is why the theme
 handles keys in both windows ([`controls.md`](controls.md#menus-pegasus)).
 
@@ -167,7 +194,7 @@ The Pi 5 has one ALSA card per HDMI port: `vc4-hdmi-0` is
 (`50-d2k-audio.conf`) disabling the card of the port that must stay silent, so
 PipeWire has a single sink (`pactl list short sinks`, `pactl get-default-sink`).
 Whether a screen takes audio is in its ELD (`cat /proc/asound/card*/eld#0`):
-`sad_count 0` means none. The desk monitor has none; **the Waveshare 5" plays
+`sad_count 0` means none. The desk monitor had none; **the Waveshare 5" plays
 HDMI audio on its 3.5 mm jack**, so a headset there is today's audio output.
 
 ### Emulators need a larger audio buffer

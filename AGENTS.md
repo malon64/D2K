@@ -93,11 +93,12 @@ Summary as of 24 September 2026:
 
 | Role | Device | Connection | Desktop output |
 | --- | --- | --- | --- |
-| Upper panel | Samsung LS27R75 desk monitor (native 2560x1440, run at 1920x1080), no speakers | HDMI1 | `HDMI-A-2`, position `0,0` |
-| Lower touch panel + sound | Waveshare 5" HDMI LCD, 800x480; HDMI audio comes out of its 3.5 mm jack (headset) | HDMI0 for video and audio, micro-USB **Touch** port to a Pi USB port for power + touch | `HDMI-A-1`, position `560,1080`, CVT mode |
+| Upper panel + sound | Waveshare 5" HDMI LCD, 800x480; HDMI audio comes out of its 3.5 mm jack (headset) | HDMI0 for video and audio, micro-USB **Touch** port to a Pi USB port for power (its touch is mapped to this screen) | `HDMI-A-1`, position `0,0`, CVT mode |
+| Lower touch panel | Waveshare 4-DSI-TOUCH-A, 480x800 portrait panel, Goodix touch | DSI ribbon to the **DISP 1** connector, 5V/GND from the GPIO header; `dtoverlay=vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a` in `/boot/firmware/config.txt` | `DSI-2`, position `0,480`, transform `270` |
 
-Earlier the upper panel was a Samsung TV on HDMI0 with sound; the wiring and the
-screens change, so check `wlr-randr` before assuming these names.
+Earlier the upper panel was a Samsung desk monitor on HDMI1 and the 5" was the
+lower touch panel; the wiring and the screens change, so check `wlr-randr`
+before assuming these names.
 
 The official Active Cooler is fitted (hwmon `pwmfan`, `fan1_input` = RPM); its
 cable must be plugged in before boot ([docs/platform.md](docs/platform.md#heat-and-cooling-pi-5)).
@@ -113,7 +114,7 @@ SSH is not the desktop session. Export the session variables first (or source
 ```bash
 export XDG_RUNTIME_DIR=/run/user/$(id -u) WAYLAND_DISPLAY=wayland-0 DISPLAY=:0
 wlr-randr                                            # outputs and positions
-grim -o HDMI-A-2 /tmp/upper.png; grim -o HDMI-A-1 /tmp/lower.png   # screenshots (scp them back to look)
+grim -o HDMI-A-1 /tmp/upper.png; grim -o DSI-2 /tmp/lower.png       # screenshots (scp them back to look)
 xdotool search --onlyvisible --name . getwindowname %@
 pactl list short sinks; pactl get-default-sink       # audio
 vcgencmd measure_temp; vcgencmd get_throttled        # heat

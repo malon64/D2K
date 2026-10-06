@@ -19,8 +19,8 @@ correctly on the Raspberry Pi 5 except one open 3DS rendering bug
 | --- | --- | --- |
 | Compute | Raspberry Pi 5, Raspberry Pi OS 64-bit | In use; the V1 baseline |
 | Compute (alternative) | Radxa ROCK 4D 6 GB (RK3576) | On order; replaces the Pi only if both screens and touch work without custom driver work and it is measurably faster |
-| Upper screen | Waveshare 5" HDMI, 800×480 | Received; on the bench it is the lower touch screen |
-| Lower screen | Waveshare 4-DSI-TOUCH-A, 4" touch, 480×800 used landscape | On order |
+| Upper screen | Waveshare 5" HDMI, 800×480 | In use as the upper screen |
+| Lower screen | Waveshare 4-DSI-TOUCH-A, 4" touch, 480×800 used landscape | In use on the Pi (DISP 1 connector) |
 | Controls | ESP32-S3 as USB HID: D-pad, ABXY, L1/R1/L2/R2, Start/Select/Home, two New 3DS XL circle pads | On order; a keyboard stands in ([docs/controls.md](docs/controls.md)) |
 | Audio | Waveshare WM8960 board (I²S), two 8 Ω / 2 W speakers, headphone jack | On order; today the Waveshare 5" jack |
 | Cooling | Raspberry Pi 5 Active Cooler (SC1148) | Fitted |

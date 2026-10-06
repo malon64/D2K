@@ -11,22 +11,26 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 # Current wiring (see AGENTS.md): Waveshare 5" HDMI touch LCD on HDMI0
-# (HDMI-A-1) is the lower panel, the Samsung LS27R75 desk monitor on HDMI1
-# (HDMI-A-2) is the upper panel. The Waveshare scaler needs CVT timing
-# (Waveshare's hdmi_cvt 800 480 60 6); its EDID timing leaves the picture
-# offset. The desk monitor runs at 1080p rather than its native 1440p to keep
-# the GPU load of scaling emulator output down.
-upper_output=${D2K_UPPER_OUTPUT:-HDMI-A-2}
-upper_mode=${D2K_UPPER_MODE:-1920x1080}
-lower_output=${D2K_LOWER_OUTPUT:-HDMI-A-1}
-lower_mode=${D2K_LOWER_MODE:---custom 800x480@60Hz}
+# (HDMI-A-1) is the upper panel, the Waveshare 4-DSI-TOUCH-A on the DISP 1
+# connector (DSI-2, overlay in config.txt) is the lower touch panel. The 5"
+# scaler needs CVT timing (Waveshare's hdmi_cvt 800 480 60 6); its EDID timing
+# leaves the picture offset. The DSI panel is 480x800 portrait and is turned to
+# landscape by the output transform; Labwc rotates touches mapped to it too.
+upper_output=${D2K_UPPER_OUTPUT:-HDMI-A-1}
+upper_mode=${D2K_UPPER_MODE:---custom 800x480@60Hz}
+lower_output=${D2K_LOWER_OUTPUT:-DSI-2}
+lower_mode=${D2K_LOWER_MODE:-480x800}
+lower_transform=${D2K_LOWER_TRANSFORM:-270}
 touch_output=${D2K_TOUCH_OUTPUT:-$lower_output}
-# libinput has reported this panel under both names.
-touch_devices=("WaveShare WS170120" "WaveShare WS170120 (USB 1-1)")
+# Touch device=output. The DSI panel's Goodix controller is the menu. The 5"
+# panel's USB touch (libinput has reported it under both names) stays on its
+# own screen so it cannot reach the menu.
+touch_maps=("Goodix Capacitive TouchScreen=$touch_output"
+            "WaveShare WS170120=$upper_output"
+            "WaveShare WS170120 (USB 1-1)=$upper_output")
 # Audio device to disable so PipeWire keeps sound on the other HDMI port. The
-# desk monitor has no speakers (its ELD lists no audio formats); the Waveshare
-# accepts HDMI audio and plays it on its 3.5 mm jack. HDMI1 is
-# 107c706400, HDMI0 is 107c701400.
+# Waveshare 5" accepts HDMI audio and plays it on its 3.5 mm jack; the DSI panel
+# has no audio. HDMI1 is 107c706400, HDMI0 is 107c701400.
 muted_audio_card=${D2K_MUTED_AUDIO_CARD:-alsa_card.platform-107c706400.hdmi}
 
 kanshi_config="$config_home/kanshi/config"
@@ -38,13 +42,15 @@ marker='# Managed by D2K scripts/linux/configure-desktop.sh'
 
 size_of() { [[ $1 =~ ([0-9]+)x([0-9]+) ]] && echo "${BASH_REMATCH[1]} ${BASH_REMATCH[2]}"; }
 read -r upper_width upper_height < <(size_of "$upper_mode")
-read -r lower_width _ < <(size_of "$lower_mode")
+read -r lower_width lower_height < <(size_of "$lower_mode")
+# A 90/270 transform swaps the panel's width and height on the desktop.
+[[ $lower_transform == *90 || $lower_transform == *270 ]] && lower_width=$lower_height
 lower_x=$(((upper_width - lower_width) / 2))
 
 kanshi_text="$marker
 profile d2k {
     output $upper_output mode $upper_mode position 0,0
-    output $lower_output mode $lower_mode position $lower_x,$upper_height
+    output $lower_output mode $lower_mode transform $lower_transform position $lower_x,$upper_height
 }"
 
 wireplumber_text="$marker
@@ -82,22 +88,24 @@ labwc_edit() {  # apply|check
         mkdir -p "$(dirname "$labwc_config")"
         cp /etc/xdg/labwc/rc.xml "$labwc_config"
     fi
-    python3 - "$1" "$labwc_config" "$home_request" "$touch_output" "${touch_devices[@]}" <<'PY'
+    python3 - "$1" "$labwc_config" "$home_request" "${touch_maps[@]}" <<'PY'
 import pathlib
 import re
 import sys
 
-mode, path, home_request, touch_output, *devices = sys.argv[1:]
+mode, path, home_request, *maps = sys.argv[1:]
+maps = [entry.rsplit("=", 1) for entry in maps]
 path = pathlib.Path(path)
 text = original = path.read_text(encoding="utf-8")
 # A panel's touch mapping must point at its current output: drop any mapping
 # of these devices to another output (left over from earlier wiring).
-stale = re.compile(r'^\s*<touch deviceName="(%s)" mapToOutput="(?!%s")[^"]*"[^>]*/>\n'
-                   % ("|".join(map(re.escape, devices)), re.escape(touch_output)), re.M)
-if stale.search(text):
-    if mode == "check":
-        sys.exit(1)
-    text = stale.sub("", text)
+for device, output in maps:
+    stale = re.compile(r'^\s*<touch deviceName="%s" mapToOutput="(?!%s")[^"]*"[^>]*/>\n'
+                       % (re.escape(device), re.escape(output)), re.M)
+    if stale.search(text):
+        if mode == "check":
+            sys.exit(1)
+        text = stale.sub("", text)
 # The numpad is the controller's face-button diamond (docs/controls.md). With
 # Num Lock off, numpad 8/4/6/2 arrive as KP_Up/Left/Right/Down and Qt emulators
 # read them as the arrow keys, which are the D-pad.
@@ -114,8 +122,8 @@ entries = [
                       f'        <command>touch "{home_request}"</command>\n'
                       '      </action>\n'
                       '    </keybind>\n'),
-] + [("</openbox_config>", f'  <touch deviceName="{device}" mapToOutput="{touch_output}" mouseEmulation="yes" />\n')
-     for device in devices]
+] + [("</openbox_config>", f'  <touch deviceName="{device}" mapToOutput="{output}" mouseEmulation="yes" />\n')
+     for device, output in maps]
 missing = [(anchor, entry) for anchor, entry in entries if entry.strip().splitlines()[0] not in text]
 if mode == "check":
     sys.exit(1 if missing else 0)
