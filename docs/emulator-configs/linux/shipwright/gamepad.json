@@ -1,0 +1,21 @@
+{
+    "_comment": "D2K Controls pad (docs/controls.md). Values are SDL game controller inputs: B<n> a button (A 0, B 1, Back 4, Start 6, LeftShoulder 9, RightShoulder 10, D-pad up/down/left/right 11/12/13/14), A<n>+/- an axis direction (left stick X 0, Y 1; right stick X 2, Y 3; left trigger 4); a list binds several inputs. The D-pad drives the stick, alongside the left Circle Pad: Ocarina's menus and movement use the stick, not the N64 D-pad. C-buttons sit on the right stick for the second Circle Pad.",
+    "buttons": {
+        "A": "B0",
+        "B": "B1",
+        "Z": "A4+",
+        "L": "B9",
+        "R": "B10",
+        "Start": "B6",
+        "CUp": "A3-",
+        "CDown": "A3+",
+        "CLeft": "A2-",
+        "CRight": "A2+"
+    },
+    "stick": {
+        "Up": ["B11", "A1-"],
+        "Down": ["B12", "A1+"],
+        "Left": ["B13", "A0-"],
+        "Right": ["B14", "A0+"]
+    }
+}

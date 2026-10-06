@@ -60,8 +60,10 @@ keyboard keeps working, except in Azahar.
 - Flycast's default pad mapping comes from SDL: ABXY by label and the D-pad
   on the D-pad. D2K replaces it with `flycast/mappings/SDL_D2K Controls.cfg`;
   Select still opens Flycast's menu (useful, like Tab on the keyboard).
-- Ship of Harkinian writes its own pad mapping the first time it sees the
-  pad; it still needs checking against this table.
+- Ship of Harkinian's default pad mapping put the D-pad on the N64 D-pad
+  (Ocarina's menus and movement need the stick) and R on R2.
+  `shipwright/gamepad.json` replaces its SDL mappings: the D-pad and the left
+  stick drive the stick, R1 = R, L2 = Z, C-buttons on the right stick.
 
 ## Menus (Pegasus)
 
@@ -111,7 +113,7 @@ keycap in that position).
 | Flycast (Dreamcast) | `flycast/mappings/SDL_Keyboard.cfg` and `SDL_D2K Controls.cfg` (whole files) | SDL scancode (position): numpad 1…9 = 89…97. Pad: raw SDL button number, hat = `(hat + 1) << 8` + direction (up 256, down 257, left 258, right 259) |
 | Dolphin (GameCube) | `dolphin/GCPadNew.ini` | X11 base keysym: numpad 8 = `KP_Up`, 7 = `KP_Home`, 3 = `KP_Next` (independent of Num Lock). Pad: OR-ed in with a device-qualified input, `` `KP_Right` \| `SDL/0/D2K Controls:Button S` `` |
 | Mupen64Plus (N64) | `mupen64plus/mupen64plus.cfg [Input-SDL-Control1]` | SDL 1.2 keysym: numpad 1…9 = 257…265, arrows 273–276. Pad: `device = 0`, then `button(N)` / `hat(0 Left Right)` after the key in the same value |
-| Ship of Harkinian | `shipwright/keyboard.json` (rewrites the port-1 keyboard mappings) | PC scancode: numpad 7/8/9 = 71/72/73, arrows = 0x100 + code |
+| Ship of Harkinian | `shipwright/keyboard.json` and `gamepad.json` (each rewrites its own kind of port-1 mappings) | PC scancode: numpad 7/8/9 = 71/72/73, arrows = 0x100 + code. Pad: SDL game controller input, `B11` a button (D-pad up), `A4+` an axis direction |
 
 To change a key: edit the overlay, run `./scripts/linux/configure-emulators.sh`
 on the Pi (with the emulator closed, since most save their config on exit),

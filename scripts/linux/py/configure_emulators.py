@@ -124,81 +124,103 @@ def file_mismatches(template, destination):
         yield "differs"
 
 
-# Ship of Harkinian keeps its keyboard bindings as mapping objects whose IDs
-# embed the key (e.g. "P0-B32768-KB45"), listed per button/stick direction
-# under Port1. Merging would leave the old keys bound too, so every port-0
-# keyboard mapping is replaced; gamepad (SDL) mappings are kept.
+# Ship of Harkinian keeps its bindings as mapping objects whose IDs embed the
+# input (e.g. "P0-B32768-KB45", "P0-S0-D2-SDLB11"), listed per button/stick
+# direction under Port1. Merging would leave the old inputs bound too, so each
+# template replaces every port-0 mapping of its own kind: keyboard.json the
+# keyboard ones, gamepad.json the SDL (gamepad) ones.
 SOH_BUTTONS = {"CRight": 1, "CLeft": 2, "CDown": 4, "CUp": 8, "R": 16, "L": 32,
                "DRight": 256, "DLeft": 512, "DDown": 1024, "DUp": 2048,
                "Start": 4096, "Z": 8192, "B": 16384, "A": 32768}
 SOH_STICK = {"Left": 0, "Right": 1, "Up": 2, "Down": 3}
+SOH_KINDS = {"keyboard": re.compile(r"^P0-(B\d+|S\d-D\d)-KB\d+$"),
+             "gamepad": re.compile(r"^P0-(B\d+|S\d-D\d)-SDL[AB]\d+(-AD[PN])?$")}
 
 
-def soh_wanted(template):
+def soh_input(kind, value):
+    """(ID suffix, mapping fields, class prefix) for one template value.
+    Keyboard values are scancodes; gamepad values are SDL game controller
+    inputs: "B11" a button, "A4+" / "A2-" one direction of an axis."""
+    if kind == "keyboard":
+        return f"KB{value}", {"KeyboardScancode": value}, "KeyboardKey"
+    if value.startswith("B"):
+        return f"SDL{value}", {"SDLControllerButton": int(value[1:])}, "SDLButton"
+    sign = value[-1]
+    return (f"SDLA{value[1:-1]}-AD{'P' if sign == '+' else 'N'}",
+            {"AxisDirection": 1 if sign == "+" else -1, "SDLControllerAxis": int(value[1:-1])}, "SDLAxisDirection")
+
+
+def soh_wanted(template, kind):
+    """{mapping ID: (Port1 table, field, mapping)} from a template."""
     keys = json.loads(template.read_text(encoding="utf-8"))
-    buttons = {f"P0-B{SOH_BUTTONS[name]}-KB{code}": (SOH_BUTTONS[name], code)
-               for name, code in keys["buttons"].items()}
-    stick = {f"P0-S0-D{SOH_STICK[name]}-KB{code}": (SOH_STICK[name], code)
-             for name, code in keys["stick"].items()}
-    return buttons, stick
+    wanted = {}
+    def each(values):  # a template value is one input or a list of inputs
+        return values if isinstance(values, list) else [values]
+
+    for name, values in keys["buttons"].items():
+        bitmask = SOH_BUTTONS[name]
+        for value in each(values):
+            suffix, fields, prefix = soh_input(kind, value)
+            wanted[f"P0-B{bitmask}-{suffix}"] = ("Buttons", f"{bitmask}ButtonMappingIds", {
+                "Bitmask": bitmask, "ButtonMappingClass": f"{prefix}ToButtonMapping", **fields})
+    for name, values in keys["stick"].items():
+        direction = SOH_STICK[name]
+        for value in each(values):
+            suffix, fields, prefix = soh_input(kind, value)
+            wanted[f"P0-S0-D{direction}-{suffix}"] = ("LeftStick", f"{name}AxisDirectionMappingIds", {
+                "AxisDirectionMappingClass": f"{prefix}ToAxisDirectionMapping", "Direction": direction,
+                "Stick": 0, **fields})
+    return wanted
 
 
 def soh_controllers(data):
     return data.setdefault("CVars", {}).setdefault("gSettings", {}).setdefault("Controllers", {})
 
 
-def overlay_soh_keyboard(template, destination):
-    data = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
-    controllers = soh_controllers(data)
-    button_maps = controllers.setdefault("ButtonMappings", {})
-    axis_maps = controllers.setdefault("AxisDirectionMappings", {})
-    port = controllers.setdefault("Port1", {})
-    port["HasConfig"] = 1
-    port_buttons = port.setdefault("Buttons", {})
-    left_stick = port.setdefault("LeftStick", {"DeadzonePercentage": 20, "NotchSnapAngle": 0,
-                                               "SensitivityPercentage": 100})
-    keyboard_id = re.compile(r"^P0-(B\d+|S0-D\d)-KB\d+$")
-    for mapping_id in [k for k in button_maps if keyboard_id.match(k)]:
-        del button_maps[mapping_id]
-    for mapping_id in [k for k in axis_maps if keyboard_id.match(k)]:
-        del axis_maps[mapping_id]
-    for table in (port_buttons, left_stick):
-        for field, ids in list(table.items()):
-            if field.endswith("MappingIds") and isinstance(ids, str):
-                table[field] = "".join(f"{i}," for i in ids.split(",") if i and not keyboard_id.match(i))
-    buttons, stick = soh_wanted(template)
-    for mapping_id, (bitmask, code) in buttons.items():
-        button_maps[mapping_id] = {"Bitmask": bitmask, "ButtonMappingClass": "KeyboardKeyToButtonMapping",
-                                   "KeyboardScancode": code}
-        field = f"{bitmask}ButtonMappingIds"
-        port_buttons[field] = port_buttons.get(field, "") + f"{mapping_id},"
-    direction_fields = {0: "Left", 1: "Right", 2: "Up", 3: "Down"}
-    for mapping_id, (direction, code) in stick.items():
-        axis_maps[mapping_id] = {"AxisDirectionMappingClass": "KeyboardKeyToAxisDirectionMapping",
-                                 "Direction": direction, "KeyboardScancode": code, "Stick": 0}
-        field = f"{direction_fields[direction]}AxisDirectionMappingIds"
-        left_stick[field] = left_stick.get(field, "") + f"{mapping_id},"
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(data, indent=4) + "\n", encoding="utf-8")
+def overlay_soh(kind):
+    def apply(template, destination):
+        data = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
+        controllers = soh_controllers(data)
+        maps = {"Buttons": controllers.setdefault("ButtonMappings", {}),
+                "LeftStick": controllers.setdefault("AxisDirectionMappings", {})}
+        port = controllers.setdefault("Port1", {})
+        port["HasConfig"] = 1
+        stick_defaults = {"DeadzonePercentage": 20, "NotchSnapAngle": 0, "SensitivityPercentage": 100}
+        tables = {"Buttons": port.setdefault("Buttons", {}),
+                  "LeftStick": port.setdefault("LeftStick", dict(stick_defaults)),
+                  "RightStick": port.setdefault("RightStick", dict(stick_defaults))}
+        owned = SOH_KINDS[kind]
+        for mapping in maps.values():
+            for mapping_id in [k for k in mapping if owned.match(k)]:
+                del mapping[mapping_id]
+        for table in tables.values():
+            for field, ids in list(table.items()):
+                if field.endswith("MappingIds") and isinstance(ids, str):
+                    table[field] = "".join(f"{i}," for i in ids.split(",") if i and not owned.match(i))
+        for mapping_id, (table, field, mapping) in soh_wanted(template, kind).items():
+            maps[table][mapping_id] = mapping
+            tables[table][field] = tables[table].get(field, "") + f"{mapping_id},"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(data, indent=4) + "\n", encoding="utf-8")
 
+    def mismatches(template, destination):
+        data = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
+        controllers = soh_controllers(data)
+        actual = {k for k in (*controllers.get("ButtonMappings", {}), *controllers.get("AxisDirectionMappings", {}))
+                  if SOH_KINDS[kind].match(k)}
+        wanted = set(soh_wanted(template, kind))
+        yield from (f"missing {k}" for k in sorted(wanted - actual))
+        yield from (f"extra {k}" for k in sorted(actual - wanted))
 
-def soh_keyboard_mismatches(template, destination):
-    data = json.loads(destination.read_text(encoding="utf-8")) if destination.exists() else {}
-    controllers = soh_controllers(data)
-    keyboard_id = re.compile(r"^P0-(B\d+|S0-D\d)-KB\d+$")
-    actual = {k for k in (*controllers.get("ButtonMappings", {}), *controllers.get("AxisDirectionMappings", {}))
-              if keyboard_id.match(k)}
-    buttons, stick = soh_wanted(template)
-    wanted = set(buttons) | set(stick)
-    yield from (f"missing {k}" for k in sorted(wanted - actual))
-    yield from (f"extra {k}" for k in sorted(actual - wanted))
+    return apply, mismatches
 
 
 HANDLERS = {
     "ini": (overlay_ini, ini_mismatches),
     "json": (overlay_json, json_mismatches),
     "file": (copy_file, file_mismatches),
-    "soh-keyboard": (overlay_soh_keyboard, soh_keyboard_mismatches),
+    "soh-keyboard": overlay_soh("keyboard"),
+    "soh-gamepad": overlay_soh("gamepad"),
 }
 
 # (template under docs/emulator-configs/linux, emulator's own config file, kind)
@@ -220,6 +242,7 @@ targets = [
     ("mupen64plus/mupen64plus.cfg", config_home / "mupen64plus/mupen64plus.cfg", "ini"),
     ("shipwright/shipofharkinian.json", soh_settings, "json"),
     ("shipwright/keyboard.json", soh_settings, "soh-keyboard"),
+    ("shipwright/gamepad.json", soh_settings, "soh-gamepad"),
     # melonDS.toml itself is copied whole by install.sh (and patched before
     # each launch); its [Instance0.Keyboard] keys are set here.
     ("melonds/keyboard.toml", config_home / "melonDS/melonDS.toml", "ini"),

@@ -185,7 +185,7 @@ The working build is `soh-raspberry-pi.AppImage` from
 `soh-raspberry-pi-0.0.2.zip`, not an official HarbourMasters release: the
 installer checks its SHA-256 and takes it from `~/.cache/d2k/downloads/` or
 `--soh-zip`. Overlay: `shipwright/shipofharkinian.json`,
-`shipwright/keyboard.json`.
+`shipwright/keyboard.json`, `shipwright/gamepad.json`.
 
 - SoH reads `oot.o2r` and its settings from its own directory, so the launcher
   starts it there; `install.sh` links `oot.z64` to the library ROM and SoH
@@ -195,7 +195,10 @@ installer checks its SHA-256 and takes it from `~/.cache/d2k/downloads/` or
 - Its keyboard mapping IDs contain the key (`P0-B32768-KB80`), so a merge
   would leave old keys bound; `configure-emulators.sh` replaces all port-1
   keyboard mappings. Its default put the C-buttons on the arrows and the stick
-  on WASD.
+  on WASD. The pad's SDL mappings are replaced the same way from
+  `gamepad.json`: SoH's default left the D-pad on the N64 D-pad, so the menus
+  ignored it. It maps a pad button to a stick direction with
+  `SDLButtonToAxisDirectionMapping` (ID `P0-S0-D<dir>-SDLB<button>`).
 - SoH's own fullscreen (`Window.Fullscreen.Enabled`) is off: SDL puts it
   on X display 0, which Xwayland made the lower DSI panel, and it snapped back
   there each time the launcher moved it up (the game flickered on both
