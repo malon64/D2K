@@ -113,12 +113,18 @@ game slows down, lower `InternalResolution` or `AnisotropyLevel` first.
 
 Flycast built from the pinned source in `~/.local/opt/d2k/flycast`, run with
 `SDL_VIDEODRIVER=x11`, renderer settings at Flycast's defaults (OpenGL, native
-640x480). Overlay: `flycast/emu.cfg`, `flycast/mappings/SDL_Keyboard.cfg`.
+640x480). Overlay: `flycast/emu.cfg`, `flycast/mappings/SDL_Keyboard.cfg`,
+`flycast/mappings/SDL_D2K Controls.cfg`.
 
 - The Flathub ARM64 Flycast aborts on the Pi 5's 16 KiB-page kernel, hence the
   source build.
 - The overlay leaves window size to the launcher: Flycast saves the size the
   launcher gave its window on exit, so a fixed size would always drift.
+- With no mapping file for a pad, Flycast builds one from SDL's game
+  controller mapping: ABXY by label (wrong for the Dreamcast, mapped by
+  position), the D-pad on the D-pad, and Select (SDL "back") on Flycast's
+  own menu. It keeps that default in memory without saving it, so the D2K
+  pad file is written whole; Flycast looks it up by the pad's name.
 - Extras kept from Flycast's defaults: Tab (menu), Space (fast-forward), F12
   (screenshot).
 

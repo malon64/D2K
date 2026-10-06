@@ -44,21 +44,24 @@ exactly like the keyboard shortcut, in every emulator, without any binding
 mapping. It drives the same functions as the keyboard scheme above, and the
 keyboard keeps working, except in Azahar.
 
-| Pad | DS | 3DS (Azahar) | PS1 / PSP | GameCube | N64 |
-| --- | --- | --- | --- | --- | --- |
-| D-pad | D-pad | D-pad | D-pad | Main stick | Stick |
-| A (right) / B (bottom) | A / B | A / B | Circle / Cross | A / B | A / B |
-| X (top) / Y (left) | X / Y | X / Y | Triangle / Square | X / Y | – |
-| L1 / R1 | L / R | L / R | L1 / R1 (PSP L / R) | L / R | L / R |
-| L2 / R2 | – | ZL / ZR | PS1 L2 / R2 | – / Z | Z / – |
-| Start / Select | Start / Select | Start / Select | Start / Select | Start | Start |
+| Pad | DS | 3DS (Azahar) | PS1 / PSP | Dreamcast | GameCube | N64 |
+| --- | --- | --- | --- | --- | --- | --- |
+| D-pad | D-pad | D-pad | D-pad | Analog stick | Main stick | Stick |
+| A (right) / B (bottom) | A / B | A / B | Circle / Cross | B / A | A / B | A / B |
+| X (top) / Y (left) | X / Y | X / Y | Triangle / Square | Y / X | X / Y | – |
+| L1 / R1 | L / R | L / R | L1 / R1 (PSP L / R) | L / R triggers | L / R | L / R |
+| L2 / R2 | – | ZL / ZR | PS1 L2 / R2 | L / R triggers | – / Z | Z / – |
+| Start / Select | Start / Select | Start / Select | Start / Select | Start / – | Start | Start |
 
 - **Azahar keeps one binding per button**, so its buttons are on the pad and
   the numpad no longer drives 3DS buttons (the circle pad / C-stick keys stay).
 - The D-pad drives the GameCube and N64 sticks until the Circle Pads are
   fitted; N64 C-buttons are keyboard-only for now (I J K L).
-- Flycast (Dreamcast) and Ship of Harkinian write their own pad mapping the
-  first time they see it; they still need checking against this table.
+- Flycast's default pad mapping comes from SDL: ABXY by label, the D-pad on
+  the D-pad and Select on Flycast's own menu. D2K replaces it with
+  `flycast/mappings/SDL_D2K Controls.cfg`.
+- Ship of Harkinian writes its own pad mapping the first time it sees the
+  pad; it still needs checking against this table.
 
 ## Menus (Pegasus)
 
@@ -105,7 +108,7 @@ keycap in that position).
 | Azahar (3DS) | `azahar/qt-config.ini [Controls]` | Qt key code without modifier (numpad 8 = `56`); every key needs `\default=false` or Azahar ignores it. Pad: `button:N,engine:sdl,guid:…,port:0`, hat `direction:up,…,hat:0` |
 | DuckStation (PS1) | `duckstation/settings.ini [Pad1]` | Physical position: `Keyboard/Numpad8`, `Keyboard/UpArrow`, `Keyboard/I`. Pad: a second line per button, `SDL-0/A`, `SDL-0/DPadUp`, `SDL-0/+LeftTrigger` |
 | PPSSPP (PSP) | `ppsspp/controls.ini` | `1-<Android keycode>`: numpad 1…9 = 145…153, Enter 66, Backspace 67. Pad: `10-<code>`, SDL a/b/x/y = 189/190/191/188, Back 196, Start 197, L1/R1 194/195 |
-| Flycast (Dreamcast) | `flycast/mappings/SDL_Keyboard.cfg` (whole file) | SDL scancode (position): numpad 1…9 = 89…97 |
+| Flycast (Dreamcast) | `flycast/mappings/SDL_Keyboard.cfg` and `SDL_D2K Controls.cfg` (whole files) | SDL scancode (position): numpad 1…9 = 89…97. Pad: raw SDL button number, hat = `(hat + 1) << 8` + direction (up 256, down 257, left 258, right 259) |
 | Dolphin (GameCube) | `dolphin/GCPadNew.ini` | X11 base keysym: numpad 8 = `KP_Up`, 7 = `KP_Home`, 3 = `KP_Next` (independent of Num Lock). Pad: OR-ed in with a device-qualified input, `` `KP_Right` \| `SDL/0/D2K Controls:Button S` `` |
 | Mupen64Plus (N64) | `mupen64plus/mupen64plus.cfg [Input-SDL-Control1]` | SDL 1.2 keysym: numpad 1…9 = 257…265, arrows 273–276. Pad: `device = 0`, then `button(N)` / `hat(0 Left Right)` after the key in the same value |
 | Ship of Harkinian | `shipwright/keyboard.json` (rewrites the port-1 keyboard mappings) | PC scancode: numpad 7/8/9 = 71/72/73, arrows = 0x100 + code |
