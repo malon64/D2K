@@ -2,7 +2,7 @@
     "Window": {
         "AudioBackend": "sdl",
         "Fullscreen": {
-            "Enabled": true
+            "Enabled": false
         }
     }
 }

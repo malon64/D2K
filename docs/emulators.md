@@ -196,6 +196,11 @@ installer checks its SHA-256 and takes it from `~/.cache/d2k/downloads/` or
   would leave old keys bound; `configure-emulators.sh` replaces all port-1
   keyboard mappings. Its default put the C-buttons on the arrows and the stick
   on WASD.
+- SoH's own fullscreen (`Window.Fullscreen.Enabled`) is off: SDL puts it
+  on X display 0, which Xwayland made the lower DSI panel, and it snapped back
+  there each time the launcher moved it up (the game flickered on both
+  panels). Windowed, the launcher makes it fullscreen on the upper panel
+  like every other single-screen emulator.
 - Audio: see [`platform.md`](platform.md#emulators-that-bypass-or-break-pipewire).
 - `LowResMode = 1` renders 4:3 at N64 resolution (pillarboxed on 16:9);
   `InterpolationFPS = 20` is the original rate, and the Pi has room for 30 or
