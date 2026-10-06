@@ -64,6 +64,7 @@ Summary as of 24 September 2026:
 | `docs/controls.md` | The keyboard/menu/touch control scheme and where each emulator stores it. |
 | `docs/theme.md` | Theme development, the Windows preview, the launch lifecycle. |
 | `library/` | **Private, git-ignored** ROMs, art and metadata. Never commit it. |
+| `firmware/esp32-controls/` | ESP32-S3-Zero USB HID gamepad firmware (Arduino-ESP32, TinyUSB); build and flash from the Pi with `arduino-cli`, see its README. Pin table must match `fusion/electronics/gen_d2k_v1_sch.py`. |
 | `fusion/` | Autodesk Fusion work (Fusion project **D2K**): build scripts run through the Fusion MCP, the generated electronics library, and the decision / open-question / wiring / constraint docs. **Read `fusion/README.md` before touching Fusion** (one small script at a time: heavy designs and uploads stall it). |
 
 ## Raspberry Pi access
