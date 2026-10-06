@@ -38,22 +38,29 @@ take 3.3 V from the ESP32's `3V3` pin. **Breadboard view with every hole:**
 as the "D2K Bench Wiring" page); which button sits on which GPIO follows that
 layout so no two wires cross.
 
-| Function | ESP32 pin | Where on the board | Function | ESP32 pin | Where |
-| --- | --- | --- | --- | --- | --- |
-| LSTICK_X | GPIO1 (ADC1_CH0) | L4 | BTN_A | GPIO9 | R7 |
-| LSTICK_Y | GPIO2 (ADC1_CH1) | L5 | BTN_B | GPIO11 | R5 |
-| RSTICK_X | GPIO3 (ADC1_CH2) | L6 | BTN_X | GPIO12 | R4 |
-| RSTICK_Y | GPIO4 (ADC1_CH3) | L7 | BTN_Y | GPIO13 | R3 |
-| BTN_R2 | GPIO5 | L8 | BTN_DPAD_UP | GPIO14 | front pad |
-| BTN_L2 | GPIO6 | L9 | BTN_DPAD_DOWN | GPIO15 | front pad |
-| BTN_DPAD_LEFT | GPIO7 | R9 | BTN_START | GPIO16 | front pad |
-| BTN_DPAD_RIGHT | GPIO8 | R8 | BTN_SELECT / HOME | GPIO17 / GPIO18 | back pads |
-| Circle Pads VCC | 3V3 | L3 | BTN_L1 / R1 | GPIO38 / GPIO39 | back pads |
-| GND (all) | GND | L2 | | | |
+**Bench plan without soldering (2026-10-06):** the Circle Pads are not here
+yet, so all 15 buttons use the 15 header GPIOs. L1/R1/L2/R2 sit on GPIO1–4,
+the pins the Circle Pads will need (ADC1); they move when the pads arrive
+(open question Q22).
 
-Kept free for later: GPIO10 (ADC1, battery voltage), GPIO40 (lid Hall
-sensor), GPIO41 (vibration PWM), GPIO42 (Pi power control), GPIO43/44 (UART0:
-system link to the Pi). Avoid GPIO45 (strapping). On the board: GPIO21 RGB LED,
+| Button | ESP32 pin | Header pin | Button | ESP32 pin | Header pin |
+| --- | --- | --- | --- | --- | --- |
+| DPAD_DOWN | GPIO7 | R9 | SELECT | GPIO43 (TX) | R1 |
+| DPAD_UP | GPIO8 | R8 | START | GPIO6 | L9 |
+| DPAD_LEFT | GPIO9 | R7 | HOME | GPIO5 | L8 |
+| DPAD_RIGHT | GPIO10 | R6 | L1 | GPIO4 | L7 |
+| A | GPIO11 | R5 | R1 | GPIO3 | L6 |
+| B | GPIO12 | R4 | L2 | GPIO2 | L5 |
+| X | GPIO13 | R3 | R2 | GPIO1 | L4 |
+| Y | GPIO44 (RX) | R2 | GND (all) | GND | L2 |
+
+Later, with the Circle Pads: LSTICK X/Y on GPIO1/2, RSTICK X/Y on GPIO3/4,
+VCC from the ESP32 3V3 pin (L3).
+
+With the bench plan every header GPIO is a button, including GPIO10 (planned
+for the battery voltage) and TX/RX (planned for a UART link to the Pi). Do
+not hold SELECT while the ESP32 powers up: the boot ROM drives TX. The solder
+pads (GPIO14–18, 38–42) stay unused for now; avoid GPIO45 (strapping). On the board: GPIO21 RGB LED,
 GPIO0 BOOT, GPIO19/20 USB. L1–L9 / R1–R9 count from the USB-C end.
 
 ## Audio: WM8960 board and speakers (sheet 3)

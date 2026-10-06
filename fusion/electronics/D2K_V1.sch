@@ -881,8 +881,6 @@
 <part name="SW13" library="D2K" deviceset="TACT_SWITCH_6X6" device="" value="BTN_R1"/>
 <part name="SW14" library="D2K" deviceset="TACT_SWITCH_6X6" device="" value="BTN_L2"/>
 <part name="SW15" library="D2K" deviceset="TACT_SWITCH_6X6" device="" value="BTN_R2"/>
-<part name="JS1" library="D2K" deviceset="CIRCLE_PAD_N3DSXL" device="" value="Circle Pad LEFT (move)"/>
-<part name="JS2" library="D2K" deviceset="CIRCLE_PAD_N3DSXL" device="" value="Circle Pad RIGHT (C-stick)"/>
 <part name="U3" library="D2K" deviceset="WM8960_AUDIO_BOARD" device="" value="WM8960 Audio Board"/>
 <part name="LS1" library="D2K" deviceset="SPEAKER_8R_2W" device="" value="Speaker LEFT"/>
 <part name="LS2" library="D2K" deviceset="SPEAKER_8R_2W" device="" value="Speaker RIGHT"/>
@@ -1368,26 +1366,23 @@
 <plain>
 <text x="-30.48" y="41.91" size="1.778" layer="97" align="bottom-center">W7  USB-A -&gt; USB-C DATA cable: HID gamepad + ESP32 power</text>
 <text x="-8.89" y="-3.14" size="1.27" layer="97" align="center-right">= USB-C VBUS on board</text>
-<text x="44.45" y="-15.84" size="1.27" layer="97" align="center-left">free: ADC1 for battery voltage</text>
 <text x="44.45" y="-71.72" size="1.27" layer="97" align="center-left">free: lid Hall sensor</text>
 <text x="44.45" y="-74.26" size="1.27" layer="97" align="center-left">free: vibration PWM</text>
 <text x="44.45" y="-76.8" size="1.27" layer="97" align="center-left">free: Pi power control</text>
-<text x="44.45" y="-3.14" size="1.27" layer="97" align="center-left">free: UART to Pi (later)</text>
-<text x="44.45" y="-5.68" size="1.27" layer="97" align="center-left">free: UART to Pi (later)</text>
 <text x="44.45" y="-79.34" size="1.27" layer="97" align="center-left">avoid: strapping pin</text>
 <text x="-111.76" y="27.94" size="1.778" layer="97" align="bottom-center">Face buttons, D-pad (6x6 tact on the breadboard)</text>
 <text x="137.16" y="27.94" size="1.778" layer="97" align="bottom-center">Start/Select/Home, shoulders</text>
-<text x="-121.92" y="-134.62" size="1.27" layer="97">! Circle Pad pinout NOT verified: measure VCC/GND/X/Y before wiring. Feed 3.3 V (ESP_3V3), never 5 V.</text>
+<text x="-121.92" y="-114.3" size="1.778" layer="97">Circle Pads JS1/JS2: not fitted yet. They will take GPIO1-4 (ADC1); L1/R1/L2/R2 move off those pins then (Q22).</text>
 <wire x1="-167.64" y1="81.28" x2="193.04" y2="81.28" width="0.4064" layer="94"/>
-<wire x1="193.04" y1="81.28" x2="193.04" y2="-187.96" width="0.4064" layer="94"/>
-<wire x1="193.04" y1="-187.96" x2="-167.64" y2="-187.96" width="0.4064" layer="94"/>
-<wire x1="-167.64" y1="-187.96" x2="-167.64" y2="81.28" width="0.4064" layer="94"/>
+<wire x1="193.04" y1="81.28" x2="193.04" y2="-154.94" width="0.4064" layer="94"/>
+<wire x1="193.04" y1="-154.94" x2="-167.64" y2="-154.94" width="0.4064" layer="94"/>
+<wire x1="-167.64" y1="-154.94" x2="-167.64" y2="81.28" width="0.4064" layer="94"/>
 <text x="-162.56" y="73.66" size="3.81" layer="94">D2K V1 - 2/3 Controls (ESP32-S3-Zero USB HID)</text>
-<text x="-162.56" y="67.31" size="1.778" layer="97">15 buttons active-low to GND (internal pull-ups), 2 Circle Pads on ADC1, USB to the Pi</text>
-<text x="-162.56" y="-167.64" size="1.27" layer="97">Header pins L1-L9 / R1-R9 sit on the breadboard; GPIO14-18, 38, 39 are solder pads (F front, B back).</text>
-<text x="-162.56" y="-172.72" size="1.27" layer="97">6x6 tact switch: pins 1-2 and 3-4 are joined inside - wire diagonally (1 to GPIO, 4 to GND).</text>
-<text x="-162.56" y="-177.8" size="1.27" layer="97">ESP32 is 3.3 V only (not 5 V tolerant). GPIO3 (RSTICK_X) is a strapping pin: fine as analog input.</text>
-<text x="-162.56" y="-182.88" size="1.27" layer="97">Kept free: GPIO10 (ADC battery), GPIO40-42 (Hall, vibration, Pi power), GPIO43/44 (UART to Pi).</text>
+<text x="-162.56" y="67.31" size="1.778" layer="97">15 buttons active-low to GND (internal pull-ups) on the 15 header GPIOs, no soldering; USB to the Pi</text>
+<text x="-162.56" y="-134.62" size="1.27" layer="97">Bench plan without soldering: shoulders on GPIO1-4 until the Circle Pads arrive (then Q22).</text>
+<text x="-162.56" y="-139.7" size="1.27" layer="97">6x6 tact switch: pins 1-2 and 3-4 are joined inside - wire diagonally (1 to GPIO, 4 to GND).</text>
+<text x="-162.56" y="-144.78" size="1.27" layer="97">SELECT is on TX (GPIO43), driven by the boot ROM at power-up: do not hold SELECT while powering up.</text>
+<text x="-162.56" y="-149.86" size="1.27" layer="97">ESP32 is 3.3 V only (not 5 V tolerant). Solder pads GPIO14-18, 38-42 unused for now.</text>
 </plain>
 <instances>
 <instance part="U2" gate="MAIN" x="0" y="0"/>
@@ -1409,8 +1404,6 @@
 <instance part="SW13" gate="S" x="127" y="-43.18"/>
 <instance part="SW14" gate="S" x="127" y="-58.42"/>
 <instance part="SW15" gate="S" x="127" y="-73.66"/>
-<instance part="JS1" gate="P" x="-121.92" y="-114.3"/>
-<instance part="JS2" gate="P" x="-35.56" y="-114.3"/>
 </instances>
 <busses>
 </busses>
@@ -1522,16 +1515,6 @@
 <wire x1="152.4" y1="-76.2" x2="160.02" y2="-76.2" width="0.1524" layer="91"/>
 <label x="160.02" y="-76.2" size="1.778" layer="95"/>
 </segment>
-<segment>
-<pinref part="JS1" gate="P" pin="GND"/>
-<wire x1="-96.52" y1="-124.46" x2="-88.9" y2="-124.46" width="0.1524" layer="91"/>
-<label x="-88.9" y="-124.46" size="1.778" layer="95"/>
-</segment>
-<segment>
-<pinref part="JS2" gate="P" pin="GND"/>
-<wire x1="-10.16" y1="-124.46" x2="-2.54" y2="-124.46" width="0.1524" layer="91"/>
-<label x="-2.54" y="-124.46" size="1.778" layer="95"/>
-</segment>
 </net>
 <net name="ESP_3V3" class="0">
 <segment>
@@ -1539,70 +1522,12 @@
 <wire x1="-5.08" y1="-7.62" x2="-12.7" y2="-7.62" width="0.1524" layer="91"/>
 <label x="-12.7" y="-7.62" size="1.778" layer="95" rot="R180"/>
 </segment>
-<segment>
-<pinref part="JS1" gate="P" pin="VCC"/>
-<wire x1="-96.52" y1="-116.84" x2="-88.9" y2="-116.84" width="0.1524" layer="91"/>
-<label x="-88.9" y="-116.84" size="1.778" layer="95"/>
-</segment>
-<segment>
-<pinref part="JS2" gate="P" pin="VCC"/>
-<wire x1="-10.16" y1="-116.84" x2="-2.54" y2="-116.84" width="0.1524" layer="91"/>
-<label x="-2.54" y="-116.84" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="LSTICK_X" class="0">
-<segment>
-<pinref part="U2" gate="MAIN" pin="GPIO1"/>
-<wire x1="-5.08" y1="-10.16" x2="-12.7" y2="-10.16" width="0.1524" layer="91"/>
-<label x="-12.7" y="-10.16" size="1.778" layer="95" rot="R180"/>
-</segment>
-<segment>
-<pinref part="JS1" gate="P" pin="X"/>
-<wire x1="-96.52" y1="-119.38" x2="-88.9" y2="-119.38" width="0.1524" layer="91"/>
-<label x="-88.9" y="-119.38" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="LSTICK_Y" class="0">
-<segment>
-<pinref part="U2" gate="MAIN" pin="GPIO2"/>
-<wire x1="-5.08" y1="-12.7" x2="-12.7" y2="-12.7" width="0.1524" layer="91"/>
-<label x="-12.7" y="-12.7" size="1.778" layer="95" rot="R180"/>
-</segment>
-<segment>
-<pinref part="JS1" gate="P" pin="Y"/>
-<wire x1="-96.52" y1="-121.92" x2="-88.9" y2="-121.92" width="0.1524" layer="91"/>
-<label x="-88.9" y="-121.92" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="RSTICK_X" class="0">
-<segment>
-<pinref part="U2" gate="MAIN" pin="GPIO3"/>
-<wire x1="-5.08" y1="-15.24" x2="-12.7" y2="-15.24" width="0.1524" layer="91"/>
-<label x="-12.7" y="-15.24" size="1.778" layer="95" rot="R180"/>
-</segment>
-<segment>
-<pinref part="JS2" gate="P" pin="X"/>
-<wire x1="-10.16" y1="-119.38" x2="-2.54" y2="-119.38" width="0.1524" layer="91"/>
-<label x="-2.54" y="-119.38" size="1.778" layer="95"/>
-</segment>
-</net>
-<net name="RSTICK_Y" class="0">
-<segment>
-<pinref part="U2" gate="MAIN" pin="GPIO4"/>
-<wire x1="-5.08" y1="-17.78" x2="-12.7" y2="-17.78" width="0.1524" layer="91"/>
-<label x="-12.7" y="-17.78" size="1.778" layer="95" rot="R180"/>
-</segment>
-<segment>
-<pinref part="JS2" gate="P" pin="Y"/>
-<wire x1="-10.16" y1="-121.92" x2="-2.54" y2="-121.92" width="0.1524" layer="91"/>
-<label x="-2.54" y="-121.92" size="1.778" layer="95"/>
-</segment>
 </net>
 <net name="BTN_DPAD_UP" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO14"/>
-<wire x1="40.64" y1="-53.34" x2="50.8" y2="-53.34" width="0.1524" layer="91"/>
-<label x="50.8" y="-53.34" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO8"/>
+<wire x1="40.64" y1="-20.32" x2="50.8" y2="-20.32" width="0.1524" layer="91"/>
+<label x="50.8" y="-20.32" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW1" gate="S" pin="P1"/>
@@ -1612,9 +1537,9 @@
 </net>
 <net name="BTN_DPAD_DOWN" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO15"/>
-<wire x1="40.64" y1="-55.88" x2="50.8" y2="-55.88" width="0.1524" layer="91"/>
-<label x="50.8" y="-55.88" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO7"/>
+<wire x1="40.64" y1="-22.86" x2="50.8" y2="-22.86" width="0.1524" layer="91"/>
+<label x="50.8" y="-22.86" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW2" gate="S" pin="P1"/>
@@ -1624,9 +1549,9 @@
 </net>
 <net name="BTN_DPAD_LEFT" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO7"/>
-<wire x1="40.64" y1="-22.86" x2="50.8" y2="-22.86" width="0.1524" layer="91"/>
-<label x="50.8" y="-22.86" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO9"/>
+<wire x1="40.64" y1="-17.78" x2="50.8" y2="-17.78" width="0.1524" layer="91"/>
+<label x="50.8" y="-17.78" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW3" gate="S" pin="P1"/>
@@ -1636,9 +1561,9 @@
 </net>
 <net name="BTN_DPAD_RIGHT" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO8"/>
-<wire x1="40.64" y1="-20.32" x2="50.8" y2="-20.32" width="0.1524" layer="91"/>
-<label x="50.8" y="-20.32" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO10"/>
+<wire x1="40.64" y1="-15.24" x2="50.8" y2="-15.24" width="0.1524" layer="91"/>
+<label x="50.8" y="-15.24" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW4" gate="S" pin="P1"/>
@@ -1648,9 +1573,9 @@
 </net>
 <net name="BTN_A" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO9"/>
-<wire x1="40.64" y1="-17.78" x2="50.8" y2="-17.78" width="0.1524" layer="91"/>
-<label x="50.8" y="-17.78" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO11"/>
+<wire x1="40.64" y1="-12.7" x2="50.8" y2="-12.7" width="0.1524" layer="91"/>
+<label x="50.8" y="-12.7" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW5" gate="S" pin="P1"/>
@@ -1660,9 +1585,9 @@
 </net>
 <net name="BTN_B" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO11"/>
-<wire x1="40.64" y1="-12.7" x2="50.8" y2="-12.7" width="0.1524" layer="91"/>
-<label x="50.8" y="-12.7" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO12"/>
+<wire x1="40.64" y1="-10.16" x2="50.8" y2="-10.16" width="0.1524" layer="91"/>
+<label x="50.8" y="-10.16" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW6" gate="S" pin="P1"/>
@@ -1672,9 +1597,9 @@
 </net>
 <net name="BTN_X" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO12"/>
-<wire x1="40.64" y1="-10.16" x2="50.8" y2="-10.16" width="0.1524" layer="91"/>
-<label x="50.8" y="-10.16" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO13"/>
+<wire x1="40.64" y1="-7.62" x2="50.8" y2="-7.62" width="0.1524" layer="91"/>
+<label x="50.8" y="-7.62" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW7" gate="S" pin="P1"/>
@@ -1684,9 +1609,9 @@
 </net>
 <net name="BTN_Y" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO13"/>
-<wire x1="40.64" y1="-7.62" x2="50.8" y2="-7.62" width="0.1524" layer="91"/>
-<label x="50.8" y="-7.62" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO44_RX"/>
+<wire x1="40.64" y1="-5.08" x2="50.8" y2="-5.08" width="0.1524" layer="91"/>
+<label x="50.8" y="-5.08" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW8" gate="S" pin="P1"/>
@@ -1696,9 +1621,9 @@
 </net>
 <net name="BTN_START" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO16"/>
-<wire x1="40.64" y1="-58.42" x2="50.8" y2="-58.42" width="0.1524" layer="91"/>
-<label x="50.8" y="-58.42" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO6"/>
+<wire x1="-5.08" y1="-22.86" x2="-15.24" y2="-22.86" width="0.1524" layer="91"/>
+<label x="-15.24" y="-22.86" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW9" gate="S" pin="P1"/>
@@ -1708,9 +1633,9 @@
 </net>
 <net name="BTN_SELECT" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO17"/>
-<wire x1="40.64" y1="-60.96" x2="50.8" y2="-60.96" width="0.1524" layer="91"/>
-<label x="50.8" y="-60.96" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO43_TX"/>
+<wire x1="40.64" y1="-2.54" x2="50.8" y2="-2.54" width="0.1524" layer="91"/>
+<label x="50.8" y="-2.54" size="1.778" layer="95"/>
 </segment>
 <segment>
 <pinref part="SW10" gate="S" pin="P1"/>
@@ -1720,9 +1645,9 @@
 </net>
 <net name="BTN_HOME" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO18"/>
-<wire x1="40.64" y1="-63.5" x2="50.8" y2="-63.5" width="0.1524" layer="91"/>
-<label x="50.8" y="-63.5" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO5"/>
+<wire x1="-5.08" y1="-20.32" x2="-15.24" y2="-20.32" width="0.1524" layer="91"/>
+<label x="-15.24" y="-20.32" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW11" gate="S" pin="P1"/>
@@ -1732,9 +1657,9 @@
 </net>
 <net name="BTN_L1" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO38"/>
-<wire x1="40.64" y1="-66.04" x2="50.8" y2="-66.04" width="0.1524" layer="91"/>
-<label x="50.8" y="-66.04" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO4"/>
+<wire x1="-5.08" y1="-17.78" x2="-15.24" y2="-17.78" width="0.1524" layer="91"/>
+<label x="-15.24" y="-17.78" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW12" gate="S" pin="P1"/>
@@ -1744,9 +1669,9 @@
 </net>
 <net name="BTN_R1" class="0">
 <segment>
-<pinref part="U2" gate="PADS" pin="GPIO39"/>
-<wire x1="40.64" y1="-68.58" x2="50.8" y2="-68.58" width="0.1524" layer="91"/>
-<label x="50.8" y="-68.58" size="1.778" layer="95"/>
+<pinref part="U2" gate="MAIN" pin="GPIO3"/>
+<wire x1="-5.08" y1="-15.24" x2="-15.24" y2="-15.24" width="0.1524" layer="91"/>
+<label x="-15.24" y="-15.24" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW13" gate="S" pin="P1"/>
@@ -1756,9 +1681,9 @@
 </net>
 <net name="BTN_L2" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO6"/>
-<wire x1="-5.08" y1="-22.86" x2="-15.24" y2="-22.86" width="0.1524" layer="91"/>
-<label x="-15.24" y="-22.86" size="1.778" layer="95" rot="R180"/>
+<pinref part="U2" gate="MAIN" pin="GPIO2"/>
+<wire x1="-5.08" y1="-12.7" x2="-15.24" y2="-12.7" width="0.1524" layer="91"/>
+<label x="-15.24" y="-12.7" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW14" gate="S" pin="P1"/>
@@ -1768,9 +1693,9 @@
 </net>
 <net name="BTN_R2" class="0">
 <segment>
-<pinref part="U2" gate="MAIN" pin="GPIO5"/>
-<wire x1="-5.08" y1="-20.32" x2="-15.24" y2="-20.32" width="0.1524" layer="91"/>
-<label x="-15.24" y="-20.32" size="1.778" layer="95" rot="R180"/>
+<pinref part="U2" gate="MAIN" pin="GPIO1"/>
+<wire x1="-5.08" y1="-10.16" x2="-15.24" y2="-10.16" width="0.1524" layer="91"/>
+<label x="-15.24" y="-10.16" size="1.778" layer="95" rot="R180"/>
 </segment>
 <segment>
 <pinref part="SW15" gate="S" pin="P1"/>

@@ -5,7 +5,7 @@ Sheet 1 - Pi 5 on the mains (27 W USB-C PSU), Waveshare 5inch HDMI LCD (H)
           Cooler. Each cable is one straight wire per conductor between the two
           connectors facing each other, with the cable named above it.
 Sheet 2 - Controls: ESP32-S3-Zero as USB HID gamepad (cable W7 to the Pi),
-          15 buttons (6x6 tact switches on the breadboard), 2 Circle Pads.
+          15 buttons (6x6 tact switches on the breadboard), 2 Circle Pads (later).
 Sheet 3 - Audio: Waveshare WM8960 Audio Board on the Pi's I2C1 + I2S pins,
           two 8 ohm speakers.
 Nets are named <cable>_<signal> for cables and by function elsewhere
@@ -47,16 +47,25 @@ PARTS = {  # part: (deviceset, value)
 # GPIO43/44 (UART0: system link to the Pi later). GPIO45 is a strapping pin.
 # Which button sits on which GPIO follows the breadboard layout
 # (gen_breadboard.py): with this order no two jumper wires cross.
+#
+# Bench plan without soldering (user, 2026-10-06): the Circle Pads are not
+# here yet, so all 15 buttons use the 15 header GPIOs. The shoulders sit on
+# GPIO1-4 (ADC1) until the pads arrive; then they move (solder pads, button
+# matrix or I/O expander, see fusion/open-questions.md Q22). SELECT is on TX
+# (GPIO43): the boot ROM drives TX at power-up, so do not hold SELECT while
+# the board powers up.
+STICKS_FITTED = False
 BUTTONS = [  # (switch, net, ESP32 gate, ESP32 pin)
-    ("SW1", "BTN_DPAD_UP", "PADS", "GPIO14"), ("SW2", "BTN_DPAD_DOWN", "PADS", "GPIO15"),
-    ("SW3", "BTN_DPAD_LEFT", "MAIN", "GPIO7"), ("SW4", "BTN_DPAD_RIGHT", "MAIN", "GPIO8"),
-    ("SW5", "BTN_A", "MAIN", "GPIO9"), ("SW6", "BTN_B", "MAIN", "GPIO11"),
-    ("SW7", "BTN_X", "MAIN", "GPIO12"), ("SW8", "BTN_Y", "MAIN", "GPIO13"),
-    ("SW9", "BTN_START", "PADS", "GPIO16"), ("SW10", "BTN_SELECT", "PADS", "GPIO17"),
-    ("SW11", "BTN_HOME", "PADS", "GPIO18"), ("SW12", "BTN_L1", "PADS", "GPIO38"),
-    ("SW13", "BTN_R1", "PADS", "GPIO39"), ("SW14", "BTN_L2", "MAIN", "GPIO6"),
-    ("SW15", "BTN_R2", "MAIN", "GPIO5"),
+    ("SW1", "BTN_DPAD_UP", "MAIN", "GPIO8"), ("SW2", "BTN_DPAD_DOWN", "MAIN", "GPIO7"),
+    ("SW3", "BTN_DPAD_LEFT", "MAIN", "GPIO9"), ("SW4", "BTN_DPAD_RIGHT", "MAIN", "GPIO10"),
+    ("SW5", "BTN_A", "MAIN", "GPIO11"), ("SW6", "BTN_B", "MAIN", "GPIO12"),
+    ("SW7", "BTN_X", "MAIN", "GPIO13"), ("SW8", "BTN_Y", "MAIN", "GPIO44_RX"),
+    ("SW9", "BTN_START", "MAIN", "GPIO6"), ("SW10", "BTN_SELECT", "MAIN", "GPIO43_TX"),
+    ("SW11", "BTN_HOME", "MAIN", "GPIO5"), ("SW12", "BTN_L1", "MAIN", "GPIO4"),
+    ("SW13", "BTN_R1", "MAIN", "GPIO3"), ("SW14", "BTN_L2", "MAIN", "GPIO2"),
+    ("SW15", "BTN_R2", "MAIN", "GPIO1"),
 ]
+# Planned once the Circle Pads arrive (ADC1); not wired while STICKS_FITTED is False.
 STICKS = [("JS1", "LSTICK", "GPIO1", "GPIO2"), ("JS2", "RSTICK", "GPIO3", "GPIO4")]
 PARTS.update({sw: ("TACT_SWITCH_6X6", net) for sw, net, _, _ in BUTTONS})
 RESERVED = {"GPIO10": "free: ADC1 for battery voltage", "GPIO40": "free: lid Hall sensor",
@@ -263,12 +272,16 @@ def sheet_controls():
     stub("ESP_3V3", ("U2", "MAIN", "3V3_OUT"))
     stub("GND", ("U2", "MAIN", "GND@1"))
     note_at_pin("U2", "MAIN", "5V_IN", "= USB-C VBUS on board")
-    for part, net, x_pin, y_pin in STICKS:
+    sticks = STICKS if STICKS_FITTED else []
+    for part, net, x_pin, y_pin in sticks:
         stub(net + "_X", ("U2", "MAIN", x_pin))
         stub(net + "_Y", ("U2", "MAIN", y_pin))
     for sw, net, gate, pin in BUTTONS:
         stub(net, ("U2", gate, pin), length=4)
+    used = {pin for _, _, _, pin in BUTTONS}
     for pin, why in RESERVED.items():
+        if pin in used:
+            continue
         gate = "PADS" if pin in ("GPIO40", "GPIO41", "GPIO42", "GPIO45") else "MAIN"
         note_at_pin("U2", gate, pin, why)
 
@@ -287,22 +300,26 @@ def sheet_controls():
 
     # Circle Pads below the left button column.
     jy = y0 - 8 * 6 * G - 4 * G
-    for k, (part, net, x_pin, y_pin) in enumerate(STICKS):
+    for k, (part, net, x_pin, y_pin) in enumerate(sticks):
         js = place(part, "P", col_x[0] + k * 34 * G, jy)
         boxes.append(js)
         stub("ESP_3V3", (part, "P", "VCC"))
         stub(net + "_X", (part, "P", "X"))
         stub(net + "_Y", (part, "P", "Y"))
         stub("GND", (part, "P", "GND"))
-    text(col_x[0], jy - 8 * G, "! Circle Pad pinout NOT verified: measure VCC/GND/X/Y before wiring. "
-         "Feed 3.3 V (ESP_3V3), never 5 V.", size=1.27)
+    if sticks:
+        text(col_x[0], jy - 8 * G, "! Circle Pad pinout NOT verified: measure VCC/GND/X/Y before wiring. "
+             "Feed 3.3 V (ESP_3V3), never 5 V.", size=1.27)
+    else:
+        text(col_x[0], jy, "Circle Pads JS1/JS2: not fitted yet. They will take GPIO1-4 (ADC1); "
+             "L1/R1/L2/R2 move off those pins then (Q22).", size=1.778)
 
     frame(boxes, "D2K V1 - 2/3 Controls (ESP32-S3-Zero USB HID)",
-          "15 buttons active-low to GND (internal pull-ups), 2 Circle Pads on ADC1, USB to the Pi",
-          ["Header pins L1-L9 / R1-R9 sit on the breadboard; GPIO14-18, 38, 39 are solder pads (F front, B back).",
+          "15 buttons active-low to GND (internal pull-ups) on the 15 header GPIOs, no soldering; USB to the Pi",
+          ["Bench plan without soldering: shoulders on GPIO1-4 until the Circle Pads arrive (then Q22).",
            "6x6 tact switch: pins 1-2 and 3-4 are joined inside - wire diagonally (1 to GPIO, 4 to GND).",
-           "ESP32 is 3.3 V only (not 5 V tolerant). GPIO3 (RSTICK_X) is a strapping pin: fine as analog input.",
-           "Kept free: GPIO10 (ADC battery), GPIO40-42 (Hall, vibration, Pi power), GPIO43/44 (UART to Pi)."])
+           "SELECT is on TX (GPIO43), driven by the boot ROM at power-up: do not hold SELECT while powering up.",
+           "ESP32 is 3.3 V only (not 5 V tolerant). Solder pads GPIO14-18, 38-42 unused for now."])
 
 
 # ---------------------------------------------------------------- sheet 3 ---

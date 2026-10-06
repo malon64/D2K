@@ -25,7 +25,7 @@ P = 16                     # px per 2.54 mm hole pitch
 X0 = 150                   # x of column 1 (room for the USB label)
 COLS = 63                  # MB-102: 63 columns, rows a-e / f-j, 4 power rails
 LANE = 11                  # spacing of wire lanes above/below the board
-N_TOP, N_BOT = 6, 9
+N_TOP, N_BOT = 9, 6           # header row d wires above, row h wires below
 
 
 def cx(col):
@@ -66,7 +66,7 @@ SHORT = {"BTN_DPAD_UP": "UP", "BTN_DPAD_DOWN": "DOWN", "BTN_DPAD_LEFT": "LEFT", 
 # (its pins sit in e/f of columns N and N+2). Groups: D-pad, face, system, shoulders.
 SLOT = {"BTN_DPAD_DOWN": 15, "BTN_DPAD_UP": 18, "BTN_DPAD_LEFT": 21, "BTN_DPAD_RIGHT": 24,
         "BTN_A": 28, "BTN_B": 31, "BTN_X": 34, "BTN_Y": 37,
-        "BTN_START": 41, "BTN_SELECT": 44, "BTN_HOME": 47,
+        "BTN_SELECT": 41, "BTN_START": 44, "BTN_HOME": 47,
         "BTN_L1": 51, "BTN_R1": 54, "BTN_L2": 57, "BTN_R2": 60}
 
 # ESP32-S3-Zero straddles the channel, USB-C off the left end of the board:
@@ -132,7 +132,7 @@ def breadboard():
     s = Svg()
     wires = []          # checklist rows: (group, label, from, to, colour key, note)
     width = cx(COLS) + 70
-    height = Y_BLOCKS + 96
+    height = Y_BLOCKS + (96 if sch.STICKS_FITTED else 34)
     # bench mat + board body
     s.rect(0, 0, width, height, "#e9eef3", rx=10)
     bx0, bx1 = cx(1) - P, cx(COLS) + P
@@ -175,9 +175,6 @@ def breadboard():
         s.circle(x, y, 3.4, "#e0b64a", "#7a5d12", 0.8)
         label = PIN_LABEL.get(name, name.replace("GPIO", "").split("_")[0])
         s.text(x, y + (10 if row == "d" else -6), label, size=7.5, fill="#ffffff")
-    for name in ("GPIO43_TX", "GPIO44_RX", "GPIO10"):
-        x, y = hole(*ESP_HOLE[name])
-        s.text(x, ROW_Y["a"] - 0.2 * P - 11, "free", size=7, fill="#7b8490", family="body")
     s.wire([(ex0 - 7, ymid), (ex0 - 60, ymid)], COL["usb"], width=4)
     s.text(ex0 - 62, ymid - 8, "USB-C to Pi", size=9, anchor="end", fill="#3c4450", family="body")
     s.text(ex0 - 62, ymid + 5, "USB 2.0 port", size=9, anchor="end", fill="#3c4450", family="body")
@@ -256,6 +253,11 @@ def breadboard():
     s.wire([hole("j", g_col), (cx(g_col), Y_BOT_MINUS)], COL["gnd"], title="ESP32 GND to the GND bus")
     wires.insert(0, ("Power", "GND bus", f"j{g_col} (ESP32 GND)", f"bottom − rail, col {g_col}", "gnd",
                      "ESP32 ground to the bottom − rail: all switch GNDs return here"))
+    if not sch.STICKS_FITTED:
+        s.text(cx(1), Y_BLOCKS - 4, "Circle Pads: not wired yet. They will use GPIO1–4 (now L1 R1 L2 R2); "
+               "the shoulder buttons move when the pads arrive.", size=9.5, anchor="start", fill="#5a3d58",
+               family="body")
+        return _finish(s, width, height, wires)
     blocks = [("JS1", "LEFT stick", cx(0.35), cx(6.65)), ("JS2", "RIGHT stick", cx(6.8), cx(12.6))]
     for ref, name, x0, x1 in blocks:
         s.rect(x0, Y_BLOCKS, x1 - x0, 52, "#f6f1f7", rx=6, stroke="#b58db0", sw=1.2)
@@ -285,6 +287,10 @@ def breadboard():
         wires.append(("Circle Pads", f"JS2 {label}", f"JS1 {label}", f"JS2 {label} contact", "v33" if i == 0 else "gnd",
                       "Splice onto JS1's wire (both pads share the supply)"))
     s.text(cx(6.6), yb + 38, "JS2 VCC / GND spliced to JS1", size=8, fill="#6b7580", family="body")
+    return _finish(s, width, height, wires)
+
+
+def _finish(s, width, height, wires):
     svg = (f'<svg viewBox="0 0 {width:.0f} {height:.0f}" width="{width:.0f}" height="{height:.0f}" role="img" '
            f'aria-label="Breadboard wiring of the D2K controls" xmlns="http://www.w3.org/2000/svg">'
            + "".join(s.parts) + "</svg>")
@@ -401,7 +407,7 @@ section{display:grid;gap:14px}
 .figure svg{display:block;max-width:none}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
-.sw{width:22px;height:5px;border-radius:3px;display:inline-block}
+.sw{width:22px;height:5px;border-radius:3px;display:inline-block;box-shadow:0 0 0 1px var(--chip-edge)}
 .sw.dash{background:repeating-linear-gradient(90deg,var(--c) 0 6px,transparent 6px 9px)!important}
 .notes{display:grid;gap:6px;margin:0;padding-left:18px;color:var(--ink);max-width:80ch}
 .notes li::marker{color:var(--accent)}
@@ -488,12 +494,16 @@ def page():
         return (order[r[0]], slot_order.index(name), r[1].endswith("GND"))
     bb_rows = sorted(bb_rows, key=key)
     pi_rows = [(g, label, a, b, ck, note) for g, a, label, b, ck, note in pi_rows]
+    items = [(COL["dpad"], "D-pad", False), (COL["face"], "A B X Y", False),
+             (COL["sys"], "Select Start Home", False), (COL["shoulder"], "L1 R1 L2 R2", False),
+             (COL["gnd"], "GND", False)]
+    if sch.STICKS_FITTED:
+        items += [(COL["stick"], "Circle Pad axes", False), (COL["v33"], "3.3 V", False)]
+    if any(g == "PADS" for _, _, g, _ in sch.BUTTONS):
+        items.append((COL["sys"], "wire soldered to a pad", True))
     legend = "".join(
         f'<span><i class="sw{" dash" if dash else ""}" style="background:{c};--c:{c}"></i>{escape(t)}</span>'
-        for c, t, dash in ((COL["dpad"], "D-pad", False), (COL["face"], "A B X Y", False),
-                           (COL["sys"], "Start Select Home", False), (COL["shoulder"], "L1 R1 L2 R2", False),
-                           (COL["stick"], "Circle Pad axes", False), (COL["v33"], "3.3 V", False),
-                           (COL["gnd"], "GND", False), (COL["sys"], "wire soldered to a pad", True)))
+        for c, t, dash in items)
     return f"""<title>D2K Bench Wiring</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -503,7 +513,7 @@ def page():
 <header>
 <p class="eyebrow">D2K V1 · bench step 2 · controls and audio</p>
 <h1>Bench wiring</h1>
-<p class="lede">The ESP32-S3-Zero, the 15 buttons and both Circle Pads on an MB-102 breadboard, then the
+<p class="lede">The ESP32-S3-Zero and the 15 buttons on an MB-102 breadboard, no soldering, then the
 jumpers from the Pi's GPIO header to the WM8960 audio board and the 4-inch screen. Same pin plan as the
 <code>D2K_V1</code> schematic in Fusion. Hole names are column 1–63 and row a–j.</p>
 </header>
@@ -513,11 +523,14 @@ jumpers from the Pi's GPIO header to the WM8960 audio board and the 4-inch scree
 <div class="figure">{bb_svg}</div>
 <div class="legend">{legend}</div>
 <ul class="notes">
-<li>Each 6×6 switch straddles the centre channel with its pins in rows e and f; one side goes to its GPIO,
-the other side to the GND bus. The ESP32's internal pull-ups do the rest: no resistors.</li>
-<li>The ESP32-S3-Zero sits across the channel in rows d and h, columns 2–10, with the USB-C off the left
-edge of the board. The dashed wires are leads soldered to its small pads (GPIO14–16 on the front,
-GPIO17, 18, 38, 39 underneath).</li>
+<li><b>Reading a hole name:</b> <code>a22</code> is column 22, row a. The five holes of one column in the same
+half (a–e, or f–j) are joined inside the board, so a wire can go in any free hole of that group.</li>
+<li>The ESP32-S3-Zero sits across the centre channel: its TX/RX/13…7 pin row in row d and its 5V/GND/3V3/1…6
+row in row h, columns 2–10, USB-C off the left edge. Every wire starts in a free hole next to a pin
+(row a above, row j below) and ends in a free hole of a switch column.</li>
+<li>Each 6×6 switch straddles the channel with its legs in rows e and f of two columns. One column takes the
+GPIO wire, the other a short black wire to the GND rail. The ESP32's internal pull-ups do the rest: no
+resistors. If a button reads as always pressed, turn the switch 90°.</li>
 <li>No two button wires cross. The dotted link on the GND rail is only needed if your board's rail is split
 in the middle. Hover or long-press a wire to see its name.</li>
 </ul>
@@ -541,8 +554,10 @@ in the middle. Hover or long-press a wire to see its name.</li>
 <section id="checks" aria-labelledby="h-checks">
 <h2 id="h-checks">Before you power up</h2>
 <ul class="warn">
-<li><b>Measure the Circle Pad pinout first.</b> VCC, GND, X and Y are not verified; feed them 3.3 V from the
-ESP32, never 5 V.</li>
+<li><b>Do not hold SELECT while the ESP32 powers up.</b> It is wired to the TX pin, which the chip drives during
+boot. (The firmware turns TX into a normal input afterwards.)</li>
+<li><b>Circle Pads later:</b> measure their pinout first (VCC, GND, X, Y are not verified) and feed them 3.3 V,
+never 5 V. They will take GPIO1–4, so L1 R1 L2 R2 move then.</li>
 <li><b>Nothing on the ESP32 sees 5 V.</b> Its pins are 3.3 V only; leave its 5V pin empty, the USB-C powers it.</li>
 <li><b>The 4-inch lead is red on pin 4, black on pin 6.</b> The Pi's 5 V pins are not fused.</li>
 <li><b>WM8960 header pins 5 and 7</b> are SCL and SDA per its schematic: check the silkscreen. Its speaker

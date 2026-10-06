@@ -4,6 +4,19 @@ Newest first. Each entry: the decision, why, and what it affects. Project-level
 decisions (compute, screens, roadmap) live in the Notion workspace; they are
 repeated here only where they drive the Fusion work.
 
+## 2026-10-06 — Bench controls without soldering
+
+- **Decision (user):** wire the bench with no soldering. All 15 buttons go
+  on the 15 header GPIOs; the shoulders take GPIO1–4 until the Circle Pads
+  arrive; SELECT takes TX (GPIO43). `STICKS_FITTED = False` in
+  `gen_d2k_v1_sch.py` keeps the Circle Pads out of the schematic and the
+  breadboard page.
+- **Why:** the user had the ESP32, buttons and breadboard but found the
+  soldered pad leads (dashed wires) confusing; the Circle Pads are not here.
+- **Cost:** GPIO10 and TX/RX, planned for the battery ADC and a Pi UART, are
+  used; the shoulders must move when the pads arrive (Q22). Do not hold
+  SELECT at power-up (TX is driven by the boot ROM).
+
 ## 2026-09-27 — Breadboard layout drives the button-to-GPIO order
 
 - **Decision:** the breadboard view (`electronics/gen_breadboard.py`) puts the
