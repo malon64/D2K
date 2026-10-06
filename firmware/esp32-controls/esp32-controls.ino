@@ -6,17 +6,21 @@
 // BUTTONS in fusion/electronics/gen_d2k_v1_sch.py.
 //
 // Build: Arduino-ESP32 core 3.x, board "ESP32S3 Dev Module",
-//   USB Mode = USB-OTG (TinyUSB), USB CDC On Boot = Enabled (see README.md).
+//   USB Mode = USB-OTG (TinyUSB), USB CDC On Boot = Disabled (see README.md).
+//   CDC on boot would start USB before setup() and keep Espressif's default
+//   device name, so the log port is created here instead.
 //
-// Report layout (Linux maps HID gamepad buttons 1..15 to BTN_SOUTH..BTN_THUMBR):
-//   ABXY are sent by POSITION, like an Xbox pad, so SDL and the emulators see
-//   south / east / north / west: B (bottom) = south, A (right) = east,
-//   X (top) = north, Y (left) = west. The D-pad is the hat switch.
+// Report layout (Linux maps HID gamepad buttons 1..15 to BTN_A..BTN_THUMBR):
+//   ABXY are sent by LABEL (user, 2026-10-06): A = BTN_A, B = BTN_B,
+//   X = BTN_X (top), Y = BTN_Y (left), so A confirms in Pegasus like on a
+//   Nintendo console. Emulators are mapped explicitly. The D-pad is the hat.
 
 #include "USB.h"
+#include "USBCDC.h"
 #include "USBHIDGamepad.h"
 
 USBHIDGamepad Gamepad;
+USBCDC LogSerial;   // button log for bench checks (`cat /dev/ttyACM0`)
 
 struct Button {
   uint8_t pin;
@@ -28,10 +32,10 @@ struct Button {
 const uint8_t PIN_UP = 8, PIN_DOWN = 7, PIN_LEFT = 9, PIN_RIGHT = 10;
 
 const Button BUTTONS[] = {
-  {11, BUTTON_B, "A"},          // A, right of the diamond -> east
-  {12, BUTTON_A, "B"},          // B, bottom -> south
-  {13, BUTTON_X, "X"},          // X, top -> north
-  {44, BUTTON_Y, "Y"},          // Y, left -> west (RX pin)
+  {11, BUTTON_A, "A"},          // A, right of the diamond
+  {12, BUTTON_B, "B"},          // B, bottom
+  {13, BUTTON_X, "X"},          // X, top
+  {44, BUTTON_Y, "Y"},          // Y, left (RX pin)
   {6, BUTTON_START, "START"},
   {43, BUTTON_SELECT, "SELECT"},  // TX pin: driven by the boot ROM at power-up
   {5, BUTTON_MODE, "HOME"},
@@ -88,15 +92,15 @@ void sendReport(uint32_t s) {
 }
 
 void printState(uint32_t s) {
-  Serial.print("pressed:");
+  LogSerial.print("pressed:");
   for (size_t i = 0; i < N_BUTTONS; i++) {
-    if (s & (1u << i)) { Serial.print(' '); Serial.print(BUTTONS[i].name); }
+    if (s & (1u << i)) { LogSerial.print(' '); LogSerial.print(BUTTONS[i].name); }
   }
   const char *dirs[4] = {"UP", "DOWN", "LEFT", "RIGHT"};
   for (int k = 0; k < 4; k++) {
-    if (s & (1u << (N_BUTTONS + k))) { Serial.print(' '); Serial.print(dirs[k]); }
+    if (s & (1u << (N_BUTTONS + k))) { LogSerial.print(' '); LogSerial.print(dirs[k]); }
   }
-  Serial.println();
+  LogSerial.println();
 }
 
 void setup() {
@@ -107,8 +111,8 @@ void setup() {
   USB.manufacturerName("D2K");
   USB.productName("D2K Controls");
   Gamepad.begin();
+  LogSerial.begin(115200);
   USB.begin();
-  Serial.begin(115200);   // USB CDC: button log for bench checks (`cat /dev/ttyACM0`)
 }
 
 void loop() {

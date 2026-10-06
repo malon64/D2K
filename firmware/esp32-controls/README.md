@@ -3,8 +3,8 @@
 Turns the Waveshare ESP32-S3-Zero into a USB HID gamepad ("D2K Controls")
 for the Raspberry Pi 5: 15 buttons wired to GND on the header GPIOs (bench
 plan without soldering, see `fusion/wiring.md` and the "D2K Bench Wiring"
-page). The D-pad is the hat switch; ABXY are sent by position (B = south,
-A = east, X = north, Y = west). The Circle Pad axes stay centred until the
+page). The D-pad is the hat switch; ABXY are sent by label (A = BTN_A,
+B = BTN_B, X = BTN_X, Y = BTN_Y), so A confirms in Pegasus. The Circle Pad axes stay centred until the
 pads are fitted.
 
 A USB serial port comes up next to the gamepad and prints every change
@@ -19,9 +19,9 @@ arduino-cli config init
 arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
 arduino-cli core update-index && arduino-cli core install esp32:esp32
 
-# build + upload (USB-OTG/TinyUSB for HID, CDC on boot for the log)
+# build + upload (USB-OTG/TinyUSB for HID; the sketch creates its own log port)
 cd ~/D2K/firmware/esp32-controls
-FQBN='esp32:esp32:esp32s3:USBMode=default,CDCOnBoot=cdc'
+FQBN='esp32:esp32:esp32s3:USBMode=default,CDCOnBoot=default'
 arduino-cli compile --fqbn "$FQBN" .
 arduino-cli upload --fqbn "$FQBN" -p /dev/ttyACM0 .
 ```
@@ -34,7 +34,7 @@ If the upload cannot find the board (first flash, or a crashed sketch): hold
 ```bash
 lsusb | grep -i d2k            # "D2K Controls"
 cat /dev/ttyACM0               # press buttons: one line per change
-evtest                         # pick "D2K Controls": BTN_SOUTH.., ABS_HAT0X/Y
+evtest                         # pick "D2K Controls": BTN_A.., ABS_HAT0X/Y
 ```
 
 ## Troubleshooting

@@ -69,12 +69,12 @@ Summary as of 24 September 2026:
 
 ## Raspberry Pi access
 
-- SSH: `ssh alex@192.168.1.16` (key authentication from the Windows PC; user
-  `alex` has passwordless `sudo`). The Pi (hostname `raspberry`) is on Wi-Fi
-  with a DHCP address that has changed before (it was `192.168.1.66` on
-  Ethernet). If SSH times out, scan the LAN for port 22 and confirm with
-  `hostname`. Its Wi-Fi signal is weak: connections can hang or drop, so keep
-  SSH commands short and use `-o ConnectTimeout=30`.
+- SSH: `ssh alex@192.168.1.66` over **Ethernet** (gigabit, the default route
+  since October 2026); the Wi-Fi address `192.168.1.16` also exists but its
+  signal is weak and SSH on it can time out. Key authentication from the
+  Windows PC; user `alex` has passwordless `sudo`. Both addresses are DHCP
+  and have changed before: if SSH times out, scan the LAN for port 22 and
+  confirm with `hostname` (`raspberry`). Use `-o ConnectTimeout=30`.
 - Repository on the Pi: `~/D2K` (git clone of `origin`; `library/` is synced
   one way from Windows with `rsync`, see README).
 - Installed software: `~/.local/opt/d2k/` (pegasus, melonds, duckstation,
