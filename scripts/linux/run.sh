@@ -26,30 +26,7 @@ fi
 
 clear_boot_state() {
     [[ -f $theme_settings ]] || return 0
-    python3 - "$theme_settings" <<'PY'
-import json
-import os
-import pathlib
-import sys
-import tempfile
-
-path = pathlib.Path(sys.argv[1])
-try:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError("settings root is not an object")
-    changed = any(key in data for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"))
-    for key in ("d2kNav", "d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"):
-        data.pop(key, None)
-    if changed:
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as output:
-            json.dump(data, output, separators=(",", ":"))
-            output.write("\n")
-            temporary = output.name
-        os.replace(temporary, path)
-except Exception as error:
-    print(f"D2K: could not clear saved boot state: {error}", file=sys.stderr)
-PY
+    python3 "$linux_dir/py/theme_state.py" clear "$theme_settings"
 }
 
 pegasus_pid=
@@ -98,17 +75,7 @@ while kill -0 "$pegasus_pid" 2>/dev/null; do
     settings=$(<"$theme_settings")
     if [[ $settings != "$last_settings" ]]; then
         last_settings=$settings
-        mapfile -t theme_values < <(python3 - "$theme_settings" <<'PY'
-import json, pathlib, sys
-try:
-    values = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"))
-except Exception:
-    values = {}
-for key in ("d2kMusicReady", "d2kMusicLaunch", "d2kMusicSeq", "d2kMusicAction", "d2kMusicTrack"):
-    value = values.get(key, "")
-    print("true" if value is True else "" if value is None else value)
-PY
-)
+        mapfile -t theme_values < <(python3 "$linux_dir/py/theme_state.py" read "$theme_settings")
         ready=${theme_values[0]:-}
         music_launch=${theme_values[1]:-}
         music_seq=${theme_values[2]:-}

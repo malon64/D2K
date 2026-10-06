@@ -56,7 +56,7 @@ Summary as of 24 September 2026:
 | --- | --- |
 | `pegasus/themes/d2k/` | The QML theme. `theme.qml` owns the two windows and screen placement. |
 | `scripts/windows/` | Windows preview: `run.ps1`, `launch-emulator.ps1`, `mpd.ps1`. |
-| `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. |
+| `scripts/linux/` | Pi/Linux: `install.sh`, `configure-desktop.sh`, `configure-emulators.sh`, `run.sh`, `launch-emulator.sh`, `mpd.sh`, `telemetry.sh` (HUD battery, CPU, temperature), `smoke-test.sh`, shared `lib.sh`. Their Python helpers (config merging, file patching) live in `scripts/linux/py/`. |
 | `docs/emulator-configs/{windows,linux}/` | Per-emulator config overlays (only the keys D2K needs). |
 | `docs/platform.md` | How D2K runs on Linux and the Pi 5 (windows, displays, touch, audio, heat, GPU driver limits) and every platform problem with its fix; what to check on another board (ROCK 4D). **Read before changing Pi behaviour.** |
 | `docs/emulators.md` | Emulator per console, its settings, every emulator problem with its fix. **Read before changing an emulator or its overlay.** |
@@ -177,6 +177,9 @@ vcgencmd measure_temp; vcgencmd get_throttled        # heat
 
 - Match the surrounding style: bash with `set -euo pipefail`, small functions,
   comments that explain *why* (usually a Pi quirk, with a pointer to the docs).
+- Python used by a shell script goes in its own file under `scripts/linux/py/`
+  (docstring with usage), called as `python3 "$linux_dir/py/<name>.py" args`;
+  no inline `python3 - <<'PY'` blocks, so it can be reviewed and linted.
 - Record every new problem and its fix once, where it belongs:
   `docs/platform.md` (Linux, Pi, another board), `docs/emulators.md` (an
   emulator), `docs/controls.md` (keys). Measurements go into
