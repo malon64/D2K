@@ -4,8 +4,9 @@ Turns the Waveshare ESP32-S3-Zero into a USB HID gamepad ("D2K Controls")
 for the Raspberry Pi 5: 15 buttons wired to GND on the header GPIOs (bench
 plan without soldering, see `fusion/wiring.md` and the "D2K Bench Wiring"
 page). The D-pad is the hat switch; ABXY are sent by label (A = BTN_A,
-B = BTN_B, X = BTN_X, Y = BTN_Y), so A confirms in Pegasus. The Circle Pad axes stay centred until the
-pads are fitted.
+B = BTN_B, X = BTN_X, Y = BTN_Y), so A confirms in Pegasus. HOME is sent as
+Super+Esc on a second, keyboard HID interface: Labwc's "leave the game"
+shortcut. The Circle Pad axes stay centred until the pads are fitted.
 
 A USB serial port comes up next to the gamepad and prints every change
 (`pressed: A L1 UP`), which is the quickest bench check.

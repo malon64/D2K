@@ -14,17 +14,25 @@
 //   ABXY are sent by LABEL (user, 2026-10-06): A = BTN_A, B = BTN_B,
 //   X = BTN_X (top), Y = BTN_Y (left), so A confirms in Pegasus like on a
 //   Nintendo console. Emulators are mapped explicitly. The D-pad is the hat.
+//   HOME is not a gamepad button: it types Super+Esc on a second (keyboard)
+//   HID interface, the Labwc shortcut that leaves the game for Pegasus. It
+//   works in every emulator without binding, and no emulator opens its own
+//   menu on a Guide button.
 
 #include "USB.h"
 #include "USBCDC.h"
 #include "USBHIDGamepad.h"
+#include "USBHIDKeyboard.h"
 
 USBHIDGamepad Gamepad;
+USBHIDKeyboard Keyboard;
 USBCDC LogSerial;   // button log for bench checks (`cat /dev/ttyACM0`)
+
+const int8_t HOME_KEYS = -2;   // hidButton value: send Super+Esc instead
 
 struct Button {
   uint8_t pin;
-  int8_t hidButton;   // USBHIDGamepad BUTTON_* index, or -1 for the D-pad
+  int8_t hidButton;   // USBHIDGamepad BUTTON_* index, or HOME_KEYS
   const char *name;
 };
 
@@ -38,7 +46,7 @@ const Button BUTTONS[] = {
   {44, BUTTON_Y, "Y"},          // Y, left (RX pin)
   {6, BUTTON_START, "START"},
   {43, BUTTON_SELECT, "SELECT"},  // TX pin: driven by the boot ROM at power-up
-  {5, BUTTON_MODE, "HOME"},
+  {5, HOME_KEYS, "HOME"},       // Super+Esc: leave the game
   {4, BUTTON_TL, "L1"},         // GPIO1-4 go to the Circle Pads later (Q22)
   {3, BUTTON_TR, "R1"},
   {2, BUTTON_TL2, "L2"},
@@ -84,7 +92,7 @@ uint8_t hatFrom(uint32_t s) {
 void sendReport(uint32_t s) {
   uint32_t buttons = 0;
   for (size_t i = 0; i < N_BUTTONS; i++) {
-    if (s & (1u << i)) buttons |= 1u << BUTTONS[i].hidButton;
+    if ((s & (1u << i)) && BUTTONS[i].hidButton >= 0) buttons |= 1u << BUTTONS[i].hidButton;
   }
   // SDL's automatic gamepad mapping reads the triggers from the Z / RZ axes
   // (lefttrigger:a2, righttrigger:a5), so L2/R2 also swing those axes from
@@ -94,6 +102,20 @@ void sendReport(uint32_t s) {
   int8_t r2 = (buttons & (1u << BUTTON_TR2)) ? 127 : -127;
   Gamepad.send(0, 0, l2, r2, 0, 0, hatFrom(s), buttons);
   lastSend = millis();
+}
+
+// Holds Super+Esc while HOME is held, like the real key combination.
+void updateHomeKeys(uint32_t before, uint32_t after) {
+  for (size_t i = 0; i < N_BUTTONS; i++) {
+    if (BUTTONS[i].hidButton != HOME_KEYS) continue;
+    bool was = before & (1u << i), is = after & (1u << i);
+    if (is && !was) {
+      Keyboard.press(KEY_LEFT_GUI);
+      Keyboard.press(KEY_ESC);
+    } else if (was && !is) {
+      Keyboard.releaseAll();
+    }
+  }
 }
 
 void printState(uint32_t s) {
@@ -116,6 +138,7 @@ void setup() {
   USB.manufacturerName("D2K");
   USB.productName("D2K Controls");
   Gamepad.begin();
+  Keyboard.begin();
   LogSerial.begin(115200);
   USB.begin();
 }
@@ -128,6 +151,7 @@ void loop() {
     rawSince = now;
   }
   if (raw != stableState && now - rawSince >= DEBOUNCE_MS) {
+    updateHomeKeys(stableState, raw);
     stableState = raw;
     sendReport(stableState);
     printState(stableState);

@@ -29,7 +29,7 @@ button sits at that place on its own pad.
 | I J K L | 3DS circle pad | Analog stick | **D-pad** | C-stick | C-buttons |
 | T F G H | 3DS C-stick | – | – | D-pad | D-pad |
 | Mouse, touch screen | DS / 3DS touch screen (lower panel) | – | – | – | – |
-| Super+Esc | Leave the game (all consoles) | | | | |
+| Super+Esc (pad: Home) | Leave the game (all consoles) | | | | |
 
 ## D2K Controls gamepad (ESP32-S3)
 
@@ -37,7 +37,10 @@ The console's own buttons are a USB HID gamepad, "D2K Controls" (ESP32-S3,
 `firmware/esp32-controls/`, SDL GUID `03007f933a3000000110000011010000`). It
 sends A/B/X/Y **by label** (A = `BTN_A`), the D-pad as a hat, L1/R1 as
 buttons 6/7, L2/R2 as buttons 8/9 plus the Z/RZ trigger axes, Select 10,
-Start 11, Home 12. SDL recognises it as a game controller with an automatic
+Start 11. **Home is not a gamepad button**: the same USB device also has a
+keyboard interface, and Home types Super+Esc on it, so it leaves the game
+exactly like the keyboard shortcut, in every emulator, without any binding
+(and no emulator can open its own menu on a Guide button). SDL recognises the pad as a game controller with an automatic
 mapping. It drives the same functions as the keyboard scheme above, and the
 keyboard keeps working, except in Azahar.
 
@@ -56,7 +59,6 @@ keyboard keeps working, except in Azahar.
   fitted; N64 C-buttons are keyboard-only for now (I J K L).
 - Flycast (Dreamcast) and Ship of Harkinian write their own pad mapping the
   first time they see it; they still need checking against this table.
-- Home (button 12) is not bound in the emulators; it is meant to leave the game.
 
 ## Menus (Pegasus)
 
