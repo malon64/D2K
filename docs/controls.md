@@ -51,15 +51,15 @@ keyboard keeps working, except in Azahar.
 | X (top) / Y (left) | X / Y | X / Y | Triangle / Square | Y / X | X / Y | – |
 | L1 / R1 | L / R | L / R | L1 / R1 (PSP L / R) | L / R triggers | L / R | L / R |
 | L2 / R2 | – | ZL / ZR | PS1 L2 / R2 | L / R triggers | – / Z | Z / – |
-| Start / Select | Start / Select | Start / Select | Start / Select | Start / – | Start | Start |
+| Start / Select | Start / Select | Start / Select | Start / Select | Start / Flycast menu | Start | Start |
 
 - **Azahar keeps one binding per button**, so its buttons are on the pad and
   the numpad no longer drives 3DS buttons (the circle pad / C-stick keys stay).
 - The D-pad drives the GameCube and N64 sticks until the Circle Pads are
   fitted; N64 C-buttons are keyboard-only for now (I J K L).
-- Flycast's default pad mapping comes from SDL: ABXY by label, the D-pad on
-  the D-pad and Select on Flycast's own menu. D2K replaces it with
-  `flycast/mappings/SDL_D2K Controls.cfg`.
+- Flycast's default pad mapping comes from SDL: ABXY by label and the D-pad
+  on the D-pad. D2K replaces it with `flycast/mappings/SDL_D2K Controls.cfg`;
+  Select still opens Flycast's menu (useful, like Tab on the keyboard).
 - Ship of Harkinian writes its own pad mapping the first time it sees the
   pad; it still needs checking against this table.
 

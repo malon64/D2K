@@ -212,7 +212,7 @@ targets = [
     ("flycast/emu.cfg", config_home / "flycast/emu.cfg", "ini"),
     ("flycast/mappings/SDL_Keyboard.cfg", config_home / "flycast/mappings/SDL_Keyboard.cfg", "file"),
     # Without this file Flycast maps the pad from SDL: ABXY by label instead
-    # of position, D-pad on the D-pad, Select on its own menu.
+    # of position and the D-pad on the D-pad.
     ("flycast/mappings/SDL_D2K Controls.cfg", config_home / "flycast/mappings/SDL_D2K Controls.cfg", "file"),
     ("azahar/qt-config.ini", home / ".var/app/org.azahar_emu.Azahar/config/azahar-emu/qt-config.ini", "ini"),
     ("ppsspp/ppsspp.ini", ppsspp_system / "ppsspp.ini", "ini"),

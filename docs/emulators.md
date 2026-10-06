@@ -124,7 +124,8 @@ Flycast built from the pinned source in `~/.local/opt/d2k/flycast`, run with
   controller mapping: ABXY by label (wrong for the Dreamcast, mapped by
   position), the D-pad on the D-pad, and Select (SDL "back") on Flycast's
   own menu. It keeps that default in memory without saving it, so the D2K
-  pad file is written whole; Flycast looks it up by the pad's name.
+  pad file is written whole; Flycast looks it up by the pad's name. It keeps
+  Select on the menu, which is useful in game (like Tab).
 - Extras kept from Flycast's defaults: Tab (menu), Space (fast-forward), F12
   (screenshot).
 
