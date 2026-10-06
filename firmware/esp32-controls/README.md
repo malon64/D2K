@@ -26,8 +26,11 @@ arduino-cli compile --fqbn "$FQBN" .
 arduino-cli upload --fqbn "$FQBN" -p /dev/ttyACM0 .
 ```
 
-If the upload cannot find the board (first flash, or a crashed sketch): hold
-**BOOT**, plug the USB-C in, release, then upload again.
+If the upload says "Failed to connect ... No serial data received", the running
+sketch did not accept esptool's reset: `stty -F /dev/ttyACM0 1200` reboots it
+into download mode (the port comes back as "USB JTAG/serial debug unit"),
+then upload again. Last resort (crashed sketch): hold **BOOT**, plug the
+USB-C in, release, upload.
 
 ## Check it
 
