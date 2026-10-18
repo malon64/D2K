@@ -216,8 +216,9 @@ It plays through its own jack since 17 October 2026, as ALSA card
   board's on-board oscillator (Waveshare FAQ and schematic); that overlay has no
   parameter for it.
 - **Mixer.** The codec starts muted. `configure-desktop.sh` turns on
-  `Left/Right Output Mixer PCM`, sets `Playback` (230 ≈ −12.5 dB) and
-  `Headphone` (110 ≈ −11 dB), keeps `Speaker` at 0 until speakers are fitted,
+  `Left/Right Output Mixer PCM`, sets `Playback` (255, 0 dB) and
+  `Headphone` (120, −1 dB; −12.5 and −11 dB were too quiet on a headset),
+  keeps `Speaker` at 0 until speakers are fitted,
   and saves it with `alsactl store`; `--check` compares it. A boot where the
   codec does not answer on I²C saves a muted state: re-run the script.
   Test: `speaker-test -D plughw:CARD=wm8960soundcard -c 2 -t sine -f 440 -l 1`.

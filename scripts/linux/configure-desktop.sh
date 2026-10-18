@@ -34,13 +34,14 @@ touch_maps=("Goodix Capacitive TouchScreen=$touch_output"
 # Waveshare 5"'s jack again (it plays HDMI0 audio), set
 # D2K_MUTED_AUDIO_CARDS=alsa_card.platform-107c706400.hdmi.
 read -r -a muted_audio_cards <<< "${D2K_MUTED_AUDIO_CARDS:-alsa_card.platform-107c701400.hdmi alsa_card.platform-107c706400.hdmi}"
-# The WM8960 codec starts with its DACs cut off from the outputs. Headphone 110
-# is -11 dB; the speaker amplifier stays at 0 until speakers are fitted.
-# PipeWire would otherwise drive these controls as its volume; the WirePlumber
-# rule below gives that card a software volume, so the levels set here hold.
+# The WM8960 codec starts with its DACs cut off from the outputs. Playback 255
+# and Headphone 120 are 0 and -1 dB (-12.5 and -11 dB were too quiet on a
+# headset); the speaker amplifier stays at 0 until speakers are fitted. The
+# user volume is PipeWire's: the WirePlumber rule below gives that card a
+# software volume, so PipeWire leaves these levels alone.
 wm8960_card=wm8960soundcard
-wm8960_mixer=("Left Output Mixer PCM=on" "Right Output Mixer PCM=on" "Playback=230"
-              "Headphone=110" "Speaker=0")
+wm8960_mixer=("Left Output Mixer PCM=on" "Right Output Mixer PCM=on" "Playback=255"
+              "Headphone=120" "Speaker=0")
 
 kanshi_config="$config_home/kanshi/config"
 labwc_config="$config_home/labwc/rc.xml"
