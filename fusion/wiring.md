@@ -69,21 +69,24 @@ GPIO0 BOOT, GPIO19/20 USB. L1–L9 / R1–R9 count from the USB-C end.
 | --- | --- | --- | --- |
 | W8 | 1 (3V3) | 1 (VCC) | 3.3 V: logic, codec **and speaker amplifier** |
 | W8 | 9 (GND) | 3 (GND) | Ground |
-| W8 | 3 (GPIO2, SDA1) | 7 (SDA) | I²C data (codec at 0x1A) |
-| W8 | 5 (GPIO3, SCL1) | 5 (SCL) | I²C clock |
+| W8 | 39 (GND) | 4 (GND) | Second ground beside the I²S wires (recommended, see trap 12) |
+| W8 | 3 (GPIO2, SDA1) | 5 (SDA) | I²C data (codec at 0x1A) |
+| W8 | 5 (GPIO3, SCL1) | 7 (SCL) | I²C clock |
 | W8 | 12 (GPIO18, PCM_CLK) | 9 (CLK) | I²S bit clock |
 | W8 | 35 (GPIO19, PCM_FS) | 11 (WS) | I²S frame clock (L/R) |
-| W8 | 40 (GPIO21, PCM_DOUT) | 13 (TXSDA) | Playback data, Pi → codec DAC |
-| W8 | 38 (GPIO20, PCM_DIN) | 14 (RXSDA) | Recording data, codec ADC → Pi (on-board MEMS mic) |
+| W8 | 40 (GPIO21, PCM_DOUT) | 13 (RXSDA) | Playback data, Pi → codec DAC |
+| W8 | 38 (GPIO20, PCM_DIN) | 14 (TXSDA) | Recording data, codec ADC → Pi (on-board MEMS mic) |
 | W9 | — | SPK J1: 1 LP, 2 LN | Left speaker (LS1) + / − |
 | W9 | — | SPK J1: 4 RP, 3 RN | Right speaker (LS2) + / − |
 
 Header pins 2/4, 10/12 duplicate 1/3, 9/11 on the board; 6 and 8 are not
 connected; 15/16 export MCLK through jumper P1: leave it open (the codec uses
-its own 24 MHz crystal, the Pi has no MCLK pin). W8 is eight female-female
-jumper wires. The speakers' PH1.25 plugs do not fit the board's 4-pin SPK
-header: crimp a matching 4-pin plug or use an adapter. Linux: the WM8960
-overlay (`dtoverlay=wm8960-soundcard`, to confirm on the Pi), then MPD and the
+its own 24 MHz crystal, the Pi has no MCLK pin). W8 is nine female-female
+jumper wires; wire them by the silkscreen names, which match Waveshare's
+schematic (checked on the bench, 17 October 2026). The speakers' PH1.25 plugs
+do not fit the board's 4-pin SPK header: crimp a matching 4-pin plug or use an
+adapter. Linux: `dtoverlay=d2k-wm8960-24mhz`
+([docs/platform.md](../docs/platform.md#wm8960-audio-board)), then MPD and the
 emulators on the new ALSA card.
 
 Software side (already in `scripts/linux/configure-desktop.sh` and
@@ -136,9 +139,13 @@ the upper role.
     is limited to ~0.4 W per channel at 3.3 V, and loud audio draws current
     from the Pi's 3.3 V rail: measure it (M10) and keep the volume moderate
     until then. Do not connect the board's VCC to 5 V (it is a 3.3 V board).
-12. **WM8960 header pins 5/7:** the schematic netlist gives 5 = SCL, 7 = SDA;
-    read the silkscreen before wiring. A swap does no damage but the codec
-    will not answer on I²C.
+12. **WM8960 header: wire by the silkscreen.** 5 = SDA, 7 = SCL, 13 = RXSDA
+    (the DAC input: Pi DOUT), 14 = TXSDA (the mic output: Pi DIN). With SDA
+    and SCL swapped the codec does not answer on I²C; with the data lines
+    swapped, or CLK on Pi pin 14 (GND, beside pin 12), it answers but stays
+    silent. All of these happened on the bench, without damage. Keep the second
+    GND wire (Pi 39): once the codec stopped answering on I²C as soon as the
+    bit clock started, and that ended when the wire was added.
 13. **Never connect a speaker wire to GND:** the WM8960 speaker outputs are
     bridged (LP/LN, RP/RN); each speaker goes between its P and N pins only,
     and the two channels must not share a wire.

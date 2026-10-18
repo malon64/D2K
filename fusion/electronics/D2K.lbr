@@ -637,15 +637,15 @@
 <text x="-2.54" y="-2.24" size="1.016" layer="97" align="bottom-center">1</text>
 <pin name="GND@1" x="-5.08" y="-5.08" length="middle" direction="pas"/>
 <text x="-2.54" y="-4.78" size="1.016" layer="97" align="bottom-center">3</text>
-<pin name="SCL" x="-5.08" y="-7.62" length="middle" direction="pas"/>
+<pin name="SDA" x="-5.08" y="-7.62" length="middle" direction="pas"/>
 <text x="-2.54" y="-7.32" size="1.016" layer="97" align="bottom-center">5</text>
-<pin name="SDA" x="-5.08" y="-10.16" length="middle" direction="pas"/>
+<pin name="SCL" x="-5.08" y="-10.16" length="middle" direction="pas"/>
 <text x="-2.54" y="-9.86" size="1.016" layer="97" align="bottom-center">7</text>
 <pin name="CLK@9" x="-5.08" y="-12.7" length="middle" direction="pas"/>
 <text x="-2.54" y="-12.4" size="1.016" layer="97" align="bottom-center">9</text>
 <pin name="WS@11" x="-5.08" y="-15.24" length="middle" direction="pas"/>
 <text x="-2.54" y="-14.94" size="1.016" layer="97" align="bottom-center">11</text>
-<pin name="TXSDA_DAC_IN" x="-5.08" y="-17.78" length="middle" direction="pas"/>
+<pin name="RXSDA_DAC_IN" x="-5.08" y="-17.78" length="middle" direction="pas"/>
 <text x="-2.54" y="-17.48" size="1.016" layer="97" align="bottom-center">13</text>
 <pin name="MCLK_RX" x="-5.08" y="-20.32" length="middle" direction="pas"/>
 <text x="-2.54" y="-20.02" size="1.016" layer="97" align="bottom-center">15</text>
@@ -661,7 +661,7 @@
 <text x="50.8" y="-12.4" size="1.016" layer="97" align="bottom-center">10</text>
 <pin name="WS@12" x="53.34" y="-15.24" length="middle" direction="pas" rot="R180"/>
 <text x="50.8" y="-14.94" size="1.016" layer="97" align="bottom-center">12</text>
-<pin name="RXSDA_ADC_OUT" x="53.34" y="-17.78" length="middle" direction="pas" rot="R180"/>
+<pin name="TXSDA_ADC_OUT" x="53.34" y="-17.78" length="middle" direction="pas" rot="R180"/>
 <text x="50.8" y="-17.48" size="1.016" layer="97" align="bottom-center">14</text>
 <pin name="MCLK_TX" x="53.34" y="-20.32" length="middle" direction="pas" rot="R180"/>
 <text x="50.8" y="-20.02" size="1.016" layer="97" align="bottom-center">16</text>
@@ -820,7 +820,7 @@
 </devices>
 </deviceset>
 <deviceset name="WM8960_AUDIO_BOARD" prefix="U" uservalue="yes">
-<description>&lt;b&gt;Waveshare WM8960 Audio Board (SKU 15019): WM8960 codec, I2C control (0x1A), I2S audio, 24 MHz crystal as MCLK, 1 W/ch class-D speaker outputs (8 ohm), 3.5 mm headset jack, MEMS mic. Runs from 3.3 V only: the speaker supply (SPKVDD) is the same 3.3 V rail.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Connector pin = signal:&lt;br&gt;&lt;b&gt;HDR&lt;/b&gt; (Header P2 8x2): 1=VCC, 2=VCC, 3=GND, 4=GND, 5=SCL, 6=NC, 7=SDA, 8=NC, 9=CLK, 10=CLK, 11=WS, 12=WS, 13=TXSDA_DAC_IN, 14=RXSDA_ADC_OUT, 15=MCLK_RX, 16=MCLK_TX&lt;br&gt;&lt;b&gt;SPK&lt;/b&gt; (SPK J1 4p): 1=LP, 2=LN, 3=RN, 4=RP</description>
+<description>&lt;b&gt;Waveshare WM8960 Audio Board (SKU 15019): WM8960 codec, I2C control (0x1A), I2S audio, 24 MHz crystal as MCLK, 1 W/ch class-D speaker outputs (8 ohm), 3.5 mm headset jack, MEMS mic. Runs from 3.3 V only: the speaker supply (SPKVDD) is the same 3.3 V rail.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Connector pin = signal:&lt;br&gt;&lt;b&gt;HDR&lt;/b&gt; (Header P2 8x2): 1=VCC, 2=VCC, 3=GND, 4=GND, 5=SDA, 6=NC, 7=SCL, 8=NC, 9=CLK, 10=CLK, 11=WS, 12=WS, 13=RXSDA_DAC_IN, 14=TXSDA_ADC_OUT, 15=MCLK_RX, 16=MCLK_TX&lt;br&gt;&lt;b&gt;SPK&lt;/b&gt; (SPK J1 4p): 1=LP, 2=LN, 3=RN, 4=RP</description>
 <gates>
 <gate name="HDR" symbol="WM8960_HEADER" x="0" y="0" addlevel="next"/>
 <gate name="SPK" symbol="WM8960_SPK" x="50.8" y="0" addlevel="next"/>
@@ -828,7 +828,7 @@
 <devices>
 <device name="">
 <technologies>
-<technology name=""><attribute name="MANUFACTURER" value="Waveshare"/><attribute name="MPN" value="WM8960 Audio Board"/><attribute name="SKU" value="15019"/><attribute name="SUPPLY" value="3.3 V (logic, codec AND speaker amplifier)"/><attribute name="SPEAKER" value="8 ohm, 1 W/ch at 5 V SPKVDD; ~0.4 W/ch at the board's 3.3 V"/><attribute name="I2C_ADDR" value="0x1A"/><attribute name="DOC" value="https://www.waveshare.com/wiki/WM8960_Audio_Board"/><attribute name="VERIFY" value="Header pins 5/7 (SCL/SDA) from the schematic netlist: check the silkscreen"/></technology>
+<technology name=""><attribute name="MANUFACTURER" value="Waveshare"/><attribute name="MPN" value="WM8960 Audio Board"/><attribute name="SKU" value="15019"/><attribute name="SUPPLY" value="3.3 V (logic, codec AND speaker amplifier)"/><attribute name="SPEAKER" value="8 ohm, 1 W/ch at 5 V SPKVDD; ~0.4 W/ch at the board's 3.3 V"/><attribute name="I2C_ADDR" value="0x1A"/><attribute name="DOC" value="https://www.waveshare.com/wiki/WM8960_Audio_Board"/><attribute name="LINUX" value="dtoverlay=d2k-wm8960-24mhz (wm8960-soundcard with MCLK 24 MHz), docs/platform.md"/></technology>
 </technologies>
 </device>
 </devices>

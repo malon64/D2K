@@ -197,6 +197,40 @@ Whether a screen takes audio is in its ELD (`cat /proc/asound/card*/eld#0`):
 `sad_count 0` means none. The desk monitor had none; **the Waveshare 5" plays
 HDMI audio on its 3.5 mm jack**, so a headset there is today's audio output.
 
+### WM8960 audio board
+
+The Waveshare WM8960 Audio Board (the planned speakers and headphone output)
+is on the GPIO header with jumper wires: wiring in
+[`fusion/wiring.md`](../fusion/wiring.md#audio-wm8960-board-and-speakers-sheet-3).
+It plays through its own jack since 17 October 2026, as ALSA card
+`wm8960soundcard`; PipeWire, MPD and the emulators do not use it yet.
+
+- **Overlay.** `/boot/firmware/config.txt` needs `dtparam=i2c_arm=on`,
+  `dtparam=i2s=on` and `dtoverlay=d2k-wm8960-24mhz`, built from
+  [`scripts/linux/overlays/d2k-wm8960-24mhz.dts`](../scripts/linux/overlays/d2k-wm8960-24mhz.dts)
+  (build steps at its top), then a reboot. It is the firmware's
+  `wm8960-soundcard` with the MCLK changed from 12.288 to **24 MHz**, the
+  board's on-board oscillator (Waveshare FAQ and schematic); that overlay has no
+  parameter for it.
+- **Mixer.** The codec starts muted: turn on `Left/Right Output Mixer PCM`, set
+  `Playback` (230 ≈ −12.5 dB) and `Headphone` (110 ≈ −11 dB), `Speaker` 0 until
+  speakers are fitted, then `sudo alsactl store` keeps it across reboots.
+  Test: `speaker-test -D plughw:CARD=wm8960soundcard -c 2 -t sine -f 440 -l 1`.
+- **Wiring faults and their symptoms**, all met on the bench:
+  - Bus 1 empty, `wm8960 1-001a: probe ... failed with error -121`: SDA and
+    SCL swapped, or no power. Wire by the board's silkscreen (SDA 5, SCL 7).
+  - `ASoC error (-121)` in `dmesg` as soon as playback starts, and the codec
+    then stays silent on I²C until the power is cut (a reboot keeps the 3.3 V
+    rail on): it stopped once a second GND wire (Pi pin 39) ran beside the I²S
+    wires.
+  - The card plays without errors but the jack is silent apart from a click
+    (and the mic records only zeros): the I²S bit clock or data does not reach
+    the codec. Pi pin 40 must go to **RXSDA** (the DAC input) and pin 12 to
+    CLK; pin 14 next to pin 12 is GND. To check the clocks and the 24 MHz
+    oscillator without a scope, put the codec in master mode over I²C and
+    sample GPIO18/19 as inputs with `pinctrl lev` (this resets the codec:
+    reboot afterwards).
+
 ### Emulators need a larger audio buffer
 
 Several emulators asked PipeWire for tiny buffers (melonDS 256 samples, PPSSPP

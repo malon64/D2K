@@ -39,7 +39,7 @@ model, doc), then move it to **Resolved** at the bottom.
 | Q15 | Ribbons behind the boards (+2–3 mm thickness) or beside them (+width)? | Decide in the layout study with the shell width. |
 | Q16 | Do the Adafruit ribbons survive the hinge? | Cycle-test in the printed hinge prototype (thousands of openings, R ≥ 6 mm wrap). Fallback: custom dynamic-flex PCB with the same 20-pin ends. |
 | Q17 | How many ribbon conductors carry VBUS/GND in the Adafruit USB adapters, and is it enough for the 5in (~400 mA, more at full backlight)? | Check the adapter schematics/continuity; otherwise feed the 5in from a separate power pair through the power/audio passage. |
-| Q18 | Exact Linux overlay for the Waveshare WM8960 board on Pi 5 (`wm8960-soundcard` or Waveshare's driver)? | Confirm on the Pi, record in docs/platform.md. |
+| Q18 | Exact Linux overlay for the Waveshare WM8960 board on Pi 5 (`wm8960-soundcard` or Waveshare's driver)? | Answered 17 October 2026: `wm8960-soundcard` with the MCLK set to 24 MHz (`d2k-wm8960-24mhz`), see docs/platform.md. |
 | Q19 | Speaker connection: recrimp the PH1.25 leads onto a 4-pin plug for the WM8960 SPK header, or an adapter? | Check the SPK header pitch (likely PH2.0) on the real board. |
 | Q20 | Circle Pad breakout for the breadboard (4-contact flex) | Buy or make a small flex-to-pin adapter once M11 gives the pitch. |
 | Q22 | When the Circle Pads arrive, where do L1/R1/L2/R2 go (they occupy GPIO1–4 on the bench)? | Options: wires soldered to the pads GPIO14–18/38–42; a 4×4 button matrix on 8 header pins with 15 diodes (1N4148); an I²C I/O expander (MCP23017). The battery ADC (GPIO10) and the Pi UART (TX/RX) need pins back too. |

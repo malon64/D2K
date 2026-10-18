@@ -74,12 +74,12 @@ RESERVED = {"GPIO10": "free: ADC1 for battery voltage", "GPIO40": "free: lid Hal
             "GPIO45": "avoid: strapping pin"}
 
 # Pi GPIO header pins used by the WM8960 board (sheet 3), labelled on sheet 1.
-PI_AUDIO_PINS = {"3V3@1": "3V3", "GPIO2_SDA1": "I2C1_SDA", "GPIO3_SCL1": "I2C1_SCL", "GND@2": "GND",
+PI_AUDIO_PINS = {"3V3@1": "3V3", "GPIO2_SDA1": "I2C1_SDA", "GPIO3_SCL1": "I2C1_SCL", "GND@2": "GND", "GND@8": "GND",
                  "GPIO18_PCM_CLK": "I2S_BCLK", "GPIO19_PCM_FS": "I2S_LRCLK",
                  "GPIO20_PCM_DIN": "I2S_DIN", "GPIO21_PCM_DOUT": "I2S_DOUT"}
 WM8960_NETS = {"VCC@1": "3V3", "VCC@2": "3V3", "GND@1": "GND", "GND@2": "GND", "SCL": "I2C1_SCL",
                "SDA": "I2C1_SDA", "CLK@9": "I2S_BCLK", "CLK@10": "I2S_BCLK", "WS@11": "I2S_LRCLK",
-               "WS@12": "I2S_LRCLK", "TXSDA_DAC_IN": "I2S_DOUT", "RXSDA_ADC_OUT": "I2S_DIN"}
+               "WS@12": "I2S_LRCLK", "RXSDA_DAC_IN": "I2S_DOUT", "TXSDA_ADC_OUT": "I2S_DIN"}
 
 GSYMS = lib.gate_symbols()
 instances = {}       # (part, gate) -> (x, y)
@@ -245,7 +245,7 @@ def sheet_pi_screens():
     text(gpio["x"] + gpio["w"] / 2, gpio["bottom"] - 1.27,
          "! GPIO 5V is not fused: one pin off can kill the Pi. Power off before plugging.", align="top-center")
     text(gpio["x"] + gpio["w"] / 2, gpio["bottom"] - 3.8,
-         "Labelled pins 1, 3, 5, 9, 12, 35, 38, 40: WM8960 audio board (sheet 3), W8 jumper wires.",
+         "Labelled pins 1, 3, 5, 9, 12, 35, 38, 39, 40: WM8960 audio board (sheet 3), W8 jumper wires.",
          size=1.27, align="top-center")
     cable("W6", "Fan lead JST-SH 4p (captive)", "U1", "FAN", "M1", "FAN",
           lambda a, b: "GND" if a == "GND" else f"FAN_{a}")
@@ -341,7 +341,7 @@ def sheet_audio():
         stub(p, (part, "S", "SPK+"), length=4)
         stub(n, (part, "S", "SPK-"), length=4)
     text(hdr["x"] + hdr["w"] / 2, hdr["top"] + 3 * G,
-         "W8  8 jumper wires from the Pi GPIO header (sheet 1): 3V3 pin 1, SDA 3, SCL 5, GND 9, "
+         "W8  9 jumper wires from the Pi GPIO header (sheet 1): 3V3 pin 1, SDA 3, SCL 5, GND 9 + 39, "
          "BCLK 12, LRCLK 35, DIN 38, DOUT 40", align="bottom-center")
     text(ls1["x"], ls1["top"] + 3 * G, "W9  speaker leads (PH1.25 plugs: need a 4-pin adapter / recrimp)",
          align="bottom-center")
@@ -350,8 +350,8 @@ def sheet_audio():
           "Pi 5 I2S (GPIO18-21) + I2C1 (GPIO2/3) -> Waveshare WM8960 Audio Board -> two 8 ohm 2 W speakers",
           ["The board runs from the Pi 3V3 rail, including its speaker amplifier (SPKVDD): ~0.4 W/ch max, "
            "measure the current.",
-           "Header pins 5/7 = SCL/SDA per the schematic netlist: check the board silkscreen before wiring.",
-           "Linux: WM8960 overlay (dtoverlay=wm8960-soundcard, to confirm on the Pi); codec I2C address 0x1A.",
+           "Wire by the header silkscreen: SDA 5, SCL 7, RXSDA 13 = DAC in (Pi DOUT), TXSDA 14 = ADC out (Pi DIN).",
+           "Linux: dtoverlay=d2k-wm8960-24mhz (wm8960-soundcard with MCLK 24 MHz, docs/platform.md); I2C 0x1A.",
            "Speakers go in the upper half: 4 wires through the hinge, power/audio side (fusion/constraints.md)."])
 
 

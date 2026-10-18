@@ -93,14 +93,15 @@ ESP32_S3_ZERO_PADS = [
 ]
 USB_C_DEVICE = [("A4", "VBUS", "pas"), ("A7", "D-", "pas"), ("A6", "D+", "pas"), ("A1", "GND", "pas")]
 
-# Waveshare WM8960 Audio Board header P2 (8x2), from the board schematic
-# netlist: 5 = SCL, 7 = SDA (check the silkscreen), 13 = DAC data in
-# (silkscreen TXSDA), 14 = ADC data out (RXSDA), 15/16 = MCLK via jumper P1.
+# Waveshare WM8960 Audio Board header P2 (8x2), checked on the bench against
+# the silkscreen and Waveshare's schematic: 5 = SDA, 7 = SCL, 13 = DAC data in
+# (silkscreen RXSDA), 14 = ADC data out (TXSDA). 15/16 only export the on-board
+# 24 MHz MCLK through jumper P1; the codec gets it with P1 open.
 WM8960_HEADER = [
     (1, "VCC@1", "pas"), (2, "VCC@2", "pas"), (3, "GND@1", "pas"), (4, "GND@2", "pas"),
-    (5, "SCL", "pas"), (6, "NC@6", "nc"), (7, "SDA", "pas"), (8, "NC@8", "nc"),
+    (5, "SDA", "pas"), (6, "NC@6", "nc"), (7, "SCL", "pas"), (8, "NC@8", "nc"),
     (9, "CLK@9", "pas"), (10, "CLK@10", "pas"), (11, "WS@11", "pas"), (12, "WS@12", "pas"),
-    (13, "TXSDA_DAC_IN", "pas"), (14, "RXSDA_ADC_OUT", "pas"), (15, "MCLK_RX", "pas"), (16, "MCLK_TX", "pas"),
+    (13, "RXSDA_DAC_IN", "pas"), (14, "TXSDA_ADC_OUT", "pas"), (15, "MCLK_RX", "pas"), (16, "MCLK_TX", "pas"),
 ]
 WM8960_SPK = [(1, "LP", "pas"), (2, "LN", "pas"), (3, "RN", "pas"), (4, "RP", "pas")]
 
@@ -237,7 +238,7 @@ DEVICES = [
             "SPEAKER": "8 ohm, 1 W/ch at 5 V SPKVDD; ~0.4 W/ch at the board's 3.3 V",
             "I2C_ADDR": "0x1A",
             "DOC": "https://www.waveshare.com/wiki/WM8960_Audio_Board",
-            "VERIFY": "Header pins 5/7 (SCL/SDA) from the schematic netlist: check the silkscreen",
+            "LINUX": "dtoverlay=d2k-wm8960-24mhz (wm8960-soundcard with MCLK 24 MHz), docs/platform.md",
         },
         "gates": [
             ("HDR", "WM8960_HEADER", "Header P2 8x2", WM8960_HEADER, "LR"),

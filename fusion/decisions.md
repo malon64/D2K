@@ -44,7 +44,7 @@ repeated here only where they drive the Fusion work.
   pins are not all spent on buttons; header pins first keeps most wiring on
   the breadboard; the free pins match the Notion ESP32 duties.
 - **Audio:** WM8960 board on the Pi's I2C1 (GPIO2/3) and I2S (GPIO18–21) with
-  eight jumper wires (W8), MCLK jumper open (on-board 24 MHz crystal), the two
+  nine jumper wires (W8, two of them GND), MCLK jumper open (on-board 24 MHz crystal), the two
   speakers on its bridged outputs (W9). Power from the Pi 3V3 pin, because
   the board is 3.3 V only; its current is to be measured (M10, Q21).
 - **Drawing:** sheets 2 and 3 connect by net labels; the Pi's audio pins are

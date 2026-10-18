@@ -300,16 +300,21 @@ def _finish(s, width, height, wires):
 # ------------------------------------------------------------ Pi header view --
 PI_WIRES = [  # (Pi pin, destination, destination pin, colour key, signal)
     (1, "WM8960", 1, "v33", "3.3 V (VCC)"), (9, "WM8960", 3, "gnd", "GND"),
-    (3, "WM8960", 7, "i2c", "I²C SDA (GPIO2)"), (5, "WM8960", 5, "i2c2", "I²C SCL (GPIO3)"),
+    (39, "WM8960", 4, "gnd", "Second GND next to the I²S wires, recommended: once the codec stopped "
+                             "answering on I²C when the bit clock started"),
+    (3, "WM8960", 5, "i2c", "I²C SDA (GPIO2)"), (5, "WM8960", 7, "i2c2", "I²C SCL (GPIO3)"),
     (12, "WM8960", 9, "i2s", "I²S bit clock (GPIO18)"), (35, "WM8960", 11, "i2s2", "I²S L/R clock (GPIO19)"),
-    (40, "WM8960", 13, "dout", "Playback data out (GPIO21) → TXSDA"),
-    (38, "WM8960", 14, "din", "Mic data in (GPIO20) ← RXSDA"),
+    (40, "WM8960", 13, "dout", "Playback data out (GPIO21) → RXSDA, the DAC input"),
+    (38, "WM8960", 14, "din", "Mic data in (GPIO20) ← TXSDA, the ADC output"),
     (4, "4in DSI", "red", "v5", "5 V to the 4in screen (red lead)"),
     (6, "4in DSI", "black", "gnd", "GND to the 4in screen (black lead)"),
 ]
 PI_COL = {"v33": "#d1343b", "gnd": "#23272e", "i2c": "#1f9aa8", "i2c2": "#136f7a", "i2s": "#7b5cc4",
           "i2s2": "#5a3fa6", "dout": "#2e9e5b", "din": "#e0761f", "v5": "#b3202a"}
 PI_NAMES = {n: name for n, name, _ in lib.GPIO_40}
+# WM8960 header P2 silkscreen, checked on the board and its schematic (odd pins: the column marked 1)
+WM_LABEL = {1: "VCC", 2: "VCC", 3: "GND", 4: "GND", 5: "SDA", 6: "NC", 7: "SCL", 8: "NC", 9: "CLK",
+            10: "CLK", 11: "WS", 12: "WS", 13: "RXSDA", 14: "TXSDA", 15: "RXMCLK", 16: "TXMCLK"}
 
 
 def pi_header():
@@ -347,7 +352,7 @@ def pi_header():
     s.rect(wx0 - 16, wy_odd - 16, 8 * pp + 10, 2 * pp + 10, "#1b3f8f", rx=4)
     s.text(wx0 + 8 * pp + 10, wy_odd + 8, "WM8960 Audio Board header P2 (U3)", size=10, fill="#3c4450",
            anchor="start", family="body")
-    s.text(wx0 + 8 * pp + 10, wy_odd + 22, "pins 2, 4, 10, 12 repeat 1, 3, 9, 11 · 6, 8 not connected",
+    s.text(wx0 + 8 * pp + 10, wy_odd + 22, "pins 2, 4, 10, 12 repeat 1, 3, 9, 11 · 6, 8 not connected · wire by the silkscreen names",
            size=8.5, fill="#6b7580", anchor="start", family="body")
 
     def wm_xy(n):
@@ -380,7 +385,7 @@ def pi_header():
            f'aria-label="Pi GPIO header jumpers to the WM8960 board and the 4in screen" '
            f'xmlns="http://www.w3.org/2000/svg">' + "".join(s.parts) + "</svg>")
     rows = [("Audio (W8)" if d == "WM8960" else "4in screen (W5)", f"Pi pin {pn}",
-             f"{PI_NAMES[pn].split('@')[0]}", f"WM8960 pin {dn}" if d == "WM8960" else f"4in lead, {dn}",
+             f"{PI_NAMES[pn].split('@')[0]}", f"WM8960 pin {dn} ({WM_LABEL[dn]})" if d == "WM8960" else f"4in lead, {dn}",
              ck, sig) for pn, d, dn, ck, sig in PI_WIRES]
     return svg, rows
 
@@ -560,8 +565,10 @@ boot. (The firmware turns TX into a normal input afterwards.)</li>
 never 5 V. They will take GPIO1–4, so L1 R1 L2 R2 move then.</li>
 <li><b>Nothing on the ESP32 sees 5 V.</b> Its pins are 3.3 V only; leave its 5V pin empty, the USB-C powers it.</li>
 <li><b>The 4-inch lead is red on pin 4, black on pin 6.</b> The Pi's 5 V pins are not fused.</li>
-<li><b>WM8960 header pins 5 and 7</b> are SCL and SDA per its schematic: check the silkscreen. Its speaker
-amplifier runs from the Pi's 3.3 V pin, so keep the volume moderate until its current is measured.</li>
+<li><b>WM8960: wire by the silkscreen names</b> (SDA, SCL, CLK, WS, RXSDA, TXSDA), checked on the board
+and Waveshare's schematic. RXSDA is the codec's DAC input (playback), TXSDA its mic output. Keep the second GND
+wire. Pi pin 14 next to pin 12 is GND: a CLK wire there silences the board. Its speaker amplifier runs from
+the Pi's 3.3 V pin, so keep the volume moderate until its current is measured.</li>
 <li><b>Speakers:</b> each one between its P and N pins only (bridged outputs), never to GND. Their PH1.25 plugs
 need a 4-pin adapter or a recrimp for the board's SPK connector.</li>
 <li><b>Power off the Pi</b> before plugging the DSI ribbon or the GPIO jumpers.</li>
