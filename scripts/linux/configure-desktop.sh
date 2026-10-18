@@ -2,8 +2,8 @@
 # Configures the Raspberry Pi OS (Labwc) desktop for the D2K panels:
 #   - screen layout: upper panel above, lower touch panel centred below (kanshi)
 #   - touch input mapped to the lower panel only (Labwc)
-#   - sound pinned to one HDMI port (WirePlumber), melonDS and PPSSPP audio
-#     buffer floor (pipewire-pulse)
+#   - sound on the WM8960 audio board: HDMI audio disabled (WirePlumber), the
+#     codec's mixer unmuted; melonDS and PPSSPP audio buffer floor (pipewire-pulse)
 #   - melonDS without title bars, Super+Esc as the keyboard Home button, and
 #     the numpad always sending digits (the face-button diamond, docs/controls.md)
 # Safe to re-run; re-run it after rewiring the screens. --check verifies it.
@@ -28,10 +28,19 @@ touch_output=${D2K_TOUCH_OUTPUT:-$lower_output}
 touch_maps=("Goodix Capacitive TouchScreen=$touch_output"
             "WaveShare WS170120=$upper_output"
             "WaveShare WS170120 (USB 1-1)=$upper_output")
-# Audio device to disable so PipeWire keeps sound on the other HDMI port. The
-# Waveshare 5" accepts HDMI audio and plays it on its 3.5 mm jack; the DSI panel
-# has no audio. HDMI1 is 107c706400, HDMI0 is 107c701400.
-muted_audio_card=${D2K_MUTED_AUDIO_CARD:-alsa_card.platform-107c706400.hdmi}
+# Audio devices to disable so PipeWire has one sink. Sound goes to the WM8960
+# audio board on the GPIO header (overlay in config.txt, docs/platform.md), so
+# both HDMI ports are off. HDMI1 is 107c706400, HDMI0 is 107c701400; to use the
+# Waveshare 5"'s jack again (it plays HDMI0 audio), set
+# D2K_MUTED_AUDIO_CARDS=alsa_card.platform-107c706400.hdmi.
+read -r -a muted_audio_cards <<< "${D2K_MUTED_AUDIO_CARDS:-alsa_card.platform-107c701400.hdmi alsa_card.platform-107c706400.hdmi}"
+# The WM8960 codec starts with its DACs cut off from the outputs. Headphone 110
+# is -11 dB; the speaker amplifier stays at 0 until speakers are fitted.
+# PipeWire would otherwise drive these controls as its volume; the WirePlumber
+# rule below gives that card a software volume, so the levels set here hold.
+wm8960_card=wm8960soundcard
+wm8960_mixer=("Left Output Mixer PCM=on" "Right Output Mixer PCM=on" "Playback=230"
+              "Headphone=110" "Speaker=0")
 
 kanshi_config="$config_home/kanshi/config"
 labwc_config="$config_home/labwc/rc.xml"
@@ -53,11 +62,21 @@ profile d2k {
     output $lower_output mode $lower_mode transform $lower_transform position $lower_x,$upper_height
 }"
 
+audio_matches=""
+for card in "${muted_audio_cards[@]}"; do
+    audio_matches+="
+      { device.name = \"$card\" }"
+done
 wireplumber_text="$marker
 monitor.alsa.rules = [
   {
-    matches = [ { device.name = \"$muted_audio_card\" } ]
+    matches = [$audio_matches
+    ]
     actions = { update-props = { device.disabled = true } }
+  }
+  {
+    matches = [ { api.alsa.card.name = \"wm8960-soundcard\" } ]
+    actions = { update-props = { api.alsa.soft-mixer = true } }
   }
 ]"
 
@@ -120,6 +139,29 @@ xkb_options_edit() {  # apply|check
     echo "XKB_DEFAULT_OPTIONS=${current:+$current,}$numpad_option" >> "$labwc_environment"
 }
 
+# Sets the WM8960 mixer (apply) or compares it (check). Without the board's
+# card there is nothing to do: it is on the bench, not yet in every build.
+wm8960_mixer_edit() {  # apply|check
+    local entry control value current
+    [[ -e /proc/asound/$wm8960_card ]] || return 0
+    for entry in "${wm8960_mixer[@]}"; do
+        control=${entry%=*} value=${entry##*=}
+        if [[ $1 == check ]]; then
+            current=$(amixer -c "$wm8960_card" sget "$control" 2>/dev/null | tail -n 1)
+            if [[ $value == on ]]; then
+                [[ $current == *'[on]'* ]] || return 1
+            else
+                [[ $current == *": Playback $value "* || $current == *": $value "* ]] || return 1
+            fi
+        else
+            amixer -q -c "$wm8960_card" sset "$control" "$value"
+        fi
+    done
+    # Saved for the next boot (alsa-restore); configure-desktop.sh sets it again anyway.
+    [[ $1 == apply ]] && sudo -n alsactl store "$wm8960_card" 2>/dev/null
+    return 0
+}
+
 if [[ ${1:-} == --check ]]; then
     status=0
     xkb_options_edit check || { echo "XKB option $numpad_option missing: $labwc_environment" >&2; status=1; }
@@ -127,6 +169,7 @@ if [[ ${1:-} == --check ]]; then
     [[ -f $wireplumber_rule && $(<"$wireplumber_rule") == "$wireplumber_text" ]] || { echo "Audio rule differs: $wireplumber_rule" >&2; status=1; }
     [[ -f $pulse_rule && $(<"$pulse_rule") == "$pulse_text" ]] || { echo "Emulator audio rule differs: $pulse_rule" >&2; status=1; }
     labwc_edit check || { echo "Labwc entries missing: $labwc_config" >&2; status=1; }
+    wm8960_mixer_edit check || { echo "WM8960 mixer differs: card $wm8960_card" >&2; status=1; }
     ((status == 0)) && echo 'Desktop configuration check passed.'
     exit "$status"
 elif [[ $# -gt 0 ]]; then
@@ -158,4 +201,5 @@ fi
 if [[ $pulse_changed == true ]]; then
     systemctl --user restart pipewire-pulse 2>/dev/null || true
 fi
-echo "Desktop configured: $upper_output above $lower_output, touch on $touch_output, audio device $muted_audio_card disabled."
+wm8960_mixer_edit apply
+echo "Desktop configured: $upper_output above $lower_output, touch on $touch_output, audio devices disabled: ${muted_audio_cards[*]}."

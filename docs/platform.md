@@ -186,16 +186,19 @@ handles keys in both windows ([`controls.md`](controls.md#menus-pegasus)).
 
 ## Audio (Pi 5)
 
-### Sound on one HDMI port
+### One sink: the WM8960 board
 
 The Pi 5 has one ALSA card per HDMI port: `vc4-hdmi-0` is
 `alsa_card.platform-107c701400.hdmi` (HDMI0), `vc4-hdmi-1` is
 `...107c706400.hdmi` (HDMI1). `configure-desktop.sh` installs a WirePlumber rule
-(`50-d2k-audio.conf`) disabling the card of the port that must stay silent, so
-PipeWire has a single sink (`pactl list short sinks`, `pactl get-default-sink`).
-Whether a screen takes audio is in its ELD (`cat /proc/asound/card*/eld#0`):
-`sad_count 0` means none. The desk monitor had none; **the Waveshare 5" plays
-HDMI audio on its 3.5 mm jack**, so a headset there is today's audio output.
+(`50-d2k-audio.conf`) disabling both, so PipeWire has a single sink, the WM8960
+board below (`pactl list short sinks`, `pactl get-default-sink`), and MPD,
+Pegasus and the emulators all play there. The same rule gives the WM8960 card a
+software volume (`api.alsa.soft-mixer`), so the codec mixer levels set by the
+script hold. Whether a screen takes audio is in its ELD
+(`cat /proc/asound/card*/eld#0`): `sad_count 0` means none. **The Waveshare 5"
+plays HDMI0 audio on its 3.5 mm jack**; to go back to it, run the script with
+`D2K_MUTED_AUDIO_CARDS=alsa_card.platform-107c706400.hdmi`.
 
 ### WM8960 audio board
 
@@ -203,7 +206,7 @@ The Waveshare WM8960 Audio Board (the planned speakers and headphone output)
 is on the GPIO header with jumper wires: wiring in
 [`fusion/wiring.md`](../fusion/wiring.md#audio-wm8960-board-and-speakers-sheet-3).
 It plays through its own jack since 17 October 2026, as ALSA card
-`wm8960soundcard`; PipeWire, MPD and the emulators do not use it yet.
+`wm8960soundcard`, and has been D2K's only output since 18 October.
 
 - **Overlay.** `/boot/firmware/config.txt` needs `dtparam=i2c_arm=on`,
   `dtparam=i2s=on` and `dtoverlay=d2k-wm8960-24mhz`, built from
@@ -212,9 +215,11 @@ It plays through its own jack since 17 October 2026, as ALSA card
   `wm8960-soundcard` with the MCLK changed from 12.288 to **24 MHz**, the
   board's on-board oscillator (Waveshare FAQ and schematic); that overlay has no
   parameter for it.
-- **Mixer.** The codec starts muted: turn on `Left/Right Output Mixer PCM`, set
-  `Playback` (230 ≈ −12.5 dB) and `Headphone` (110 ≈ −11 dB), `Speaker` 0 until
-  speakers are fitted, then `sudo alsactl store` keeps it across reboots.
+- **Mixer.** The codec starts muted. `configure-desktop.sh` turns on
+  `Left/Right Output Mixer PCM`, sets `Playback` (230 ≈ −12.5 dB) and
+  `Headphone` (110 ≈ −11 dB), keeps `Speaker` at 0 until speakers are fitted,
+  and saves it with `alsactl store`; `--check` compares it. A boot where the
+  codec does not answer on I²C saves a muted state: re-run the script.
   Test: `speaker-test -D plughw:CARD=wm8960soundcard -c 2 -t sine -f 440 -l 1`.
 - **Wiring faults and their symptoms**, all met on the bench:
   - Bus 1 empty, `wm8960 1-001a: probe ... failed with error -121`: SDA and

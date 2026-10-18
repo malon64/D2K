@@ -86,7 +86,7 @@ Summary as of 24 September 2026:
   `mpd/`).
 - Pi-local config written by the scripts: `~/.config/kanshi/config` (screen
   layout), `~/.config/labwc/rc.xml` (touch mapping, melonDS rule, Super+Esc),
-  `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (sound on one HDMI port),
+  `~/.config/wireplumber/wireplumber.conf.d/50-d2k-audio.conf` (HDMI audio off, sound on the WM8960 board),
   `~/.config/pipewire/pipewire-pulse.conf.d/50-d2k-emulator-audio.conf` (melonDS / PPSSPP / Azahar audio buffer floor),
   `~/.config/autostart/d2k.desktop`.
 
@@ -94,7 +94,8 @@ Summary as of 24 September 2026:
 
 | Role | Device | Connection | Desktop output |
 | --- | --- | --- | --- |
-| Upper panel + sound | Waveshare 5" HDMI LCD, 800x480; HDMI audio comes out of its 3.5 mm jack (headset) | HDMI0 for video and audio, micro-USB **Touch** port to a Pi USB port for power (its touch is mapped to this screen) | `HDMI-A-1`, position `0,0`, CVT mode |
+| Upper panel | Waveshare 5" HDMI LCD, 800x480 (its 3.5 mm jack plays HDMI audio, now disabled) | HDMI0, micro-USB **Touch** port to a Pi USB port for power (its touch is mapped to this screen) | `HDMI-A-1`, position `0,0`, CVT mode |
+| Sound | Waveshare WM8960 Audio Board, headset on its jack | Jumper wires on the GPIO header (I²C1 + I²S, two GND), [fusion/wiring.md](fusion/wiring.md#audio-wm8960-board-and-speakers-sheet-3); `dtoverlay=d2k-wm8960-24mhz` | ALSA `wm8960soundcard`, the only PipeWire sink |
 | Lower touch panel | Waveshare 4-DSI-TOUCH-A, 480x800 portrait panel, Goodix touch | DSI ribbon to the **DISP 1** connector, 5V/GND from the GPIO header; `dtoverlay=vc4-kms-dsi-waveshare-panel-v2,4_0_inch_a` in `/boot/firmware/config.txt` | `DSI-2`, position `0,480`, transform `270` |
 
 Earlier the upper panel was a Samsung desk monitor on HDMI1 and the 5" was the
